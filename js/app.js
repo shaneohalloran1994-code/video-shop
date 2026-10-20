@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=1b3";
-import * as tmdb from "./tmdb.js?v=1b3";
-import * as importer from "./importer.js?v=1b3";
-import * as lib from "./library.js?v=1b3";
-import * as snd from "./sound.js?v=1b3";
+import * as store from "./store.js?v=1b4";
+import * as tmdb from "./tmdb.js?v=1b4";
+import * as importer from "./importer.js?v=1b4";
+import * as lib from "./library.js?v=1b4";
+import * as snd from "./sound.js?v=1b4";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -432,19 +432,19 @@ function pickHTML(it) {
   return `<article class="pick"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="info" style="min-width:0">
     <h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}${m.l !== "en" ? " · " + esc(lang(m.l).toUpperCase()) : ""}</div>
     <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}${m.dir[0] ? " · " + esc(m.dir[0]) : ""}</div>
-    <ul class="why">${(it.why || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul>
+    ${(it.why || []).length ? `<ul class="why talker">${it.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
     <div class="acts"><a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a></div></div></article>`;
 }
 function renderForYou() {
   if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
-  $("#fitsHead").textContent = S.house ? "Staff picks" : "Off your own shelf";
-  $("#freshHead").textContent = S.house ? "The clerk hasn't seen these either" : "Not on your list yet";
-  $("#picksNote").textContent = S.house ? "The house shop: the owner's own favourites and his watchlist. His ratings stay hidden." : "Ranked on how you rate similar directors, actors, genres and eras, and what you've been watching lately. No scores, just reasons.";
+  $("#fitsHead").textContent = S.house ? "The clerk's favourites" : "Picked off your own shelf";
+  $("#freshHead").textContent = S.house ? "The clerk hasn't seen these either" : "Not on your list. Should be.";
+  $("#picksNote").textContent = S.house ? "The clerk's shelf. His own favourites, and the ones he still means to get to." : "The clerk's shelf. He's been through your history and pulled these for you. No scores, just his reasons.";
   $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map(pickHTML).join("");
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
   $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(pickHTML).join("");
   $("#moreFresh").hidden = freshN >= S.fresh.length;
-  $("#freshNote").textContent = S.house ? "Films on the owner's watchlist that fit the shop's taste." : S.fresh.length ? "Films that keep coming up off the ones you rated 4★ and higher." : "Still restocking these. Check back in a minute.";
+  $("#freshNote").textContent = S.house ? "Films on the owner's watchlist that fit the shop's taste." : S.fresh.length ? "Off the back of the films you rated highest. He reckons you've missed these." : "Still restocking these. Check back in a minute.";
 }
 $("#moreFits").onclick = () => { fitsN += 10; renderForYou(); };
 $("#moreFresh").onclick = () => { freshN += 10; renderForYou(); };

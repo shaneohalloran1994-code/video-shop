@@ -332,3 +332,11 @@ input[type=number],input[type=password],select{border-radius:0}
 
 .keys button[aria-pressed="true"]{border-color:#0b0b0d}
 .tagline{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Staff picks: tapes on a wooden shelf, each with a handwritten shelf-talker card */
+#v-picks .list{gap:22px}
+#v-picks .pick{background:linear-gradient(transparent calc(100% - 12px),#3b2214 calc(100% - 12px)),linear-gradient(#16131a,#100d12);border:0;padding:12px 12px 22px;box-shadow:0 12px 0 -4px #241409,6px 6px 0 #000}
+.why.talker{position:relative;margin:6px 0 2px;padding:10px 12px 8px;background:#fff4d8;color:#2a1306;font:400 15px/1.25 var(--marker);transform:rotate(-1.2deg);box-shadow:2px 3px 0 rgba(0,0,0,.55);gap:4px}
+.why.talker::before{content:"";position:absolute;top:-8px;left:40%;width:46px;height:16px;background:rgba(240,230,190,.75);transform:rotate(3deg)}
+.why.talker li::before{content:"– "}
+#v-picks .pick:nth-child(2n) .why.talker{transform:rotate(1deg)}
