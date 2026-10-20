@@ -517,3 +517,27 @@ body.noscroll{overflow:hidden}
 .binsign{position:absolute;left:50%;top:-18px;transform:translateX(-50%) rotate(-4deg);background:#f5cf3a;color:#b3150e;font:800 18px/1 var(--cond);letter-spacing:.1em;text-align:center;padding:8px 14px;box-shadow:3px 3px 0 #000}
 .binsign b{display:block;font:400 34px var(--marker)}
 .binsign small{font-size:11px;letter-spacing:.2em}
+
+/* ---------- 2c ---------- */
+.chip.vibe[aria-pressed="true"]{background:#0f6e72;color:#fff}
+.cab.purple{background:linear-gradient(#5b1a50 0 52px,#170f17 52px)}.cab.purple .cab-top{color:#ffe0fb}
+.cab.lime{background:linear-gradient(#5f8f1a 0 52px,#12170d 52px)}.cab.lime .cab-top{color:#f2ffdc}
+.amarquee.purple{background:#5b1a50}.amarquee.lime{background:#5f8f1a}
+.sbox{position:relative}
+.sbox input{width:100%;background:#120d0a;border:2px solid #5a4030;padding:10px;font-size:16px;color:var(--ink)}
+.sugs{display:flex;flex-direction:column;margin-top:4px}
+.sug{border:0;border-bottom:1px solid #3a2a20;background:#1c1410;color:var(--ink);text-align:left;padding:10px;font-size:15px}
+.sug small{color:var(--muted)}
+.seedchips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seed{background:#fff4d8;color:#2a1306;font:400 16px var(--marker);padding:6px 10px;box-shadow:2px 2px 0 #000;display:inline-flex;gap:6px;align-items:center}
+.seed small{font:400 14px var(--crt);color:#7a6250}
+.seed .x{border:0;background:none;font-size:18px;color:#b3150e;padding:0 2px}
+.keys.mini{align-self:flex-start;margin-top:6px}
+.keys.mini button{flex:0 0 auto;padding:10px 12px 6px;font-size:12px}
+.deep{display:flex;flex-direction:column;gap:8px;padding:12px;background:#16131a;box-shadow:4px 4px 0 #000;border-left:6px solid var(--amber)}
+.dname{font:400 20px var(--marker);color:var(--paper);display:flex;flex-direction:column}
+.dname small{font:400 17px var(--crt);color:var(--green)}
+.dnext{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center}
+.dnext .cover{width:56px;aspect-ratio:2/3;background:#222 center/cover}
+.dnext .titlecard{font-size:18px}
+.dnext .tag{margin-top:4px}

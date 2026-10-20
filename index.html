@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=2b2">
+<link rel="stylesheet" href="css/app.css?v=2c2">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=2b2"></script>
+<script type="module" src="js/app.js?v=2c2"></script>
 </head>
 <body>
 
@@ -76,6 +76,7 @@
     <div class="board fpanel">
       <div class="fhead"><span class="marker">Tonight I want…</span><button class="tag hot" id="closeFilters">Done</button></div>
       <div class="fgroup moods-g"><h3>Moods <em>one tap sets it up and rolls</em></h3><div class="moods" id="moods"></div></div>
+      <div class="fgroup"><h3>Vibe <em>pick any</em></h3><div class="chips" id="vibes"></div></div>
       <div class="fgroup"><h3>Genre <em>tap once for yes, twice for no</em></h3><div class="chips" id="genres"></div></div>
       <div class="fgroup"><h3>Length</h3><div class="chips" id="lengths"></div></div>
       <div class="fgroup"><h3>I've got</h3><div class="chips" id="slots"></div></div>
@@ -111,6 +112,8 @@
     <h2 class="shelfname" id="fitsHead">Off your own shelf</h2>
     <div class="list" id="bestFits"></div>
     <button class="ghost more" id="moreFits">More</button>
+    <h2 class="shelfname" id="deepHead" hidden>Finish the job</h2>
+    <div class="list" id="deepDive"></div>
     <h2 class="shelfname" id="freshHead">Not on your list yet</h2>
     <p class="note" id="freshNote"></p>
     <div class="list" id="fresh"></div>

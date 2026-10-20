@@ -11,6 +11,8 @@ const everything = () => { if (!C.S) return []; if (C.S.house) return C.S.watchl
 const hhmm = mins => { const m = ((mins % 1440) + 1440) % 1440; return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
 
 const CABS = [
+  ["morelike", "More Like This", "Name a film. Get the ones that feel like it.", "purple"],
+  ["blend", "Blend", "Two to four films, yours and a mate's. One pick that links them all.", "lime"],
   ["allday", "All-Dayer", "Two to five films, a proper day of it. Printed listings, start times, the lot.", "red"],
   ["double", "Double Bill", "Two films that belong together. Rasher pairs them.", "blue"],
   ["knockout", "Knockout", "Eight tapes, one winner. Pick between pairs till it's settled.", "orange"],
@@ -295,4 +297,134 @@ function bargain() {
   };
 }
 
-const GAMES = { allday: () => allDayer(false), double: () => allDayer(true), knockout, swipe, chain: chainGame, globe, bargain };
+// ---------- More Like This / Blend ----------
+const idfCache = { S: null, idf: null };
+function idf() {
+  if (idfCache.S === C.S) return idfCache.idf;
+  const c = new Map(), all = everything(); all.forEach(x => (x.m.kw || []).forEach(k => c.set(k, (c.get(k) || 0) + 1)));
+  const n = all.length || 1, f = k => Math.log(1 + n / (1 + (c.get(k) || 0)));
+  idfCache.S = C.S; idfCache.idf = f; return f;
+}
+function sim(a, b) {
+  const f = idf(); let s = 0; const why = [];
+  const kw = (a.kw || []).filter(k => (b.kw || []).includes(k) && !/stinger|woman director|based on novel/.test(k));
+  s += Math.min(6, kw.reduce((t, k) => t + f(k), 0)) * 0.6;
+  const d = a.dir.find(x => b.dir.includes(x)); if (d) { s += 3; why.push(`same director as ${a.t} (${d})`); }
+  const c = a.cast.slice(0, 5).filter(x => b.cast.slice(0, 5).includes(x)); s += c.length; if (c.length && !d) why.push(`${c[0]}, like in ${a.t}`);
+  s += a.g.filter(g => b.g.includes(g)).length * 0.5;
+  if ((a.y || "").slice(0, 3) && (a.y || "").slice(0, 3) === (b.y || "").slice(0, 3)) s += 0.4;
+  const rec = (a.recs || []).includes(b.id) || (a._rel || []).includes(b.id);
+  if (rec) s += 1.5;
+  if ((b.recs || []).includes(a.id)) s += 1;
+  const vib = Object.entries(C.vibes || {}).filter(([, ws]) => ws.some(w => (a.kw || []).includes(w)) && ws.some(w => (b.kw || []).includes(w))).map(([k]) => k);
+  if (!why.length && vib.length) why.push(`same ${C.vibeName(vib[0]).toLowerCase()} feel as ${a.t}`);
+  if (!why.length && kw.length) why.push(`${kw.slice(0, 2).join(", ")}, like ${a.t}`);
+  if (!why.length && rec) why.push(`comes up off ${a.t}`);
+  return { s, why };
+}
+const seenIds = () => new Set(C.S.seen.map(s => s.m.id));
+let ml = { seed: null, any: true, out: null }, bl = { seeds: [], any: true, out: null };
+function searchBox(id, ph) {
+  return `<div class="sbox"><input id="${id}" type="search" placeholder="${ph}" autocomplete="off"><div class="sugs" id="${id}S"></div></div>`;
+}
+function bindSearch(id, onPick) {
+  const inp = $("#" + id), box = $("#" + id + "S"); let t = null, seq = 0;
+  inp.oninput = () => {
+    clearTimeout(t); const q = inp.value.trim().toLowerCase(); if (q.length < 2) { box.innerHTML = ""; return; }
+    const local = []; const seen = new Set();
+    for (const x of everything().concat(C.S.seen)) if (x.m.t.toLowerCase().includes(q) && !seen.has(x.m.id)) { seen.add(x.m.id); local.push(x.m); if (local.length >= 5) break; }
+    const show = list => { box.innerHTML = list.map((m, i) => `<button class="sug" data-i="${i}">${C.esc(m.t)} <small>${C.esc((m.y || m.release_date || "").slice(0, 4))}</small></button>`).join(""); box.querySelectorAll(".sug").forEach(b => b.onclick = () => { box.innerHTML = ""; inp.value = ""; onPick(list[+b.dataset.i]); }); };
+    show(local);
+    const my = ++seq;
+    t = setTimeout(async () => {
+      try {
+        const r = await C.api.search(q); if (my !== seq) return;
+        const ids = new Set(local.map(m => m.id));
+        const more = (r?.results || []).filter(x => !ids.has(x.id)).slice(0, 6 - Math.min(local.length, 3)).map(x => ({ id: x.id, t: x.title, y: (x.release_date || "").slice(0, 4), remote: true }));
+        show(local.slice(0, 3).concat(more));
+      } catch { }
+    }, 350);
+  };
+}
+async function full(m) {
+  if (!m.remote && m.kw) return m;
+  const local = everything().concat(C.S.seen).find(x => x.m.id === m.id); if (local) return local.m;
+  return await C.api.details(m.id);
+}
+async function candidatesAny(seed) {
+  const r = await C.api.related(seed.id);
+  seed._rel = [...(r?.recommendations?.results || []), ...(r?.similar?.results || [])].map(x => x.id);
+  return [...new Set([...(r?.recommendations?.results || []), ...(r?.similar?.results || [])].map(x => x.id))];
+}
+async function fetchAll(ids, n = 6) {
+  const out = []; let i = 0;
+  await Promise.all(Array.from({ length: n }, async () => { while (i < ids.length) { const id = ids[i++]; try { const d = await C.api.details(id); if (d) out.push(d); } catch { } } }));
+  return out;
+}
+const resultCards = (list) => list.map((r, i) => `${card({ m: r.m }, `<ul class="why talker">${r.why.slice(0, 2).map(w => `<li>${C.esc(w.charAt(0).toUpperCase() + w.slice(1))}</li>`).join("")}</ul>
+  <div class="acts"><button class="tag hot" data-play="${i}">Put it on</button><a class="tag" href="https://letterboxd.com/tmdb/${r.m.id}/" target="_blank" rel="noopener">Letterboxd</a></div>`)}`).join("");
+function anyToggle(id, on) { return `<div class="seg keys mini" role="group" aria-label="Where from"><button data-any="0" aria-pressed="${!on}">Your shelves</button><button data-any="1" aria-pressed="${on}">Any film</button></div>`; }
+
+export function moreLike(m) { ml.seed = m; ml.out = null; moreLikeView(); scrollTo(0, 0); }
+function moreLikeView() {
+  const v = view();
+  v.innerHTML = `${header("morelike")}
+    <div class="fgroup"><h3>More like…</h3>${ml.seed ? `<div class="seedchips"><span class="seed">${C.esc(ml.seed.t)} <small>${C.esc(ml.seed.y || "")}</small></span><button class="tag" id="mlClear">Change</button></div>` : searchBox("mlQ", "Type any film you love")}
+    ${anyToggle("ml", ml.any)}</div>
+    <div id="mlOut">${ml.out || ""}</div>`;
+  bindBack();
+  if (!ml.seed) bindSearch("mlQ", m => { ml.seed = m; ml.out = null; moreLikeView(); runMoreLike(); });
+  else { $("#mlClear").onclick = () => { ml.seed = null; ml.out = null; moreLikeView(); }; if (!ml.out) runMoreLike(); }
+  v.querySelectorAll("[data-any]").forEach(b => b.onclick = () => { ml.any = b.dataset.any === "1"; ml.out = null; C.snd.click(); moreLikeView(); });
+  bindPlays(ml);
+}
+async function runMoreLike() {
+  const out = $("#mlOut"); out.innerHTML = `<p class="note center blinkish">Rasher's having a look…</p>`;
+  const seed = await full(ml.seed); if (!seed) { out.innerHTML = empty("Couldn't find that one."); return; }
+  ml.seed = seed; const seen = seenIds(); let cands;
+  if (ml.any) { const ids = (await candidatesAny(seed)).filter(id => !seen.has(id) && id !== seed.id).slice(0, 30); cands = (await fetchAll(ids)).map(m => ({ m })); }
+  else cands = unseen().filter(x => x.m.id !== seed.id);
+  const q = m => (m.vc >= 50 ? (m.va - 6.5) * 0.8 : -0.5) + Math.min(Math.log10((m.vc || 0) + 1), 4) * 0.25;
+  const ranked = cands.map(x => { const r = sim(seed, x.m); return { m: x.m, s: r.s + q(x.m), why: r.why.length ? r.why : [`in the same spirit as ${seed.t}`] }; }).sort((a, b) => b.s - a.s).slice(0, 6);
+  ml.list = ranked; ml.out = ranked.length ? resultCards(ranked) : empty("Nothing close enough. Try Any film.");
+  if (view().querySelector("#mlOut")) { $("#mlOut").innerHTML = ml.out; bindPlays(ml); }
+}
+function bindPlays(st) { view().querySelectorAll("[data-play]").forEach(b => b.onclick = () => C.play([{ m: st.list[+b.dataset.play].m, src: "wl" }])); }
+
+function blendView() {
+  const v = view();
+  v.innerHTML = `${header("blend")}
+    <div class="fgroup"><h3>The films <em>2 to 4, yours and a mate's</em></h3>
+      <div class="seedchips">${bl.seeds.map((m, i) => `<span class="seed">${C.esc(m.t)} <small>${C.esc(m.y || "")}</small><button class="x" data-rm="${i}" aria-label="Remove">×</button></span>`).join("")}</div>
+      ${bl.seeds.length < 4 ? searchBox("blQ", bl.seeds.length ? "Add another" : "Type a film") : ""}
+      ${anyToggle("bl", bl.any)}</div>
+    <button class="play" id="blGo" ${bl.seeds.length < 2 ? "disabled" : ""}><span class="tri"></span><span>Blend them</span></button>
+    <div id="blOut">${bl.out || ""}</div>`;
+  bindBack();
+  if (bl.seeds.length < 4) bindSearch("blQ", async m => { const f = await full(m); if (f && !bl.seeds.some(s => s.id === f.id)) bl.seeds.push(f); bl.out = null; C.snd.click(); blendView(); setTimeout(() => $("#blQ")?.focus(), 30); });
+  v.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { bl.seeds.splice(+b.dataset.rm, 1); bl.out = null; blendView(); });
+  v.querySelectorAll("[data-any]").forEach(b => b.onclick = () => { bl.any = b.dataset.any === "1"; bl.out = null; C.snd.click(); blendView(); });
+  $("#blGo").onclick = runBlend;
+  bindPlays(bl);
+}
+async function runBlend() {
+  const out = $("#blOut"); out.innerHTML = `<p class="note center">Rasher's working out what links them…</p>`;
+  const seeds = bl.seeds, seen = seenIds(), sids = new Set(seeds.map(s => s.id));
+  let cands;
+  if (bl.any) {
+    const counts = new Map();
+    for (const s of seeds) (await candidatesAny(s)).forEach((id, r) => { if (!seen.has(id) && !sids.has(id)) counts.set(id, (counts.get(id) || 0) + 1 + (20 - Math.min(r, 20)) / 40); });
+    const ids = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([id]) => id);
+    cands = (await fetchAll(ids)).map(m => ({ m }));
+  } else cands = unseen().filter(x => !sids.has(x.m.id));
+  const ranked = cands.map(x => {
+    const rs = seeds.map(s => sim(s, x.m)), mn = Math.min(...rs.map(r => r.s)), avg = rs.reduce((t, r) => t + r.s, 0) / rs.length;
+    const why = rs.map(r => r.why[0]).filter(Boolean);
+    const qq = (x.m.vc >= 50 ? (x.m.va - 6.5) * 0.8 : -0.5) + Math.min(Math.log10((x.m.vc || 0) + 1), 4) * 0.25;
+    return { m: x.m, s: mn * 1.5 + avg + qq, why: why.length ? why : ["sits right between them"] };
+  }).sort((a, b) => b.s - a.s).slice(0, 3);
+  bl.list = ranked; bl.out = ranked.length ? `<p class="note">Rasher's top three for ${seeds.map(s => C.esc(s.t)).join(" + ")}:</p>` + resultCards(ranked) : empty("Couldn't find a link. Try Any film.");
+  if (view().querySelector("#blOut")) { $("#blOut").innerHTML = bl.out; bindPlays(bl); }
+}
+
+const GAMES = { morelike: () => { ml = { seed: null, any: ml.any, out: null }; moreLikeView(); }, blend: () => { bl.out = null; blendView(); }, allday: () => allDayer(false), double: () => allDayer(true), knockout, swipe, chain: chainGame, globe, bargain };

@@ -1,9 +1,9 @@
-import * as store from "./store.js?v=2b2";
-import * as tmdb from "./tmdb.js?v=2b2";
-import * as importer from "./importer.js?v=2b2";
-import * as lib from "./library.js?v=2b2";
-import * as snd from "./sound.js?v=2b2";
-import * as arcade from "./arcade.js?v=2b2";
+import * as store from "./store.js?v=2c2";
+import * as tmdb from "./tmdb.js?v=2c2";
+import * as importer from "./importer.js?v=2c2";
+import * as lib from "./library.js?v=2c2";
+import * as snd from "./sound.js?v=2c2";
+import * as arcade from "./arcade.js?v=2c2";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -32,7 +32,26 @@ const PRESETS = [
   ["brainon", "Brain on", { inc: ["Drama", "Mystery", "Science Fiction", "History"], crowdOn: true, c0: "3.8", c1: "5" }],
   ["rainy", "Rainy day", { len: ["epic"] }],
 ];
-const DEFAULT_F = { inc: [], exc: [], len: [], slot: "", lang: "any", lp: "", y0: "", y1: "", crowdOn: false, c0: "3", c1: "5", myMin: "", since: "", neverRe: false, taste: false };
+// Vibes, matched on TMDB's film keywords.
+const VIBES = [
+  ["hangout", "Hangout", ["slice of life", "hangout", "stoner", "stoner comedy", "slacker", "party", "last day of school", "bowling", "buddy comedy", "summer vacation", "male friendship", "bar"]],
+  ["nostalgia", "Period nostalgia", ["1950s", "1960s", "1970s", "1980s", "1990s", "nostalgia", "period piece", "nostalgic"]],
+  ["needle", "Needle-drops", ["disco", "rock music", "rock and roll", "punk rock", "soul music", "jukebox musical", "record store", "band", "musician", "music industry", "hip-hop", "soundtrack", "rock band", "pop music"]],
+  ["slow", "Slow burn", ["slow burn", "psychological thriller", "atmospheric", "meditative", "existentialism", "minimalism", "contemplative", "psychological drama"]],
+  ["bleak", "Bleak", ["dystopia", "nihilism", "despair", "tragedy", "grief", "post-apocalyptic future", "depression", "bleak", "tragic ending", "loneliness", "melancholy"]],
+  ["cosy", "Cosy", ["christmas", "holiday", "heartwarming", "feel good", "cozy", "wholesome", "family relationships"]],
+  ["oneloc", "One location", ["single location", "one location", "confined space", "chamber piece", "locked room", "based on play or musical", "trapped", "claustrophobic"]],
+  ["heist", "Heist", ["heist", "robbery", "bank robbery", "con artist", "thief", "caper", "heist film", "swindle"]],
+  ["road", "Road trip", ["road trip", "road movie", "on the road", "cross country"]],
+  ["neon", "Neon-noir", ["neo-noir", "neon", "nightlife", "hitman", "synthwave", "film noir"]],
+  ["coming", "Coming of age", ["coming of age", "teenager", "high school", "adolescence", "growing up", "first love", "teenage romance"]],
+  ["twist", "Twisty", ["plot twist", "twist ending", "unreliable narrator", "nonlinear timeline", "mind-bending", "mind bending", "puzzle", "surprise ending", "whodunit"]],
+  ["revenge", "Revenge", ["revenge", "vengeance", "vigilante", "retribution", "revenge story"]],
+  ["small", "Small town", ["small town", "rural area", "village", "small town life", "rural"]],
+  ["true", "True story", ["based on true story", "biography", "true crime", "based on real events", "historical figure", "based on a true story"]],
+];
+const VIBE_KW = Object.fromEntries(VIBES.map(([k, , w]) => [k, w]));
+const DEFAULT_F = { vibes: [], inc: [], exc: [], len: [], slot: "", lang: "any", lp: "", y0: "", y1: "", crowdOn: false, c0: "3", c1: "5", myMin: "", since: "", neverRe: false, taste: false };
 let F = Object.assign({}, DEFAULT_F, store.prefs.get("f", {}));
 let poolMode = store.prefs.get("pool", "wl");
 let N = store.prefs.get("n", 1);
@@ -176,11 +195,13 @@ $("#c1").onchange = e => { F.c1 = e.target.value; changed(); };
 $("#myMin").onchange = e => { F.myMin = e.target.value; changed(); };
 $("#neverRe").onchange = e => { F.neverRe = e.target.checked; changed(); };
 $("#taste").onchange = e => { F.taste = e.target.checked; changed(); };
-$("#clearF").onclick = () => { F = Object.assign({}, DEFAULT_F); changed(true); toast("Forget about it."); };
+$("#clearF").onclick = () => { F = Object.assign({}, DEFAULT_F, { vibes: [], inc: [], exc: [], len: [] }); changed(true); toast("Forget about it."); };
+VIBES.forEach(([k, l]) => { const b = document.createElement("button"); b.className = "chip vibe"; b.textContent = l; b.dataset.vibe = k;
+  b.onclick = () => { F.vibes = (F.vibes || []).includes(k) ? F.vibes.filter(x => x !== k) : [...(F.vibes || []), k]; changed(); }; $("#vibes").append(b); });
 PRESETS.forEach(([k, l, f]) => {
   const b = document.createElement("button"); b.className = "mood"; b.dataset.mood = k; b.textContent = l;
   b.onclick = () => {
-    F = Object.assign({}, DEFAULT_F, { inc: [], exc: [], len: [] }, f, { mood: k, last: F.last }); changed(true);
+    F = Object.assign({}, DEFAULT_F, { vibes: [], inc: [], exc: [], len: [] }, f, { mood: k, last: F.last }); changed(true);
     openFilters(false); snd.click(); roll();
   };
   $("#moods").append(b);
@@ -213,6 +234,7 @@ function buildFilterOptions() {
 }
 function syncFilters(full = true) {
   $$("#genres .chip").forEach(b => { const g = b.dataset.g; b.classList.toggle("on", F.inc.includes(g)); b.classList.toggle("no", F.exc.includes(g)); });
+  $$("#vibes .chip").forEach(b => b.setAttribute("aria-pressed", (F.vibes || []).includes(b.dataset.vibe)));
   $$("#lengths .chip").forEach(b => b.setAttribute("aria-pressed", F.len.includes(b.dataset.len)));
   $$("#slots .chip").forEach(b => b.setAttribute("aria-pressed", F.slot !== "" && F.slot === b.dataset.slot));
   $$("#since .chip").forEach(b => b.setAttribute("aria-pressed", F.since === b.dataset.since));
@@ -229,7 +251,7 @@ function syncFilters(full = true) {
   const n = pool().length;
   $("#inRun").textContent = S ? `${n.toLocaleString()} tape${n === 1 ? "" : "s"} in the running` : "";
   $("#roll").disabled = !S;
-  const act = F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && SEEN_POOLS.includes(poolMode) ? !!F.myMin + !!F.since + F.neverRe : 0);
+  const act = (F.vibes || []).length + F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && SEEN_POOLS.includes(poolMode) ? !!F.myMin + !!F.since + F.neverRe : 0);
   const mood = PRESETS.find(p => p[0] === F.mood);
   $("#ftag").textContent = mood ? mood[1] : act ? `${act} filter${act > 1 ? "s" : ""} on` : "No filters";
   $$(".mood").forEach(b => b.setAttribute("aria-pressed", b.dataset.mood === F.mood));
@@ -262,6 +284,7 @@ function pool() {
     const m = x.m;
     if (F.inc.length && !F.inc.some(g => m.g.includes(g))) return false;
     if (F.exc.some(g => m.g.includes(g))) return false;
+    if (F.vibes?.length && !F.vibes.some(v => (VIBE_KW[v] || []).some(k => (m.kw || []).includes(k)))) return false;
     if (lens.length && !lens.some(l => l[2](m))) return false;
     if (F.slot && !(m.rt > 0 && m.rt <= +F.slot)) return false;
     if (F.lang === "en" && m.l !== "en") return false;
@@ -418,6 +441,12 @@ async function land(chosen) {
 // The arcade sends its winners to the telly.
 arcade.init({
   get S() { return S; }, esc, poster, fmtRt, lang, region, draw: (arr, n) => draw(arr, n), toast, snd,
+  vibes: VIBE_KW, vibeName: k => (VIBES.find(v => v[0] === k) || ["", k])[1],
+  api: {
+    search: q => tmdb.call(apiKey, "/search/movie", { query: q }),
+    details: id => tmdb.details(apiKey, id),
+    related: id => tmdb.call(apiKey, `/movie/${id}`, { append_to_response: "recommendations,similar" }),
+  },
   play: async items => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land(items.map(x => ({ ...x, src: x.src || "wl" }))); },
 });
 
@@ -478,6 +507,7 @@ function caseHTML(it, i) {
         <button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button>
         ${swapBtn}
         ${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
+        <button class="tag" data-a="more">More like this</button>
         <a class="tag" href="https://open.spotify.com/search/${encodeURIComponent(m.t + " " + m.y + " soundtrack")}" target="_blank" rel="noopener">Soundtrack</a>
         <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
       </div>${locked}
@@ -512,6 +542,7 @@ $("#cases").addEventListener("click", e => {
   const a = b.dataset.a;
   if (a === "tv") showOnTV(i);
   if (a === "syn") { const p = card.querySelector(".syn"); p.hidden = !p.hidden; b.textContent = p.hidden ? "Synopsis" : "Hide synopsis"; }
+  if (a === "more") { tab("arcade"); arcade.moreLike(it.m); return; }
   if (a === "rent") { it.revealed = true; active = i; snd.clunk(); playOnTV(it); renderPicks(); }
   if (a === "swap") {
     if (vetoes <= 0) return;
@@ -582,10 +613,28 @@ function renderForYou() {
   $("#freshHead").textContent = S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
   $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : "Rasher's shelf. He's been through your history and pulled these for you. No scores, just his reasons.";
   $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map(pickHTML).join("");
+  renderDeepDive();
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
   $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(pickHTML).join("");
   $("#moreFresh").hidden = freshN >= S.fresh.length;
   $("#freshNote").textContent = S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
+}
+// Finish the job: directors you're partway through, and the next one on your list.
+function renderDeepDive() {
+  const box = $("#deepDive"), head = $("#deepHead");
+  if (!S || S.house) { box.innerHTML = ""; head.hidden = true; return; }
+  const seenBy = new Map(), wlBy = new Map();
+  S.seen.forEach(s => s.m.dir.forEach(d => seenBy.set(d, (seenBy.get(d) || 0) + 1)));
+  S.watchlist.forEach(x => x.m.dir.forEach(d => { if (!wlBy.has(d)) wlBy.set(d, []); wlBy.get(d).push(x); }));
+  const rows = [...wlBy].filter(([d]) => (seenBy.get(d) || 0) >= 2).map(([d, l]) => ({ d, seen: seenBy.get(d), left: l, next: l.slice().sort((a, b) => b.fit - a.fit)[0] }))
+    .sort((a, b) => b.seen - a.seen || a.left.length - b.left.length)
+    .filter((r, i, arr) => arr.findIndex(o => o.next.m.id === r.next.m.id) === i).slice(0, 6);
+  head.hidden = !rows.length;
+  box.innerHTML = rows.map((r, i) => { const m = r.next.m, p = poster(m.p, "w154");
+    return `<article class="deep"><div class="dname">${esc(r.d)}<small>Seen ${r.seen} · ${r.left.length} still on your list</small></div>
+      <div class="dnext"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div><span class="kicker">Next up</span><h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div>
+      <button class="tag hot" data-deep="${i}">Put it on</button></div></div></article>`; }).join("");
+  box.querySelectorAll("[data-deep]").forEach(b => b.onclick = async () => { const it = rows[+b.dataset.deep].next; tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ ...it, src: "wl" }]); });
 }
 $("#moreFits").onclick = () => { fitsN += 10; renderForYou(); };
 $("#moreFresh").onclick = () => { freshN += 10; renderForYou(); };
