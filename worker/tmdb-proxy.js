@@ -1,4 +1,4 @@
-// Take One: the shop's little helper on Cloudflare Workers. Version 3 (adds shared shops and Letterboxd top-up).
+// Take One: the shop's little helper on Cloudflare Workers. Version 3.1 (adds shared shops and Letterboxd top-up).
 // 1. TMDB proxy: lets people use the app without their own TMDB key. The key stays here as a secret (TMDB_KEY).
 // 2. Shared shops: when someone taps Share, their shelves are stored here under a short code until they stop sharing.
 //    Needs a KV namespace bound to this Worker with the variable name SHOPS.
@@ -65,8 +65,15 @@ export default {
     // ---- Letterboxd diary feed ----
     const lb = url.pathname.match(/^\/lb\/([A-Za-z0-9_]{1,40})$/);
     if (lb) {
-      const r = await fetch(`https://letterboxd.com/${lb[1]}/rss/`, { headers: { "User-Agent": "TakeOne/1.0" }, cf: { cacheTtl: 1800, cacheEverything: true } });
-      if (!r.ok) return json({ error: "Couldn't read that Letterboxd feed." }, r.status === 404 ? 404 : 502);
+      const r = await fetch(`https://letterboxd.com/${lb[1]}/rss/`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+          "Accept": "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
+          "Accept-Language": "en-IE,en;q=0.9",
+        },
+        cf: { cacheTtl: 1800, cacheEverything: true },
+      });
+      if (!r.ok) return json({ error: `Couldn't read that Letterboxd feed (Letterboxd said ${r.status}).` }, r.status === 404 ? 404 : 502);
       return new Response(await r.text(), { headers: { ...cors, "Content-Type": "application/rss+xml; charset=utf-8", "Cache-Control": "public, max-age=1800" } });
     }
 
