@@ -1,0 +1,231 @@
+// Rasher's lines. Generated from the line bank Shane approves in the tracker. Don't hand-edit.
+export const LINES = {
+"land": [
+"Oh, man. Yeah. This one's got layers. Like, actual layers.",
+"Good tape. Rewind it after, I'm not your mam.",
+"This is the one, man. I felt it in the rack.",
+"Solid choice. The universe picked it, I just handed it over.",
+"Ah, this one. Get snacks. Proper snacks.",
+"You know what this is? It's a vibe, man. That's what it is.",
+"Fuckin' A. Good pull.",
+"I'd watch this. I have watched this. Twice, actually.",
+"Some films you watch. This one kind of watches you back.",
+"Right tape, right night. Don't overthink it.",
+"This is what the rack is for, man.",
+"Lights off for this one. Phone away. I'll know.",
+"Strong pick. Stronger than my coffee.",
+"Yeah. Yeah, okay. That'll do nicely.",
+"The rack has spoken, man. Who are we to argue."
+],
+"land_three": [
+"Three tapes. Choice is a construct, man, but sure. Here's three.",
+"A trilogy of options. Very fancy.",
+"Three's a lot of responsibility. Pick the one that's looking at you.",
+"Pick one, put the others back. Not on the floor this time."
+],
+"land_late": [
+"It's 1am, man. Perfect time for something you'll only half remember.",
+"Late shift. Best time for a film. Worst time for a long one.",
+"Everyone good is asleep. We're the other lot.",
+"This hour, the films hit different. Weirder. Better.",
+"Graveyard shift, man. Pick something that suits the dark."
+],
+"g_horror": [
+"Lock the door. Then check you locked it.",
+"Don't watch this alone. Or do. I'm not your boss.",
+"This one gets under your skin and pays rent."
+],
+"g_comedy": [
+"Laugh like no one's listening. Your housemate is, though.",
+"Good gaff. Dumb in the right ways.",
+"If this doesn't get you, nothing will, man."
+],
+"g_romance": [
+"Bit of love, man. Never hurt anyone. Well, it has. But still.",
+"Bring tissues. Or a person. Ideally both."
+],
+"g_scifi": [
+"Space, man. It's big. This film knows that.",
+"The future's weird. This one gets it."
+],
+"g_western": [
+"Dust, guns, long stares. Perfection.",
+"Westerns are just films about men who won't talk about their feelings. Like me."
+],
+"g_war": [
+"Heavy one. Don't put it on for background noise."
+],
+"g_doc": [
+"True story, man. Stranger than the made-up ones.",
+"Real life. Somebody had to film it."
+],
+"g_animation": [
+"Cartoons are for everyone, man. Especially at 2am.",
+"Drawn by hand. Respect the hands."
+],
+"g_crime": [
+"Crime doesn't pay. Watching it does.",
+"Somebody's getting double-crossed. Bet on it."
+],
+"d_John Carpenter": [
+"Carpenter scored his own films 'cause nobody else was weird enough. Respect."
+],
+"d_Richard Linklater": [
+"Linklater, man. He named Dazed after a Zeppelin song. The man has taste."
+],
+"d_Joel Coen": [
+"Fun fact: Fargo says it's a true story. It isn't. The Coens are messers."
+],
+"d_Stanley Kubrick": [
+"Kubrick. Did a hundred takes of everything. You can tell."
+],
+"d_Martin Scorsese": [
+"Scorsese, man. Watch for the long tracking shot. There's always one."
+],
+"d_David Lynch": [
+"Lynch took five years to make Eraserhead. This one makes about as much sense. Love it."
+],
+"d_Sergio Leone": [
+"Leone played Morricone's music on set while they shot. You can feel it."
+],
+"d_Bong Joon Ho": [
+"Bong Joon Ho. Never trust the first half of his films. Never."
+],
+"d_Quentin Tarantino": [
+"Tarantino worked in a video shop before all this. One of us, man."
+],
+"d_Paul Thomas Anderson": [
+"PTA. Started Boogie Nights as a short when he was a teenager. Some lads peak early."
+],
+"d_Martin McDonagh": [
+"McDonagh. Playwright first. That's why everyone talks so well and swears so much."
+],
+"d_Josh Safdie": [
+"Safdies. Your heart rate's going to be a problem."
+],
+"d_Ari Aster": [
+"Ari Aster. Go in blind. Come out different."
+],
+"d_Christopher Nolan": [
+"Nolan grew a whole cornfield for Interstellar. Real corn, man."
+],
+"d_Denis Villeneuve": [
+"Villeneuve. Big sound, big sky, big feelings."
+],
+"d_David Fincher": [
+"Fincher. Every frame's on purpose. Even the boring ones."
+],
+"swap": [
+"Nah, you're right. That's a Tuesday film. It's not Tuesday.",
+"Fair. Not every tape is for every night.",
+"Back on the shelf with you.",
+"Picky. I respect it.",
+"That one'll wait. They always wait.",
+"Grand, grand. Let's go again."
+],
+"locked": [
+"That's your veto, man. This one's yours now. No take-backs.",
+"Locked in. The universe has rules. So do I.",
+"No more vetoes. Press play, ya coward."
+],
+"blind": [
+"Don't read the back of the box. The back lies, man.",
+"Judge it by the cover. Everyone does anyway.",
+"Blind date. With a film. Could go either way.",
+"Mystery tape. Very you."
+],
+"rate_he_loved": [
+"That's fucked, man. Genuinely. But it's your trip.",
+"Wrong. Respectfully, but wrong.",
+"I'm not mad. I'm just going to lie down for a bit.",
+"Okay. We'll talk about this later. We won't, but still."
+],
+"rate_surprise": [
+"See? You contain multitudes.",
+"Didn't see that coming. Fair play.",
+"Huh. You're full of surprises, man.",
+"Look at that. Taste is a journey."
+],
+"rate_called": [
+"Called it. I'm basically a mystic.",
+"Knew it. I know you, man.",
+"Told ya. Didn't I tell ya?",
+"Bang on. Write that down somewhere."
+],
+"rate_low": [
+"Ah, shite. Can't win them all.",
+"Into the bargain bin with it."
+],
+"rewatch": [
+"Second time's for the details, man.",
+"Old friend. Good to see it again.",
+"Rewatches are like old jumpers. Never fit worse."
+],
+"chalk": [
+"Watched this at 4am once and saw God. Or the ceiling. Either way.",
+"Rasher's special. Don't ask questions.",
+"If you only watch one thing this week, make it this. Then watch more.",
+"Trust me on this one. You always do eventually.",
+"On the board 'cause it deserves to be.",
+"Tonight's special. Comes with no side, just greatness."
+],
+"shame": [
+"This has been on your list since {year}. It's not angry. It's just disappointed.",
+"Overdue, man. Seriously overdue.",
+"The late fee on this one could buy a car.",
+"Return it or watch it. Those are the options.",
+"It's been waiting since {year}. Patient tape."
+],
+"notice": [
+"If found asleep behind the counter, do not wake. Just leave the money.",
+"Please keep off the rug. It really ties the room together.",
+"No food or drink near the tapes. Rasher is exempt.",
+"Shoplifters will be prosecuted. Everything's free, so good luck.",
+"Horror is in the back. Obviously.",
+"The back room is for members. You're a member.",
+"Late fees are a state of mind.",
+"Be kind. Rewind.",
+"Don't ask Rasher about the moon landing.",
+"Staff picks are not up for debate. Rasher will debate them anyway."
+],
+"picks_intro": [
+"Rasher's shelf. He's been through your history and pulled these for you. No scores, just his reasons.",
+"Pulled these myself, man. Each one's a good time.",
+"These are the ones. I'd stake my job on it. Which isn't much of a job."
+],
+"counter": [
+"Stock the shelves, man. I'll wait. I'm good at waiting.",
+"Fresh export? Lovely. Smells like new tapes.",
+"Shelves are a month old, man. Bring in a fresh export.",
+"Two ways in. The house shop, or your own shelves. Both are cool."
+],
+"tv_late": [
+"THEY LIVE. WE SLEEP.",
+"STILL UP? SAME."
+],
+"welcome": [
+"Alright, welcome in. I'm Rasher. I work here. Sort of.",
+"Hit Take One and I'll find you a film. That's the whole job, man.",
+"Signs up top are sections. Some only open late. Some only in October.",
+"Tonight I want lets you set the mood. Arcade's for messing about. Staff picks are mine.",
+"Rate what you watch and I get to know you. Don't make it weird."
+],
+"arc": [
+"Winner, man. Fair and square."
+],
+"arc_knockout": [
+"Knockout champion. Give it a belt."
+],
+"arc_globe": [
+"Spun the world, landed here. That's fate."
+],
+"arc_bargain": [
+"Bargain bin, man. Lowest price, highest risk."
+],
+"arc_swipe": [
+"Swipe it like you mean it."
+],
+"arc_double": [
+"Double bill. Like a date, but two films."
+]
+};

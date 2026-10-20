@@ -158,7 +158,7 @@ function renderDay(double) {
     if (!pick) return C.toast("Nothing else fits that slot.");
     day.films[i] = pick; C.snd.click(); renderDay(double);
   });
-  $("#adPlay").onclick = () => C.play(day.films);
+  $("#adPlay").onclick = () => C.play(day.films, day.double ? "double" : "allday");
   $("#adAgain").onclick = () => $("#adGo").click();
 }
 
@@ -177,7 +177,7 @@ function renderKo() {
     v.innerHTML = `${header("knockout")}<div class="champ"><span class="marker">Tonight's champion</span>${card(w)}</div>
       <div class="row center"><button class="play" id="koPlay"><span class="tri"></span><span>Put it on</span></button><button class="ghost" id="koAgain">New bracket</button></div>`;
     bindBack(); C.snd.stab?.();
-    $("#koPlay").onclick = () => C.play([w]); $("#koAgain").onclick = () => { C.snd.click(); knockout(); };
+    $("#koPlay").onclick = () => C.play([w], "knockout"); $("#koAgain").onclick = () => { C.snd.click(); knockout(); };
     return;
   }
   const a = ko.round[ko.i * 2], b = ko.round[ko.i * 2 + 1];
@@ -227,8 +227,8 @@ function shortlist() {
     <div class="list">${sw.yes.map(x => `<button class="pickbtn" data-id="${x.m.id}">${card(x)}</button>`).join("")}</div>
     <div class="row center"><button class="play" id="swRasher"><span class="tri"></span><span>Rasher decides</span></button><button class="ghost" id="swAgain">Go again</button></div>`;
   bindBack();
-  v.querySelectorAll("[data-id]").forEach(b => b.onclick = () => C.play([sw.yes.find(x => x.m.id === +b.dataset.id)]));
-  $("#swRasher").onclick = () => { const best = sw.yes.slice().sort((a, b) => swScore(b.m) - swScore(a.m))[0]; C.toast(`Rasher says ${best.m.t}. He's not wrong.`); C.play([best]); };
+  v.querySelectorAll("[data-id]").forEach(b => b.onclick = () => C.play([sw.yes.find(x => x.m.id === +b.dataset.id)], "swipe"));
+  $("#swRasher").onclick = () => { const best = sw.yes.slice().sort((a, b) => swScore(b.m) - swScore(a.m))[0]; C.play([best], "swipe") };
   $("#swAgain").onclick = () => { C.snd.click(); swipe(); };
 }
 
@@ -253,7 +253,7 @@ function renderChain() {
     <div class="row center">${chain.length > 1 ? `<button class="play" id="chPlay"><span class="tri"></span><span>Put this one on</span></button>` : ""}<button class="ghost" id="chReset">Start over</button></div>`;
   bindBack();
   view().querySelectorAll("[data-o]").forEach(b => b.onclick = () => { const o = opts[+b.dataset.o]; if (!o.ms.length) return; chain.push({ it: rnd(o.ms), via: o.p }); C.snd.click(); renderChain(); });
-  const pl = $("#chPlay"); if (pl) pl.onclick = () => C.play([cur]);
+  const pl = $("#chPlay"); if (pl) pl.onclick = () => C.play([cur], "chain");
   $("#chReset").onclick = () => { C.snd.click(); chainGame(); };
 }
 
@@ -278,7 +278,7 @@ function globe() {
     function land() {
       $("#country").textContent = C.region(c); C.snd.stab?.();
       $("#globeOut").innerHTML = `${card(x, `<div class="note">${by.get(c).length} film${by.get(c).length > 1 ? "s" : ""} from ${C.esc(C.region(c))} on your shelf</div>`)}<div class="row center"><button class="play" id="gPlay"><span class="tri"></span><span>Put it on</span></button></div>`;
-      $("#gPlay").onclick = () => C.play([x]);
+      $("#gPlay").onclick = () => C.play([x], "globe");
     }
   };
 }
@@ -293,7 +293,7 @@ function bargain() {
   $("#rummage").onclick = () => {
     const x = rnd(bin); C.snd.clunk?.();
     $("#binOut").innerHTML = `${card(x, `<div class="note">Only ${x.m.vc.toLocaleString()} people have ever rated this. Brave.</div>`)}<div class="row center"><button class="play" id="bPlay"><span class="tri"></span><span>Take a chance</span></button><button class="ghost" id="bAgain">Rummage again</button></div>`;
-    $("#bPlay").onclick = () => C.play([x]); $("#bAgain").onclick = () => $("#rummage").click();
+    $("#bPlay").onclick = () => C.play([x], "bargain"); $("#bAgain").onclick = () => $("#rummage").click();
   };
 }
 
@@ -389,7 +389,7 @@ async function runMoreLike() {
   ml.list = ranked; ml.out = ranked.length ? resultCards(ranked) : empty("Nothing close enough. Try Any film.");
   if (view().querySelector("#mlOut")) { $("#mlOut").innerHTML = ml.out; bindPlays(ml); }
 }
-function bindPlays(st) { view().querySelectorAll("[data-play]").forEach(b => b.onclick = () => C.play([{ m: st.list[+b.dataset.play].m, src: "wl" }])); }
+function bindPlays(st) { view().querySelectorAll("[data-play]").forEach(b => b.onclick = () => C.play([{ m: st.list[+b.dataset.play].m, src: "wl" }], "list")); }
 
 function blendView() {
   const v = view();

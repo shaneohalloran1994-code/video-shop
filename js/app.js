@@ -1,10 +1,12 @@
-import * as store from "./store.js?v=2d2";
-import * as tmdb from "./tmdb.js?v=2d2";
-import * as importer from "./importer.js?v=2d2";
-import * as lib from "./library.js?v=2d2";
-import * as snd from "./sound.js?v=2d2";
-import * as arcade from "./arcade.js?v=2d2";
-import * as coming from "./coming.js?v=2d2";
+import * as store from "./store.js?v=3a1";
+import * as tmdb from "./tmdb.js?v=3a1";
+import * as importer from "./importer.js?v=3a1";
+import * as lib from "./library.js?v=3a1";
+import * as snd from "./sound.js?v=3a1";
+import * as arcade from "./arcade.js?v=3a1";
+import * as coming from "./coming.js?v=3a1";
+import * as rasher from "./rasher.js?v=3a1";
+import { LINES } from "./lines.js?v=3a1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -108,9 +110,8 @@ const CULT_KW = ["cult film", "surrealism", "absurdism", "b movie", "midnight mo
 const isCult = m => (m.vc > 0 && m.vc < 400 && m.va >= 6.6) || (m.kw || []).some(k => CULT_KW.includes(k)) || (m.g.includes("Horror") && m.g.includes("Comedy"));
 const isIrish = m => m.c.includes("IE") || m.l === "ga";
 const MIDNIGHT_G = ["Horror", "Thriller", "Mystery", "Science Fiction"];
-const NOTICES = ["No food or drink near the tapes.", "Please keep off the rug. It really ties the room together.", "Shoplifters will be prosecuted. Everything's free, so good luck.",
-  "Horror is in the back. Obviously.", "The back room is for members. You're a member.", "Late fees are a state of mind.", "Be kind. Rewind.",
-  "Irish shelf restocked. Mostly Brendan Gleeson.", "Rasher's on break. Help yourself."];
+const NOTICES = [...LINES.notice, "Irish shelf restocked. Mostly Brendan Gleeson.", "Rasher's on break. Help yourself."];
+const daySeed = () => { const d = new Date(); return d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate(); };
 
 async function load() {
   profile = await store.get("profile");
@@ -142,9 +143,9 @@ function street() {
   $("#walkIn").onclick = () => {
     snd.buzz();
     $("#neonTitle").classList.add("flick");
-    if (RM) { st.hidden = true; $("#shop").hidden = false; return; }
+    if (RM) { st.hidden = true; $("#shop").hidden = false; maybeTour(); return; }
     st.classList.add("leaving");
-    setTimeout(() => { st.hidden = true; $("#shop").hidden = false; stopRain = true; }, 650);
+    setTimeout(() => { st.hidden = true; $("#shop").hidden = false; stopRain = true; maybeTour(); }, 650);
   };
 }
 let stopRain = false;
@@ -253,7 +254,7 @@ function syncFilters(full = true) {
   $("#rollLabel").textContent = N === 3 ? "Take three" : "Take one";
   const n = pool().length;
   $("#inRun").textContent = S ? `${n.toLocaleString()} tape${n === 1 ? "" : "s"} in the running` : "";
-  $("#roll").disabled = !S;
+  $("#roll").disabled = !S; $("#askRasher").hidden = !S;
   const act = (F.vibes || []).length + F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && SEEN_POOLS.includes(poolMode) ? !!F.myMin + !!F.since + F.neverRe : 0);
   const mood = PRESETS.find(p => p[0] === F.mood);
   $("#ftag").textContent = mood ? mood[1] : act ? `${act} filter${act > 1 ? "s" : ""} on` : "No filters";
@@ -338,7 +339,7 @@ function idleScreen() {
   }
   const shelf = (allPools().find(p => p[0] === poolMode) || ["", ""])[1].toUpperCase();
   const h = new Date().getHours(), late = h < 5;
-  c.innerHTML = `<div class="idle"><span>${S.house ? "HOUSE SHOP" : "VIDEO 1"}</span><span class="big">${pool().length.toLocaleString()} TAPES</span><span>SHELF: ${shelf}</span><span>${late ? "THEY LIVE. WE SLEEP." : "PRESS TAKE ONE ▶"}<span class="blink">_</span></span></div>`;
+  c.innerHTML = `<div class="idle"><span>${S.house ? "HOUSE SHOP" : "VIDEO 1"}</span><span class="big">${pool().length.toLocaleString()} TAPES</span><span>SHELF: ${shelf}</span><span>${late ? rasher.line("tv_late", {}, { always: true, seed: daySeed() + h }) : "PRESS TAKE ONE ▶"}<span class="blink">_</span></span></div>`;
 }
 function playOnTV(it) {
   const m = it.m, c = $("#tvContent"), hide = blind && !it.revealed;
@@ -431,12 +432,14 @@ async function roll() {
   chosen.forEach(c => el.querySelector(`.spine[data-id="${c.m.id}"]`)?.classList.add("pulled"));
   await land(chosen);
 }
-async function land(chosen) {
-  snd.clunk();
+async function land(chosen, ctx = {}) {
+  snd.clunk(); rasher.slip("");
   picks = chosen; active = 0; vetoes = F.last ? 1 : Infinity; swapRun = 0;
   if (!RM) await staticBurst();
   playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
+  const first = picks[0], shame = poolMode === "shame" && !ctx.arcade && !ctx.direct && first.added;
+  rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true);
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
 }
@@ -451,7 +454,7 @@ arcade.init({
     details: id => tmdb.details(apiKey, id),
     related: id => tmdb.call(apiKey, `/movie/${id}`, { append_to_response: "recommendations,similar" }),
   },
-  play: async items => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land(items.map(x => ({ ...x, src: x.src || "wl" }))); },
+  play: async (items, cab) => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land(items.map(x => ({ ...x, src: x.src || "wl" })), { arcade: cab || "arc" }); },
 });
 
 // ---------- the chalkboard: Rasher's film of the day ----------
@@ -466,11 +469,11 @@ function renderChalk() {
   const it = chalkPick(), el = $("#chalk");
   if (!it) { el.hidden = true; return; }
   el.hidden = false;
-  el.innerHTML = `<span class="chalk-h">Tonight's special</span><span class="chalk-t">${esc(it.m.t)}</span><span class="chalk-s">${esc(it.m.y)} · ${fmtRt(it.m.rt)} · chalked up by Rasher</span>`;
+  el.innerHTML = `<span class="chalk-h">Tonight's special</span><span class="chalk-t">${esc(it.m.t)}</span><span class="chalk-s">${esc(it.m.y)} · ${fmtRt(it.m.rt)} · chalked up by Rasher</span>${rasher.quiet() ? "" : `<span class="chalk-q">“${esc(rasher.line("chalk", {}, { seed: daySeed() }))}”</span>`}`;
   el.onclick = async () => {
     if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on");
     const r = $("#tv").getBoundingClientRect(); if (r.top < 60) scrollTo({ top: scrollY + r.top - 70, behavior: RM ? "auto" : "smooth" });
-    await land([{ ...it, src: "wl" }]);
+    await land([{ ...it, src: "wl" }], { direct: true });
   };
 }
 $("#roll").onclick = roll;
@@ -557,8 +560,9 @@ $("#cases").addEventListener("click", e => {
     if (!nx) return toast("Nothing else on the shelf matches.");
     vetoes--; swapRun++;
     picks[i] = nx; active = i; snd.clunk(); playOnTV(nx); renderPicks();
-    if (F.last && vetoes <= 0) toast("That's your veto. This one's locked in.");
-    else if (swapRun === 4) toast("Just when I thought I was out…");
+    if (F.last && vetoes <= 0) { rasher.slip(""); toast(rasher.line("locked") || "That's your veto. This one's locked in."); }
+    else if (swapRun === 4) { rasher.slip(""); toast("Just when I thought I was out…"); }
+    else rasher.slip(rasher.line("swap"));
   }
   if (a === "ret") openReturn(it);
 });
@@ -640,13 +644,9 @@ async function handBack(rating) {
   log[m.id] = { key, date: today(), rating, guess, crowd, prev, m: key ? undefined : m };
   await store.set("log", log);
   const box = $("#retReveal");
-  let verdict = "";
-  if (rating != null) { const d = rating - guess; verdict = Math.abs(d) <= .5 ? "Rasher called it." : d > 0 ? "You liked it more than Rasher thought." : "Not your night, then.";
-    if (rating === 0.5) verdict = "Yeah, well, that's just, like, your opinion, man.";
-    else if (rating === 5 && guess <= 3.5) verdict = "Alright, alright, alright.";
-    else if (rating >= 4.5 && m.dir.includes("John Carpenter")) verdict = "Carpenter never misses."; }
+  const verdict = rasher.verdict(rating, guess, prev, m);
   box.innerHTML = `${rating != null ? `<div class="reveal3"><div>YOU<b>${rating.toFixed(1)}★</b></div><div>CROWD<b>${crowd != null ? crowd.toFixed(1) + "★" : "–"}</b></div><div>${S.house ? "RASHER SAID" : "RASHER GUESSED"}<b>${guess.toFixed(1)}★</b></div></div>
-    ${prev != null ? `<p class="kicker">Last time you gave it ${prev.toFixed(1)}★</p>` : ""}<p class="verdict">${verdict}</p>` : `<p class="verdict">Back on the shelf. Crowd gave it ${crowd != null ? crowd.toFixed(1) + "★" : "nothing yet"}.</p>`}
+    ${prev != null ? `<p class="kicker">Last time you gave it ${prev.toFixed(1)}★</p>` : ""}${verdict ? `<p class="verdict">${esc(verdict)}</p>` : ""}` : `<p class="verdict">Back on the shelf. Crowd gave it ${crowd != null ? crowd.toFixed(1) + "★" : "nothing yet"}.</p>`}
     <div class="row"><a class="btn" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Log it on Letterboxd</a><button class="ghost" id="retDone">Done</button></div>`;
   $("#retAsk").hidden = true; box.hidden = false;
   $("#retDone").onclick = () => { $("#returnSheet").hidden = true; };
@@ -668,7 +668,7 @@ function renderForYou() {
   if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
   $("#fitsHead").textContent = S.house ? "Rasher's favourites" : "Picked off your own shelf";
   $("#freshHead").textContent = S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
-  $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : "Rasher's shelf. He's been through your history and pulled these for you. No scores, just his reasons.";
+  $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
   $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map(pickHTML).join("");
   renderDeepDive();
   coming.render();
@@ -692,7 +692,7 @@ function renderDeepDive() {
     return `<article class="deep"><div class="dname">${esc(r.d)}<small>Seen ${r.seen} · ${r.left.length} still on your list</small></div>
       <div class="dnext"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div><span class="kicker">Next up</span><h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div>
       <button class="tag hot" data-deep="${i}">Put it on</button></div></div></article>`; }).join("");
-  box.querySelectorAll("[data-deep]").forEach(b => b.onclick = async () => { const it = rows[+b.dataset.deep].next; tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ ...it, src: "wl" }]); });
+  box.querySelectorAll("[data-deep]").forEach(b => b.onclick = async () => { const it = rows[+b.dataset.deep].next; tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ ...it, src: "wl" }], { direct: true }); });
 }
 $("#moreFits").onclick = () => { fitsN += 10; renderForYou(); };
 $("#moreFresh").onclick = () => { freshN += 10; renderForYou(); };
@@ -747,7 +747,10 @@ function counterState() {
   $("#zipMsg").textContent = profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
   const n = Object.keys(log).length;
   $("#unwatch").hidden = !n; $("#unwatch").textContent = `Forget ${n} film${n > 1 ? "s" : ""} marked watched here`;
-  $("#soundOn").checked = snd.isOn(); $("#skipStreet").checked = store.prefs.get("skipStreet", false);
+  $("#soundOn").checked = snd.isOn(); $("#skipStreet").checked = store.prefs.get("skipStreet", false); $("#quietOn").checked = rasher.quiet();
+  const cs = LINES.counter, age = profile ? (Date.now() - new Date(profile.importedAt)) / 864e5 : 0;
+  const say = rasher.quiet() ? "" : !S ? cs[3] : profile && age > 30 ? cs[2] : profile && age < 1 ? cs[1] : !profile ? cs[0] : "";
+  $("#counterSays").hidden = !say; $("#counterSays").innerHTML = say ? `<p class="said"><b>Rasher</b>${esc(say)}</p>` : "";
 }
 $("#keySave").onclick = async () => {
   const k = $("#keyIn").value.trim(); if (!k) return;
@@ -785,6 +788,8 @@ $("#houseGo").onclick = async () => {
 };
 $("#soundOn").onchange = e => { snd.setOn(e.target.checked); store.prefs.set("sound", e.target.checked); };
 $("#skipStreet").onchange = e => store.prefs.set("skipStreet", e.target.checked);
+$("#quietOn").onchange = e => { rasher.setQuiet(e.target.checked); counterState(); renderChalk(); toast(e.target.checked ? "Rasher's put his headphones on." : "Rasher's back."); };
+$("#tourAgain").onclick = () => { if (rasher.quiet()) return toast("Turn quiet mode off first."); tour(); };
 $("#unwatch").onclick = async () => { log = {}; await store.set("log", log); rebuild(); toast("Marked-watched films are back on the shelf."); };
 $("#wipe").onclick = () => $("#wipeConfirm").hidden = false;
 $("#wipeNo").onclick = () => $("#wipeConfirm").hidden = true;
@@ -808,8 +813,63 @@ $(".shopname").addEventListener("click", () => {
   setTimeout(() => { el.textContent = was; el.classList.remove("flick"); }, 3200);
 });
 
+// ---------- Rasher shows you round (first visit) ----------
+let touring = false, loaded = false;
+function tour() {
+  if (touring) return; touring = true;
+  const W = LINES.welcome;
+  const steps = [{ text: W[0], before: () => tab("roll") }, { text: W[1], at: "#roll" }, { text: W[2], at: "#sections" }, { text: W[3], at: "#openFilters" }, { text: W[4], at: ".deck" }];
+  if (!S) steps.push({ text: LINES.counter[3], at: "#stepHouse", before: () => tab("counter") });
+  rasher.welcome({ steps, done: () => { touring = false; scrollTo(0, 0); } });
+}
+function maybeTour() { if (loaded && !$("#shop").hidden && !store.prefs.get("welcomed", false) && !rasher.quiet()) setTimeout(tour, RM ? 0 : 700); }
+
+// ---------- Ask Rasher: three questions, then he picks ----------
+const ASK = [
+  ["How's the head?", [["sharp", "Sharp"], ["grand", "Grand"], ["bits", "In bits"]]],
+  ["Who's on the couch?", [["me", "Just me"], ["date", "A date"], ["crew", "The lads"]]],
+  ["What are we after?", [["laugh", "A laugh"], ["fright", "A fright"], ["chew", "Something to chew on"], ["any", "Surprise me"]]],
+];
+function askScore(x, a) {
+  const m = x.m, g = n => m.g.includes(n), subs = m.l !== "en" && m.l !== "xx";
+  let s = x.fit + Math.random() * (a[2] === "any" ? .9 : .35);
+  if (a[0] === "bits") s += (m.rt && m.rt <= 110 ? .6 : 0) - (m.rt > 130 ? 1.5 : 0) - (subs ? .8 : 0) - (g("War") || g("History") || g("Documentary") ? .6 : 0) + (g("Comedy") || g("Animation") ? .3 : 0);
+  if (a[0] === "grand") s -= m.rt > 160 ? .6 : 0;
+  if (a[0] === "sharp") s += g("Drama") || g("Mystery") || g("Science Fiction") ? .2 : 0;
+  if (a[1] === "date") s += (g("Romance") ? .6 : 0) + (g("Comedy") ? .3 : 0) - (g("Horror") || g("War") ? 1.2 : 0);
+  if (a[1] === "crew") s += (g("Action") || g("Comedy") || g("Crime") || g("Horror") ? .4 : 0) - (subs ? .6 : 0) - (g("Documentary") ? 1 : 0);
+  if (a[2] === "laugh") s += g("Comedy") ? 1.2 : -.6;
+  if (a[2] === "fright") s += g("Horror") ? 1.2 : g("Thriller") ? .5 : -.8;
+  if (a[2] === "chew") s += (g("Drama") || g("Mystery") || g("Science Fiction") || g("History") ? .5 : 0) - (m.g.length === 1 && g("Comedy") ? .3 : 0) + (m.va >= 7.3 ? .4 : 0);
+  return s;
+}
+function openAsk() {
+  if (!S || rolling) return;
+  const a = [], sh = $("#askSheet"), body = $("#askBody");
+  sh.hidden = false; document.body.classList.add("noscroll");
+  const step = () => {
+    const [q, opts] = ASK[a.length];
+    body.innerHTML = `<div class="askq">${rasher.HEAD}<p class="said"><b>Rasher</b>${esc(q)}</p></div><div class="chips askopts">${opts.map(([k, l]) => `<button class="chip" data-ask="${k}">${esc(l)}</button>`).join("")}</div><p class="small rcount">${a.length + 1} of 3</p>`;
+    body.querySelectorAll("[data-ask]").forEach(b => b.onclick = () => { snd.click(); a.push(b.dataset.ask); if (a.length < ASK.length) step(); else choose(); });
+  };
+  const choose = async () => {
+    closeAsk();
+    const list = S.watchlist.length ? S.watchlist : S.seen;
+    const best = list.map(x => [askScore(x, a), x]).sort((p, q) => q[0] - p[0])[0][1];
+    const why = (best.why && best.why[0]) || (S.reasons ? S.reasons(best.m)[0] : "");
+    tab("roll"); rolling = true; $("#roll").disabled = true; $("#led").classList.add("on");
+    await land([{ ...best, src: "wl" }], { direct: true, say: why ? `This one. ${why}.`.replace(/\.\.$/, ".") : "" });
+  };
+  step();
+}
+function closeAsk() { $("#askSheet").hidden = true; document.body.classList.remove("noscroll"); }
+$("#askRasher").onclick = openAsk;
+$("#askClose").onclick = closeAsk;
+$("#askSheet").addEventListener("click", e => { if (e.target.id === "askSheet") closeAsk(); });
+$("#rHead").innerHTML = rasher.HEAD;
+
 // ---------- start ----------
 snd.setOn(store.prefs.get("sound", true));
 street();
-load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (TABS.includes(t) ? t : "roll") : "counter"); });
+load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour(); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=2d2">
+<link rel="stylesheet" href="css/app.css?v=3a1">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=2d2"></script>
+<script type="module" src="js/app.js?v=3a1"></script>
 </head>
 <body>
 
@@ -53,6 +53,8 @@
       <div class="tv-panel" aria-hidden="true"><span class="brand">TAKE·ONE</span><span class="knob"></span><span class="knob"></span><span class="led" id="led"></span></div>
     </div>
 
+    <div class="rasher" id="rasher" hidden aria-live="polite"></div>
+
     <div class="rack" title="Browse the shelves"><div class="strip" id="strip"></div><span class="browse">Browse ▸</span></div>
 
     <div class="controls">
@@ -63,7 +65,7 @@
       <button class="wantbtn" id="openFilters" aria-haspopup="dialog"><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></button>
     </div>
     <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
-    <span class="inrun" id="inRun"></span>
+    <div class="underplay"><span class="inrun" id="inRun"></span><button class="askr" id="askRasher">Or ask Rasher ▸</button></div>
 
     <div class="cases" id="cases" aria-live="polite"></div>
 
@@ -107,7 +109,7 @@
 
   <!-- FOR YOU -->
   <section id="v-picks" class="view" hidden>
-    <div class="neonhead"><span class="neon blue">Staff picks</span><span class="byline">picked by Rasher</span></div>
+    <div class="neonhead"><span class="neon blue">Staff picks</span><span class="byline">picked by Rasher</span><span class="rhead" id="rHead"></span></div>
     <p class="note" id="picksNote"></p>
     <h2 class="shelfname" id="fitsHead">Off your own shelf</h2>
     <div class="list" id="bestFits"></div>
@@ -134,6 +136,7 @@
   <section id="v-counter" class="view" hidden>
     <div class="counter">
       <h2 class="marker big">The counter</h2>
+      <div class="rasher says" id="counterSays" hidden></div>
       <div class="step" id="stepHouse">
         <h3 id="houseH">Come in</h3>
         <p id="houseTxt"></p>
@@ -156,6 +159,8 @@
         <h3>Settings</h3>
         <label class="tog"><input type="checkbox" id="soundOn" checked> Sound</label>
         <label class="tog"><input type="checkbox" id="skipStreet"> Skip the street when I open the app</label>
+        <label class="tog"><input type="checkbox" id="quietOn"> Quiet mode: Rasher keeps his thoughts to himself</label>
+        <div class="row"><button class="ghost" id="tourAgain">Have Rasher show you round again</button></div>
         <div class="row"><button class="ghost" id="unwatch" hidden></button></div>
       </div>
       <div class="step">
@@ -203,6 +208,13 @@
   <div class="aisle-head"><span class="neon pink">Walk the aisles</span><button class="tag hot" id="aisleClose">Done</button></div>
   <div class="aisle-body" id="aisleBody"></div>
   <div class="aisle-case" id="aisleCase" hidden></div>
+</div>
+<!-- Ask Rasher: three questions, one tape -->
+<div class="sheet" id="askSheet" hidden role="dialog" aria-modal="true" aria-label="Ask Rasher">
+  <div class="sheet-card dark ask">
+    <div class="fhead"><span class="marker">Ask Rasher</span><button class="tag" id="askClose">Never mind</button></div>
+    <div id="askBody"></div>
+  </div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>
