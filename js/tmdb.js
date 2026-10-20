@@ -1,10 +1,13 @@
 // TMDB lookups. The key is the viewer's own, saved on their device in Settings.
+import { TMDB_PROXY } from "./config.js?v=2a6";
 const API = "https://api.themoviedb.org/3";
+export const hasProxy = !!TMDB_PROXY;
 export const IMG = "https://image.tmdb.org/t/p/";
 
 export async function call(key, path, params = {}) {
-  const u = new URL(API + path);
-  u.searchParams.set("api_key", key);
+  if (!key && !TMDB_PROXY) throw Object.assign(new Error("bad_key"), { code: "bad_key" });
+  const u = new URL((key ? API : TMDB_PROXY.replace(/\/$/, "") + "/3") + path);
+  if (key) u.searchParams.set("api_key", key);
   for (const [k, v] of Object.entries(params)) if (v != null && v !== "") u.searchParams.set(k, v);
   for (let i = 0; i < 6; i++) {
     let r;

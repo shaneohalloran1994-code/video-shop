@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=2a5";
-import * as tmdb from "./tmdb.js?v=2a5";
-import * as importer from "./importer.js?v=2a5";
-import * as lib from "./library.js?v=2a5";
-import * as snd from "./sound.js?v=2a5";
+import * as store from "./store.js?v=2a6";
+import * as tmdb from "./tmdb.js?v=2a6";
+import * as importer from "./importer.js?v=2a6";
+import * as lib from "./library.js?v=2a6";
+import * as snd from "./sound.js?v=2a6";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -575,10 +575,10 @@ function barcode(seed) {
 // ---------- counter ----------
 function counterState() {
   $("#keyIn").placeholder = apiKey ? "Key saved. Paste a new one to change it" : "Paste your API key";
-  $("#keyMsg").textContent = apiKey ? "Key saved on this phone." : "Get one free at themoviedb.org → Settings → API.";
+  $("#keyMsg").textContent = apiKey ? "Key saved on this phone." : tmdb.hasProxy ? "Optional. The shop has its own key, so you can skip straight to step 2." : "Get one free at themoviedb.org → Settings → API.";
   $("#stepHouse").hidden = !!profile;
   const showOwn = !!profile || !!apiKey || ownOpen;
-  $("#stepKey").hidden = $("#stepZip").hidden = !showOwn;
+  $("#stepKey").hidden = !showOwn || (tmdb.hasProxy && !apiKey && !profile); $("#stepZip").hidden = !showOwn;
   $("#ownGo").hidden = showOwn;
   $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop: Rasher's own shelves and favourites. Nothing to set up.";
   $("#houseGo").textContent = mode === "house" ? "Leave the house shop" : "Browse the house shop";
@@ -596,7 +596,7 @@ $("#keySave").onclick = async () => {
 $("#zipIn").onchange = async e => {
   const file = e.target.files[0]; e.target.value = "";
   if (!file) return;
-  if (!apiKey) { $("#zipMsg").textContent = "Save your TMDB key first, then pick the zip."; return; }
+  if (!apiKey && !tmdb.hasProxy) { $("#zipMsg").textContent = "Save your TMDB key first, then pick the zip."; return; }
   const prog = $("#prog"); prog.hidden = false;
   const set = (d, t, label) => { $("#progBar").style.width = (t ? d / t * 100 : 100) + "%"; $("#progTxt").textContent = `${label} ${d.toLocaleString()} / ${t.toLocaleString()}`; };
   try {
