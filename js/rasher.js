@@ -1,6 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=3a1";
-import { prefs } from "./store.js?v=3a1";
+import { LINES } from "./lines.js?v=3b1";
+import { prefs } from "./store.js?v=3b1";
+import { QUOTES } from "./quotes.js?v=3b1";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -30,6 +31,12 @@ export function line(moment, ctx = {}, opts = {}) {
   return fill(pickFrom(list, opts.seed), ctx);
 }
 
+// Now and then he quotes a film instead of talking. Never the one you're about to watch.
+export function quote(tag, notFilm = "") {
+  if (quiet()) return "";
+  const list = QUOTES.filter(x => x.tag === tag && x.film !== notFilm).map(x => `“${x.q}” — ${x.film}`);
+  return list.length ? pickFrom(list) : "";
+}
 // Which bank fits a film that's just landed.
 const GENRE = { Horror: "g_horror", Comedy: "g_comedy", Romance: "g_romance", "Science Fiction": "g_scifi", Western: "g_western", War: "g_war", Documentary: "g_doc", Animation: "g_animation", Crime: "g_crime" };
 const DIR_ALIAS = { "Ethan Coen": "Joel Coen", "Benny Safdie": "Josh Safdie" };
@@ -39,6 +46,12 @@ export function landLine(m, c = {}) {
   if (c.arcade) return line(LINES["arc_" + c.arcade] ? "arc_" + c.arcade : "arc");
   if (c.rewatch && Math.random() < .5) return line("rewatch");
   if (c.three) return line("land_three");
+  const dirs = m.dir || [], roll = Math.random();
+  if (c.mood === "hangover" && roll < .35) return quote("hangover", m.t) || line("land");
+  if (dirs.includes("John Carpenter") && roll < .45) return quote("carpenter", m.t) || line("d_John Carpenter");
+  if ((dirs.includes("Joel Coen") || dirs.includes("Ethan Coen")) && roll < .45) return quote("coen", m.t) || line("d_Joel Coen");
+  if (dirs.includes("Richard Linklater") && roll < .3) return quote("linklater", m.t) || line("d_Richard Linklater");
+  if (roll > .92) { const q = quote("any", m.t); if (q) return q; }
   if (c.blind) return line("blind");
   const d = (m.dir || []).map(x => DIR_ALIAS[x] || x).find(x => LINES["d_" + x]);
   if (d && !recent.includes(LINES["d_" + d][0])) return line("d_" + d);
@@ -72,10 +85,10 @@ export const HAND = `<svg class="r-hand" viewBox="0 0 220 70" aria-hidden="true"
   <path d="M120 22h110v40H120c-6-6-8-14-6-22c1-8 3-14 6-18z" fill="url(#rcheck)" stroke="#2a110d" stroke-width="1.4"/><path d="M121 23c-4 6-6 13-5 20c1 7 3 13 6 18" fill="none" stroke="#2a110d" stroke-width="3" opacity=".5"/></g></svg>`;
 export const HEAD = `<svg class="r-head" viewBox="0 0 120 110" aria-hidden="true">${SLEEVE}<defs><radialGradient id="rglow"><stop offset="0" stop-color="#ffb547" stop-opacity=".55"/><stop offset="1" stop-color="#ffb547" stop-opacity="0"/></radialGradient></defs>
   <circle cx="60" cy="52" r="56" fill="url(#rglow)"/>
-  <rect x="48" y="62" width="24" height="22" rx="6" fill="#c9926c" stroke="#5a3a2a" stroke-width="1.2"/>
+  <rect x="49" y="64" width="22" height="20" rx="6" fill="#7a5038" stroke="#3a2418" stroke-width="1.2"/>
   <path d="M6 110c2-22 22-31 54-31s52 9 54 31z" fill="url(#rcheck)" stroke="#2a110d" stroke-width="1.5"/>
   <path d="M42 81q18 9 36 0" fill="none" stroke="#2a110d" stroke-width="2.2"/>
-  <path d="M24 52C20 24 38 8 60 8s40 16 36 44c-1 10-4 18-8 22l-4-4-2 7-5-6-4 8-4-7-4 8-4-8-4 8-4-8-4 6-3-7-4 5-4-7-4 3c-6-6-9-12-10-20z" fill="#3b2617" stroke="#1b110a" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M24 52C20 24 38 8 60 8s40 16 36 44c-1 10-3 19-7 24l-4-2-3 4-5-3-4 4-5-3-4 4-5-3-4 4-5-3-4 4-4-3-4 2c-7-6-11-13-12-21z" fill="#3b2617" stroke="#1b110a" stroke-width="1.5" stroke-linejoin="round"/>
   <path d="M60 12c-3 14-2 30 1 46M48 14c-6 12-8 28-5 44M72 14c6 12 8 28 4 44M38 22c-6 10-8 24-6 36M83 22c6 10 7 24 5 36M54 30c-1 10 0 22 2 32M67 30c1 10 0 22-2 32" fill="none" stroke="#6b4a2c" stroke-width="1.6" stroke-linecap="round"/>
   <path d="M25 48C22 18 42 3 60 3s38 15 35 45" fill="none" stroke="#151518" stroke-width="5" stroke-linecap="round"/>
   <rect x="15" y="38" width="15" height="25" rx="6" fill="#1d1d22" stroke="#000"/><rect x="90" y="38" width="15" height="25" rx="6" fill="#1d1d22" stroke="#000"/>

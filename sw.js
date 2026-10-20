@@ -1,6 +1,6 @@
 // Offline shell + poster cache. Bump VERSION on every release.
-const VERSION = "take-one-3a-1";
-const SHELL = ["./", "index.html", "css/app.css", "js/app.js", "js/store.js", "js/tmdb.js", "js/importer.js", "js/library.js", "js/sound.js", "js/rasher.js", "js/lines.js", "js/arcade.js", "js/coming.js", "js/config.js", "vendor/jszip.min.js", "manifest.webmanifest",
+const VERSION = "take-one-3b-1";
+const SHELL = ["./", "index.html", "css/app.css", "js/app.js", "js/store.js", "js/tmdb.js", "js/importer.js", "js/library.js", "js/sound.js", "js/rasher.js", "js/lines.js", "js/quotes.js", "js/arcade.js", "js/coming.js", "js/config.js", "vendor/jszip.min.js", "manifest.webmanifest",
   "fonts/marcellus-latin-400-normal.woff2", "fonts/monoton-latin-400-normal.woff2", "fonts/permanent-marker-latin-400-normal.woff2", "fonts/vt323-latin-400-normal.woff2",
   "fonts/courier-prime-latin-400-normal.woff2", "fonts/courier-prime-latin-700-normal.woff2", "fonts/barlow-latin-400-normal.woff2", "fonts/barlow-latin-500-normal.woff2",
   "fonts/barlow-latin-600-normal.woff2", "fonts/barlow-condensed-latin-600-normal.woff2", "fonts/barlow-condensed-latin-800-normal.woff2", "icons/icon-192.png"];

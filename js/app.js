@@ -1,12 +1,12 @@
-import * as store from "./store.js?v=3a1";
-import * as tmdb from "./tmdb.js?v=3a1";
-import * as importer from "./importer.js?v=3a1";
-import * as lib from "./library.js?v=3a1";
-import * as snd from "./sound.js?v=3a1";
-import * as arcade from "./arcade.js?v=3a1";
-import * as coming from "./coming.js?v=3a1";
-import * as rasher from "./rasher.js?v=3a1";
-import { LINES } from "./lines.js?v=3a1";
+import * as store from "./store.js?v=3b1";
+import * as tmdb from "./tmdb.js?v=3b1";
+import * as importer from "./importer.js?v=3b1";
+import * as lib from "./library.js?v=3b1";
+import * as snd from "./sound.js?v=3b1";
+import * as arcade from "./arcade.js?v=3b1";
+import * as coming from "./coming.js?v=3b1";
+import * as rasher from "./rasher.js?v=3b1";
+import { LINES } from "./lines.js?v=3b1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -64,7 +64,7 @@ let picks = [], active = 0, rolling = false, rolledEmpty = false;
 let ownOpen = false;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
-  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"]],
+  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"], ["picks", "Staff picks"]],
   house: [["all", "The shelves"], ["picks", "Staff picks"], ["untested", "Untested"]],
 };
 // Sections hang above the shelves like shop signs. Some only open at certain times.
@@ -127,7 +127,7 @@ async function loadHouse() {
 }
 function rebuild() {
   S = profile ? lib.build(profile, films, extra, log) : (mode === "house" && house ? lib.buildHouse(house, log) : null);
-  renderPoolKeys(); renderChalk();
+  renderPoolKeys(); renderChalk(); renderClipping();
   document.body.classList.toggle("late", isLate()); document.body.classList.toggle("october", isOctober());
   buildFilterOptions(); syncFilters(); idleScreen(); renderPicks(); statsDirty = true;
   if ($("#v-receipt").hidden === false) renderReceipt();
@@ -275,6 +275,8 @@ function pool() {
   else if (poolMode === "shame") items = unseen().filter(x => x.added && (nowY - new Date(x.added)) / 864e5 > 365).sort((a, b) => a.added < b.added ? -1 : 1).slice(0, 80);
   else if (S.house) {
     items = S.watchlist.filter(x => poolMode === "all" || (poolMode === "picks" ? x.pick : x.wl)).map(x => ({ ...x, src: "wl" }));
+  } else if (poolMode === "picks") {
+    items = S.bestFits.map(x => ({ ...x, src: "wl" }));
   } else if (poolMode === "rewind") {
     items = S.seen.filter(s => s.rating != null && s.rating >= 4.5 && (!s.last || (nowY - new Date(s.last)) / 31557600000 >= 2)).map(s => ({ ...s, src: "seen" }));
   } else {
@@ -439,7 +441,7 @@ async function land(chosen, ctx = {}) {
   playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
   const first = picks[0], shame = poolMode === "shame" && !ctx.arcade && !ctx.direct && first.added;
-  rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true);
+  rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, mood: F.mood, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true);
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
 }
@@ -476,6 +478,21 @@ function renderChalk() {
     await land([{ ...it, src: "wl" }], { direct: true });
   };
 }
+// A cutting pinned by the till: something off your shelves that came out this week, years ago.
+function renderClipping() {
+  const el = $("#clipping"); if (!S) { el.hidden = true; return; }
+  const now = new Date(), y = now.getFullYear(), mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7)); mon.setHours(0, 0, 0, 0);
+  const inWeek = rd => { if (!rd || rd.length < 10) return false; const d = new Date(y + rd.slice(4)); return d >= mon && d < new Date(mon.getTime() + 6048e5) && +rd.slice(0, 4) < y; };
+  const wl = new Set(S.watchlist.map(x => x.m.id));
+  const all = [...S.watchlist, ...S.seen.filter(s => !wl.has(s.m.id))].filter(x => inWeek(x.m.rd)).sort((a, b) => b.m.vc - a.m.vc);
+  if (!all.length) { el.hidden = true; return; }
+  const wk = Math.floor(mon.getTime() / 6048e5), it = all[wk % Math.min(all.length, 3)], m = it.m;
+  const when = new Date(m.rd).toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" });
+  const yrs = y - +m.rd.slice(0, 4);
+  el.hidden = false;
+  el.innerHTML = `<span class="clip-h">This week in film history</span><span class="clip-t">${esc(m.t)}</span><span class="clip-s">Came out ${esc(when)}. ${yrs} years ago this week. ${wl.has(m.id) ? "Still on your watchlist." : S.house ? "On the shelves." : "You've seen it."}</span>`;
+  el.onclick = async () => { if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); const r = $("#tv").getBoundingClientRect(); if (r.top < 60) scrollTo({ top: scrollY + r.top - 70, behavior: RM ? "auto" : "smooth" }); await land([{ ...it, src: wl.has(m.id) ? "wl" : "seen" }], { direct: true }); };
+}
 $("#roll").onclick = roll;
 function openFilters(v) {
   const s = $("#filters"); s.hidden = !v; document.body.classList.toggle("noscroll", v);
@@ -507,7 +524,7 @@ function caseHTML(it, i) {
       ${m.tag ? `<p class="tagline">“${esc(m.tag)}”</p>` : ""}
       <div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()} · ${esc(langTxt.toUpperCase())}</div>
       <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}</div>
-      ${fee}
+      ${fee}${bday(m)}
       ${m.dir.length ? `<div class="who">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
       <p class="syn" hidden>${esc(m.ov)}</p>
       <div class="acts">
@@ -520,6 +537,10 @@ function caseHTML(it, i) {
         <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
       </div>${locked}
     </div></article>`;
+}
+function bday(m) {
+  const a = new Date().getFullYear() - (parseInt(m.y) || 0);
+  return a > 0 && a < 120 && (a % 10 === 0 || a === 25) ? `<span class="bday">${a} this year</span>` : "";
 }
 function lateFee(added) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(added)) / 864e5) - 3);
@@ -562,7 +583,7 @@ $("#cases").addEventListener("click", e => {
     picks[i] = nx; active = i; snd.clunk(); playOnTV(nx); renderPicks();
     if (F.last && vetoes <= 0) { rasher.slip(""); toast(rasher.line("locked") || "That's your veto. This one's locked in."); }
     else if (swapRun === 4) { rasher.slip(""); toast("Just when I thought I was out…"); }
-    else rasher.slip(rasher.line("swap"));
+    else rasher.slip(swapRun === 2 && Math.random() < .4 ? rasher.quote("swap") : rasher.line("swap"));
   }
   if (a === "ret") openReturn(it);
 });
@@ -656,24 +677,24 @@ async function handBack(rating) {
 
 // ---------- For you ----------
 let fitsN = 10, freshN = 10;
-function pickHTML(it) {
+function pickHTML(it, i, card) {
   const m = it.m, p = posterOf(m, "w154");
   return `<article class="pick"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="info" style="min-width:0">
     <h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}${m.l !== "en" ? " · " + esc(lang(m.l).toUpperCase()) : ""}</div>
     <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}${m.dir[0] ? " · " + esc(m.dir[0]) : ""}</div>
-    ${(it.why || []).length ? `<ul class="why talker">${it.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
-    <div class="acts"><a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a></div></div></article>`;
+    ${(it.why || []).length ? `<ul class="why talker${card ? " card" : ""}">${card ? `<li class="card-h">Rasher recommends</li>` : ""}${it.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+    <div class="acts">${card ? `<button class="tag hot" data-put="${i}">Put it on</button>` : ""}<a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a></div></div></article>`;
 }
 function renderForYou() {
   if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
-  $("#fitsHead").textContent = S.house ? "Rasher's favourites" : "Picked off your own shelf";
+  $("#fitsHead").textContent = S.house ? "Rasher's favourites" : "Rasher's picks for you";
   $("#freshHead").textContent = S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
   $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
-  $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map(pickHTML).join("");
+  $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map((x, i) => pickHTML(x, i, true)).join("");
   renderDeepDive();
   coming.render();
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
-  $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(pickHTML).join("");
+  $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(x => pickHTML(x)).join("");
   $("#moreFresh").hidden = freshN >= S.fresh.length;
   $("#freshNote").textContent = S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
 }
@@ -694,6 +715,11 @@ function renderDeepDive() {
       <button class="tag hot" data-deep="${i}">Put it on</button></div></div></article>`; }).join("");
   box.querySelectorAll("[data-deep]").forEach(b => b.onclick = async () => { const it = rows[+b.dataset.deep].next; tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ ...it, src: "wl" }], { direct: true }); });
 }
+$("#bestFits").addEventListener("click", async e => {
+  const b = e.target.closest("[data-put]"); if (!b || rolling) return;
+  const it = S.bestFits[+b.dataset.put]; tab("roll"); rolling = true; $("#roll").disabled = true; $("#led").classList.add("on");
+  await land([{ ...it, src: "wl" }], { direct: true });
+});
 $("#moreFits").onclick = () => { fitsN += 10; renderForYou(); };
 $("#moreFresh").onclick = () => { freshN += 10; renderForYou(); };
 
@@ -749,7 +775,7 @@ function counterState() {
   $("#unwatch").hidden = !n; $("#unwatch").textContent = `Forget ${n} film${n > 1 ? "s" : ""} marked watched here`;
   $("#soundOn").checked = snd.isOn(); $("#skipStreet").checked = store.prefs.get("skipStreet", false); $("#quietOn").checked = rasher.quiet();
   const cs = LINES.counter, age = profile ? (Date.now() - new Date(profile.importedAt)) / 864e5 : 0;
-  const say = rasher.quiet() ? "" : !S ? cs[3] : profile && age > 30 ? cs[2] : profile && age < 1 ? cs[1] : !profile ? cs[0] : "";
+  const say = rasher.quiet() ? "" : !S ? cs[3] : profile && age > 30 ? cs[2] : profile && age < 1 ? cs[1] : !profile ? cs[0] : Math.random() < .5 ? rasher.quote("counter") : "";
   $("#counterSays").hidden = !say; $("#counterSays").innerHTML = say ? `<p class="said"><b>Rasher</b>${esc(say)}</p>` : "";
 }
 $("#keySave").onclick = async () => {

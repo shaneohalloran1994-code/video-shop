@@ -1,19 +1,18 @@
-// Rasher's lines. Generated from the line bank Shane approves in the tracker. Don't hand-edit.
+// Rasher's lines. Generated from the lines Shane approved in the tracker. Don't hand-edit.
 export const LINES = {
 "land": [
-"Oh, man. Yeah. This one's got layers. Like, actual layers.",
-"Good tape. Rewind it after, I'm not your mam.",
+"Oh, man. Yeah. This one's got layers. Like an onion.",
+"Good tape. Rewind it after, I'm not your ould lady.",
 "This is the one, man. I felt it in the rack.",
 "Solid choice. The universe picked it, I just handed it over.",
-"Ah, this one. Get snacks. Proper snacks.",
 "You know what this is? It's a vibe, man. That's what it is.",
 "Fuckin' A. Good pull.",
 "I'd watch this. I have watched this. Twice, actually.",
 "Some films you watch. This one kind of watches you back.",
 "Right tape, right night. Don't overthink it.",
 "This is what the rack is for, man.",
-"Lights off for this one. Phone away. I'll know.",
-"Strong pick. Stronger than my coffee.",
+"Lights off for this one. Phone away, I'll be watching. Not in a creepy way.",
+"Strong pick. Stronger than my reefer, man.",
 "Yeah. Yeah, okay. That'll do nicely.",
 "The rack has spoken, man. Who are we to argue."
 ],
@@ -36,7 +35,6 @@ export const LINES = {
 "This one gets under your skin and pays rent."
 ],
 "g_comedy": [
-"Laugh like no one's listening. Your housemate is, though.",
 "Good gaff. Dumb in the right ways.",
 "If this doesn't get you, nothing will, man."
 ],
@@ -64,7 +62,7 @@ export const LINES = {
 "Drawn by hand. Respect the hands."
 ],
 "g_crime": [
-"Crime doesn't pay. Watching it does.",
+"Crime doesn't pay. Sure is cool though.",
 "Somebody's getting double-crossed. Bet on it."
 ],
 "d_John Carpenter": [
@@ -92,7 +90,7 @@ export const LINES = {
 "Bong Joon Ho. Never trust the first half of his films. Never."
 ],
 "d_Quentin Tarantino": [
-"Tarantino worked in a video shop before all this. One of us, man."
+"Tarantino worked in a video shop before all this. One of us, man. Especially the feet."
 ],
 "d_Paul Thomas Anderson": [
 "PTA. Started Boogie Nights as a short when he was a teenager. Some lads peak early."
@@ -137,12 +135,10 @@ export const LINES = {
 "rate_he_loved": [
 "That's fucked, man. Genuinely. But it's your trip.",
 "Wrong. Respectfully, but wrong.",
-"I'm not mad. I'm just going to lie down for a bit.",
 "Okay. We'll talk about this later. We won't, but still."
 ],
 "rate_surprise": [
 "See? You contain multitudes.",
-"Didn't see that coming. Fair play.",
 "Huh. You're full of surprises, man.",
 "Look at that. Taste is a journey."
 ],
