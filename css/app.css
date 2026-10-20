@@ -628,3 +628,38 @@ body.noscroll{overflow:hidden}
 .clip-t{font:400 24px/1.1 var(--title)}
 .clip-s{font-size:13.5px;line-height:1.35}
 .why .card-h::before{content:none!important}
+
+/* ---------- 4a: friends ---------- */
+.sharecode{display:grid;gap:4px;margin:6px 0 10px}
+.sharecode b{font:400 40px/1 var(--crt);letter-spacing:.18em;color:#b3150e}
+.fwall{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:10px}
+.ftile{background:#1a1210;color:var(--ink);padding:8px;box-shadow:3px 3px 0 #000;display:grid;gap:6px}
+.ftile.here{outline:2px solid var(--amber)}
+.fposters{display:grid;grid-template-columns:1fr 1fr;gap:3px;aspect-ratio:4/3;overflow:hidden}
+.fposters i{background:#2a2a2e center/cover}
+.fname{font:400 20px/1.1 var(--marker);color:var(--paper)}
+.fname small{display:block;font:600 12px var(--cond);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-top:2px}
+.ftile .row{display:flex;gap:6px;flex-wrap:wrap}.ftile .tag{padding:5px 9px;font-size:12px}
+.marker.dark{color:#2a1306}
+.match{display:flex;align-items:baseline;gap:8px}.match b{font:400 52px/1 var(--crt);color:#b3150e}.match span{font:400 18px var(--marker)}
+.sheet-card h4{margin:10px 0 2px;font:800 14px var(--cond);letter-spacing:.1em;text-transform:uppercase;color:#7a2f1a}
+.tlist{margin:0;padding-left:18px}.tlist small{color:#7a6a55}
+.nlist{display:grid;gap:6px}
+.nrow{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;background:#fff4d8;border:1px solid #d9c9a6;padding:9px 10px;color:#2a1306}
+.nrow small{color:#7a6a55}.nrow b{font:800 13px var(--cond);letter-spacing:.06em;text-transform:uppercase;color:#b3150e;white-space:nowrap}
+.tunecard{display:grid;gap:3px;width:100%;text-align:left;margin:12px 0 4px;padding:12px 14px;border:2px dashed var(--amber);background:rgba(255,181,71,.08);color:var(--ink)}
+.tunecard b{font:400 20px var(--marker);color:var(--amber)}
+.tgrid .pchoice{position:relative}
+.tgrid .pchoice span{position:absolute;left:0;right:0;bottom:0;padding:3px 4px;background:rgba(0,0,0,.7);font:600 11px/1.15 var(--cond);color:#fff;text-align:left}
+.tgrid .pchoice[data-s="1"]{outline:4px solid var(--green);outline-offset:-4px}
+.tgrid .pchoice[data-s="1"]::after{content:"LOVED IT";position:absolute;top:6px;left:6px;background:var(--green);color:#111;font:800 11px var(--cond);padding:2px 5px}
+.tgrid .pchoice[data-s="2"]{outline:4px solid var(--red);outline-offset:-4px;filter:grayscale(.8)}
+.tgrid .pchoice[data-s="2"]::after{content:"NOT FOR ME";position:absolute;top:6px;left:6px;background:var(--red);color:#fff;font:800 11px var(--cond);padding:2px 5px}
+.passphone{display:grid;justify-items:center;gap:2px;margin:10px 0 14px;text-align:center}
+.passphone b{font:400 34px/1.1 var(--marker);color:var(--amber)}.passphone span:last-child{color:var(--ink2)}
+.vlist{display:grid;gap:8px}
+.vtape{position:relative;display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center;text-align:left;background:#1a1210;border:1px solid var(--line);padding:6px;color:var(--ink)}
+.vtape i{aspect-ratio:2/3;background:#2a2a2e center/cover}
+.vtape span{font:400 19px/1.15 var(--title)}.vtape small{display:block;font:400 14px var(--crt);color:var(--green)}
+.vtape.out{opacity:.45}.vtape em{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(-8deg);font:800 18px var(--cond);color:var(--red);border:3px solid var(--red);padding:2px 8px;font-style:normal}
+body.visiting .topbar .shopname small::after{content:" · visiting"}

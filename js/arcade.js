@@ -20,6 +20,7 @@ const CABS = [
   ["chain", "Chain", "Follow an actor or director from your last film to the next.", "green"],
   ["globe", "Spin the Globe", "A random country. A film from it. No arguments.", "teal"],
   ["bargain", "Bargain Bin", "Obscure stuff hardly anyone's rated. €1, no refunds.", "yellow"],
+  ["group", "Group Night", "Everyone's shops in. Films none of you have seen. Pass the phone and veto.", "purple"],
 ];
 
 function card(it, extra = "") {
@@ -427,4 +428,4 @@ async function runBlend() {
   if (view().querySelector("#blOut")) { $("#blOut").innerHTML = bl.out; bindPlays(bl); }
 }
 
-const GAMES = { morelike: () => { ml = { seed: null, any: ml.any, out: null }; moreLikeView(); }, blend: () => { bl.out = null; blendView(); }, allday: () => allDayer(false), double: () => allDayer(true), knockout, swipe, chain: chainGame, globe, bargain };
+const GAMES = { morelike: () => { ml = { seed: null, any: ml.any, out: null }; moreLikeView(); }, blend: () => { bl.out = null; blendView(); }, allday: () => allDayer(false), double: () => allDayer(true), knockout, swipe, chain: chainGame, globe, bargain, group: () => C.group(view(), header("group"), bindBack) };

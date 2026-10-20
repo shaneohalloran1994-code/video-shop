@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=3b1">
+<link rel="stylesheet" href="css/app.css?v=4a1">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=3b1"></script>
+<script type="module" src="js/app.js?v=4a1"></script>
 </head>
 <body>
 
@@ -112,6 +112,7 @@
   <section id="v-picks" class="view" hidden>
     <div class="neonhead"><span class="neon blue">Staff picks</span><span class="byline">picked by Rasher</span><span class="rhead" id="rHead"></span></div>
     <p class="note" id="picksNote"></p>
+    <button class="tunecard" id="tuneOpen" hidden></button>
     <h2 class="shelfname" id="fitsHead">Off your own shelf</h2>
     <div class="list" id="bestFits"></div>
     <button class="ghost more" id="moreFits">More</button>
@@ -155,6 +156,24 @@
         <label class="btn file">Choose the zip<input id="zipIn" type="file" accept=".zip,application/zip"></label>
         <p class="small" id="zipMsg"></p>
         <div class="progress" id="prog" hidden><div class="bar"><i id="progBar"></i></div><span id="progTxt"></span></div>
+      </div>
+      <div class="step" id="stepFriends">
+        <h3>Friends</h3>
+        <div id="shareBox">
+          <p id="shareTxt">Share your shop and a mate can walk round it on their phone. Your ratings go with it so Rasher can compare your taste, but they're never shown.</p>
+          <div class="row" id="shareStart"><input id="myName" maxlength="20" placeholder="Your name on the shop"><button class="btn" id="shareGo">Share my shop</button></div>
+          <div class="sharecode" id="shareOn" hidden><span class="kicker">Your code</span><b id="myCode"></b>
+            <div class="row"><button class="ghost" id="shareSend">Send it</button><button class="ghost" id="shareUpd">Update</button><button class="ghost danger" id="shareStop">Stop sharing</button></div></div>
+        </div>
+        <div class="row"><input id="codeIn" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="A mate's code"><button class="btn" id="codeGo">Add</button></div>
+        <p class="small" id="friendMsg"></p>
+        <div class="fwall" id="fwall"></div>
+      </div>
+      <div class="step" id="stepTop" hidden>
+        <h3>Top up from Letterboxd</h3>
+        <p>Pulls in what you've logged lately from your public Letterboxd diary, so you don't need a fresh export every time. Your watchlist only updates with a full export.</p>
+        <div class="row"><button class="ghost" id="topGo">Top up now</button></div>
+        <p class="small" id="topMsg"></p>
       </div>
       <div class="step">
         <h3>Settings</h3>
@@ -216,6 +235,15 @@
     <div class="fhead"><span class="marker">Ask Rasher</span><button class="tag" id="askClose">Never mind</button></div>
     <div id="askBody"></div>
   </div>
+</div>
+<!-- Compare taste -->
+<div class="sheet" id="cmpSheet" hidden role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
+  <div class="sheet-card"><div class="fhead"><span class="marker dark" id="cmpTitle"></span><button class="tag hot" id="cmpClose">Done</button></div><div id="cmpBody"></div></div>
+</div>
+<!-- Guest tuning -->
+<div class="sheet" id="tuneSheet" hidden role="dialog" aria-modal="true" aria-label="Tell Rasher what you like">
+  <div class="sheet-card dark"><div class="fhead"><span class="marker">Tell Rasher what you like</span><button class="tag hot" id="tuneDone">Done</button></div>
+  <p class="small">Tap the ones you loved. Tap twice for ones you couldn't stand. Leave the rest.</p><div class="pgrid tgrid" id="tuneGrid"></div></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>

@@ -1,12 +1,13 @@
-import * as store from "./store.js?v=3b1";
-import * as tmdb from "./tmdb.js?v=3b1";
-import * as importer from "./importer.js?v=3b1";
-import * as lib from "./library.js?v=3b1";
-import * as snd from "./sound.js?v=3b1";
-import * as arcade from "./arcade.js?v=3b1";
-import * as coming from "./coming.js?v=3b1";
-import * as rasher from "./rasher.js?v=3b1";
-import { LINES } from "./lines.js?v=3b1";
+import * as store from "./store.js?v=4a1";
+import * as tmdb from "./tmdb.js?v=4a1";
+import * as importer from "./importer.js?v=4a1";
+import * as lib from "./library.js?v=4a1";
+import * as snd from "./sound.js?v=4a1";
+import * as arcade from "./arcade.js?v=4a1";
+import * as coming from "./coming.js?v=4a1";
+import * as rasher from "./rasher.js?v=4a1";
+import { LINES } from "./lines.js?v=4a1";
+import * as friends from "./friends.js?v=4a1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -62,6 +63,7 @@ let poolMode = store.prefs.get("pool", "wl");
 let N = store.prefs.get("n", 1);
 let picks = [], active = 0, rolling = false, rolledEmpty = false;
 let ownOpen = false;
+let visit = store.prefs.get("visit", ""), FR = {}, mine = null;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
   own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"], ["picks", "Staff picks"]],
@@ -119,6 +121,7 @@ async function load() {
   extra = (await store.get("extra")) || {};
   log = (await store.get("log")) || {};
   if (!profile && mode === "house") await loadHouse();
+  FR = await friends.all(); if (visit && !FR[visit]) { visit = ""; store.prefs.del("visit"); }
   rebuild();
 }
 async function loadHouse() {
@@ -126,7 +129,11 @@ async function loadHouse() {
   try { house = await (await fetch("data/house.json")).json(); } catch { house = null; toast("Couldn't open the house shop. Check your connection."); }
 }
 function rebuild() {
-  S = profile ? lib.build(profile, films, extra, log) : (mode === "house" && house ? lib.buildHouse(house, log) : null);
+  mine = profile ? lib.build(profile, films, extra, log) : null;
+  if (visit && FR[visit]) { S = lib.buildHouse(friends.asHouse(FR[visit]), log); S.owner = FR[visit].name; S.visit = visit; }
+  else S = mine || (mode === "house" && house ? lib.buildHouse(house, log) : null);
+  if (S?.house && !S.visit) friends.applyTune(S);
+  document.body.classList.toggle("visiting", !!S?.visit);
   renderPoolKeys(); renderChalk(); renderClipping();
   document.body.classList.toggle("late", isLate()); document.body.classList.toggle("october", isOctober());
   buildFilterOptions(); syncFilters(); idleScreen(); renderPicks(); statsDirty = true;
@@ -341,7 +348,7 @@ function idleScreen() {
   }
   const shelf = (allPools().find(p => p[0] === poolMode) || ["", ""])[1].toUpperCase();
   const h = new Date().getHours(), late = h < 5;
-  c.innerHTML = `<div class="idle"><span>${S.house ? "HOUSE SHOP" : "VIDEO 1"}</span><span class="big">${pool().length.toLocaleString()} TAPES</span><span>SHELF: ${shelf}</span><span>${late ? rasher.line("tv_late", {}, { always: true, seed: daySeed() + h }) : "PRESS TAKE ONE ▶"}<span class="blink">_</span></span></div>`;
+  c.innerHTML = `<div class="idle"><span>${S.visit ? esc(S.owner.toUpperCase()) + "'S SHOP" : S.house ? "HOUSE SHOP" : "VIDEO 1"}</span><span class="big">${pool().length.toLocaleString()} TAPES</span><span>SHELF: ${shelf}</span><span>${late ? rasher.line("tv_late", {}, { always: true, seed: daySeed() + h }) : "PRESS TAKE ONE ▶"}<span class="blink">_</span></span></div>`;
 }
 function playOnTV(it) {
   const m = it.m, c = $("#tvContent"), hide = blind && !it.revealed;
@@ -456,6 +463,7 @@ arcade.init({
     details: id => tmdb.details(apiKey, id),
     related: id => tmdb.call(apiKey, `/movie/${id}`, { append_to_response: "recommendations,similar" }),
   },
+  group: (v, head, back) => groupNight(v, head, back),
   play: async (items, cab) => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land(items.map(x => ({ ...x, src: x.src || "wl" })), { arcade: cab || "arc" }); },
 });
 
@@ -687,16 +695,18 @@ function pickHTML(it, i, card) {
 }
 function renderForYou() {
   if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
-  $("#fitsHead").textContent = S.house ? "Rasher's favourites" : "Rasher's picks for you";
-  $("#freshHead").textContent = S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
-  $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
+  const who = S.owner;
+  $("#fitsHead").textContent = who ? `${who}'s favourites` : S.house ? "Rasher's favourites" : "Rasher's picks for you";
+  $("#freshHead").textContent = who ? `Still on ${who}'s list` : S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
+  $("#picksNote").textContent = who ? `${who}'s shelf. The ones they swear by, and the ones they still mean to get to. No scores.` : S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
+  renderTuneCard();
   $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map((x, i) => pickHTML(x, i, true)).join("");
   renderDeepDive();
   coming.render();
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
   $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(x => pickHTML(x)).join("");
   $("#moreFresh").hidden = freshN >= S.fresh.length;
-  $("#freshNote").textContent = S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
+  $("#freshNote").textContent = who ? `${who} hasn't got to these yet.` : S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
 }
 // Finish the job: directors you're partway through, and the next one on your list.
 function renderDeepDive() {
@@ -776,6 +786,7 @@ function counterState() {
   $("#soundOn").checked = snd.isOn(); $("#skipStreet").checked = store.prefs.get("skipStreet", false); $("#quietOn").checked = rasher.quiet();
   const cs = LINES.counter, age = profile ? (Date.now() - new Date(profile.importedAt)) / 864e5 : 0;
   const say = rasher.quiet() ? "" : !S ? cs[3] : profile && age > 30 ? cs[2] : profile && age < 1 ? cs[1] : !profile ? cs[0] : Math.random() < .5 ? rasher.quote("counter") : "";
+  renderFriends();
   $("#counterSays").hidden = !say; $("#counterSays").innerHTML = say ? `<p class="said"><b>Rasher</b>${esc(say)}</p>` : "";
 }
 $("#keySave").onclick = async () => {
@@ -826,6 +837,7 @@ function nudge() {
   const nt = $("#notice"); nt.hidden = !S; nt.textContent = NOTICES[Math.floor(Math.random() * NOTICES.length)];
   const notice = () => { n.hidden = true; };
   if (!S) { n.hidden = false; n.textContent = "No tapes yet. Bring your Letterboxd export to the counter, or browse the house shop →"; n.onclick = () => tab("counter"); n.style.cursor = "pointer"; return; }
+  if (S.visit) { n.hidden = false; n.textContent = `You're in ${S.owner}'s shop. Tap here to go back to your own.`; n.style.cursor = "pointer"; n.onclick = () => leaveVisit(); return; }
   if (!profile) return notice();
   const age = (Date.now() - new Date(profile.importedAt)) / 864e5;
   if (age > 30) { n.hidden = false; n.textContent = "These shelves are a month old. Bring in a fresh export →"; n.onclick = () => tab("counter"); n.style.cursor = "pointer"; }
@@ -894,8 +906,148 @@ $("#askClose").onclick = closeAsk;
 $("#askSheet").addEventListener("click", e => { if (e.target.id === "askSheet") closeAsk(); });
 $("#rHead").innerHTML = rasher.HEAD;
 
+// ---------- friends ----------
+function leaveVisit() { visit = ""; store.prefs.del("visit"); picks = []; rebuild(); tab("roll"); toast("Back in your own shop."); }
+async function walkInto(code) { visit = code; store.prefs.set("visit", code); picks = []; snd.buzz(); rebuild(); tab("roll"); toast(`Welcome to ${FR[code].name}'s shop.`); }
+function wallTile(fr) {
+  const top = fr.items.filter(x => x.pick && x.m.p).sort((a, b) => b.m.vc - a.m.vc).slice(0, 4);
+  const fill = top.length < 4 ? fr.items.filter(x => x.m.p && !top.includes(x)).slice(0, 4 - top.length) : [];
+  const ps = [...top, ...fill].map(x => `<i style="background-image:url('${poster(x.m.p, "w154")}')"></i>`).join("");
+  const c = mine ? friends.compare(mine, fr) : null;
+  const here = S?.visit === fr.code;
+  return `<article class="ftile${here ? " here" : ""}"><div class="fposters">${ps}</div><div class="fname">${esc(fr.name)}<small>${c?.match != null ? `Taste match ${c.match}%` : `${fr.items.filter(x => x.wl).length.toLocaleString()} tapes`}</small></div>
+    <div class="row"><button class="tag hot" data-fr="walk" data-code="${fr.code}">${here ? "You're here" : "Walk in"}</button>${mine ? `<button class="tag" data-fr="cmp" data-code="${fr.code}">Compare</button>` : ""}<button class="tag" data-fr="rm" data-code="${fr.code}" aria-label="Remove ${esc(fr.name)}">✕</button></div></article>`;
+}
+function renderFriends() {
+  const sh = friends.shareInfo();
+  $("#shareBox").hidden = !profile;
+  $("#shareStart").hidden = !!sh; $("#shareOn").hidden = !sh;
+  if (sh) $("#myCode").textContent = sh.code;
+  if (!$("#myName").value) $("#myName").value = sh?.name || profile?.username || "";
+  const list = Object.values(FR);
+  $("#fwall").innerHTML = list.map(wallTile).join("") + (S?.visit ? `<button class="ghost" id="backHome">Back to my own shop</button>` : "");
+  const bh = $("#backHome"); if (bh) bh.onclick = leaveVisit;
+  $("#stepTop").hidden = !profile?.username || !tmdb.hasProxy;
+  if (profile?.toppedAt) $("#topMsg").textContent = `Last topped up ${new Date(profile.toppedAt).toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.`;
+}
+const fmsg = t => $("#friendMsg").textContent = t;
+$("#shareGo").onclick = async () => {
+  const name = $("#myName").value.trim(); if (!name) { fmsg("Give your shop a name first."); $("#myName").focus(); return; }
+  if (S?.visit) { fmsg("Go back to your own shop first."); return; }
+  fmsg("Boxing up your shelves…");
+  try { const code = await friends.share(mine, name); fmsg(`Shared. Your code is ${code}.`); renderFriends(); } catch (e) { fmsg(e.message); }
+};
+$("#shareUpd").onclick = async () => { fmsg("Updating your shared shop…"); try { await friends.share(mine, $("#myName").value.trim() || friends.shareInfo().name); fmsg("Updated. Mates get the new shelves next time they refresh."); } catch (e) { fmsg(e.message); } };
+$("#shareStop").onclick = async () => { try { await friends.stopSharing(); fmsg("Stopped sharing. That code won't work any more."); renderFriends(); } catch (e) { fmsg(e.message); } };
+$("#shareSend").onclick = async () => {
+  const sh = friends.shareInfo(); const text = `Come round to my video shop. Open ${location.origin + location.pathname} then go to the Counter and add my code: ${sh.code}`;
+  try { if (navigator.share) await navigator.share({ title: "Take One", text }); else { await navigator.clipboard.writeText(text); toast("Copied. Paste it to your mate."); } } catch { }
+};
+$("#codeGo").onclick = async () => {
+  const v = $("#codeIn").value.trim(); if (!v) return;
+  fmsg("Looking for that shop…");
+  try { const fr = await friends.add(v); FR = await friends.all(); $("#codeIn").value = ""; fmsg(`${fr.name}'s shop is on your wall.`); snd.coin(); renderFriends(); }
+  catch (e) { fmsg(e.message); }
+};
+$("#fwall").addEventListener("click", async e => {
+  const b = e.target.closest("[data-fr]"); if (!b) return;
+  const code = b.dataset.code, a = b.dataset.fr;
+  if (a === "walk" && S?.visit !== code) { try { await friends.refresh(code); FR = await friends.all(); } catch { } walkInto(code); }
+  if (a === "cmp") openCompare(FR[code]);
+  if (a === "rm") { if (S?.visit === code) leaveVisit(); await friends.remove(code); FR = await friends.all(); renderFriends(); }
+});
+function openCompare(fr) {
+  const c = friends.compare(mine, fr), ti = list => list.map(m => `<li>${esc(m.t)} <small>${esc(m.y)}</small></li>`).join("");
+  $("#cmpTitle").textContent = `You and ${fr.name}`;
+  $("#cmpBody").innerHTML = `${c.match != null ? `<div class="match"><b>${c.match}%</b><span>taste match</span></div>` : `<p>Not enough films you've both rated to call it yet.</p>`}
+    <p class="small">You've both seen ${c.both.toLocaleString()} films${c.bothWl ? ` and ${c.bothWl} are on both your watchlists` : ""}.${c.genres.length ? ` You both go for ${c.genres.map(g => g.toLowerCase()).join(", ")}.` : ""}</p>
+    ${c.loved.length ? `<h4>You both loved</h4><ul class="tlist">${ti(c.loved)}</ul>` : ""}
+    ${c.apart.length ? `<h4>Miles apart on</h4><ul class="tlist">${ti(c.apart)}</ul>` : ""}
+    ${c.neither.length ? `<h4>Neither of you has seen</h4><div class="nlist">${c.neither.map((x, i) => `<button class="nrow" data-nei="${i}"><span>${esc(x.m.t)} <small>${esc(x.m.y)}${x.onLists > 1 ? " · on both your lists" : ""}</small></span><b>Put it on ▸</b></button>`).join("")}</div>` : ""}`;
+  $("#cmpBody").querySelectorAll("[data-nei]").forEach(b => b.onclick = async () => { const x = c.neither[+b.dataset.nei]; closeCmp(); tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ m: x.m, src: "wl" }], { direct: true }); });
+  $("#cmpSheet").hidden = false; document.body.classList.add("noscroll");
+}
+function closeCmp() { $("#cmpSheet").hidden = true; document.body.classList.remove("noscroll"); }
+$("#cmpClose").onclick = closeCmp;
+$("#cmpSheet").addEventListener("click", e => { if (e.target.id === "cmpSheet") closeCmp(); });
+
+// ---------- Letterboxd top-up ----------
+async function topUp(quietly) {
+  if (!profile?.username || !tmdb.hasProxy) return;
+  if (!quietly) $("#topMsg").textContent = "Reading your diary…";
+  try {
+    const n = await friends.topUp(profile, films, id => tmdb.details(apiKey, id));
+    await store.set("profile", profile); await store.set("films", films);
+    if (n || !quietly) { rebuild(); toast(n ? `Topped up: ${n} new film${n > 1 ? "s" : ""} from your diary.` : "Nothing new in your diary."); }
+    renderFriends();
+  } catch (e) { if (!quietly) $("#topMsg").textContent = e.message; }
+}
+$("#topGo").onclick = () => topUp(false);
+
+// ---------- guest tuning ----------
+function renderTuneCard() {
+  const b = $("#tuneOpen"), show = !!S?.house && !S.visit;
+  b.hidden = !show; if (!show) return;
+  const t = friends.tuning(), n = t.like.length + t.nope.length;
+  b.innerHTML = `<b>${n ? "Rasher's had a think" : "Tell Rasher what you like"}</b><span>${n ? `Tuned off ${n} film${n > 1 ? "s" : ""} you told him about. Tap to change.` : "Swipe through twenty well-known films and his picks will lean your way."}</span>`;
+}
+$("#tuneOpen").onclick = () => {
+  const deck = friends.tuneDeck(lib.buildHouse(house, {})), t = friends.tuning();
+  const st = new Map(); t.like.forEach(id => st.set(id, 1)); t.nope.forEach(id => st.set(id, 2));
+  const paint = () => $$("#tuneGrid [data-t]").forEach(b => { b.dataset.s = st.get(+b.dataset.t) || 0; });
+  $("#tuneGrid").innerHTML = deck.map(x => `<button class="pchoice" data-t="${x.m.id}" aria-label="${esc(x.m.t)}" style="background-image:url('${poster(x.m.p, "w185")}')"><span>${esc(x.m.t)}</span></button>`).join("");
+  $("#tuneGrid").onclick = e => { const b = e.target.closest("[data-t]"); if (!b) return; const id = +b.dataset.t; st.set(id, ((st.get(id) || 0) + 1) % 3); snd.tick(); paint(); };
+  paint(); $("#tuneSheet").hidden = false; document.body.classList.add("noscroll");
+  $("#tuneDone").onclick = () => {
+    friends.tuneSet([...st].filter(([, v]) => v === 1).map(([k]) => k), [...st].filter(([, v]) => v === 2).map(([k]) => k));
+    $("#tuneSheet").hidden = true; document.body.classList.remove("noscroll"); rebuild(); renderForYou(); toast("Rasher's taken notes.");
+  };
+};
+
+// ---------- group night (pass the phone) ----------
+function groupNight(v, head, back) {
+  const people = [...(mine ? [{ code: "me", name: "Me" }] : []), ...Object.values(FR).map(f => ({ code: f.code, name: f.name }))];
+  if (people.length < 2) { v.innerHTML = head + `<div class="empty">Add a mate's code at the Counter first. Group night needs at least two shops.</div>`; back(); return; }
+  const g = { who: new Set(people.map(p => p.code)), short: false, nosubs: false };
+  const setup = () => {
+    v.innerHTML = head + `<p class="note">Who's on the couch? Rasher finds films none of you have seen, then you pass the phone round and veto.</p>
+      <div class="chips" id="gWho">${people.map(p => `<button class="chip" data-who="${p.code}" aria-pressed="${g.who.has(p.code)}">${esc(p.name)}</button>`).join("")}</div>
+      <label class="tog"><input type="checkbox" id="gShort" ${g.short ? "checked" : ""}> Keep it under 2 hours</label><label class="tog"><input type="checkbox" id="gSubs" ${g.nosubs ? "checked" : ""}> No subtitles</label>
+      <div class="row center"><button class="play" id="gGo"><span class="tri"></span><span>Five tapes on the counter</span></button></div>`;
+    back();
+    v.querySelectorAll("[data-who]").forEach(b => b.onclick = () => { const c = b.dataset.who; g.who.has(c) ? g.who.delete(c) : g.who.add(c); b.setAttribute("aria-pressed", g.who.has(c)); snd.click(); });
+    $("#gShort").onchange = e => g.short = e.target.checked; $("#gSubs").onchange = e => g.nosubs = e.target.checked;
+    $("#gGo").onclick = start;
+  };
+  const start = () => {
+    const room = people.filter(p => g.who.has(p.code));
+    if (room.length < 2) return toast("Pick at least two of you.");
+    const tapes = friends.neither(g.who.has("me") ? mine : null, room.filter(p => p.code !== "me").map(p => FR[p.code]), 5, { short: g.short, nosubs: g.nosubs, random: true });
+    if (tapes.length < 2) return toast("Not enough films none of you have seen. Loosen it up.");
+    veto({ room, tapes: tapes.map(t => ({ ...t, out: false })), turn: 0, passes: 0 });
+  };
+  const veto = st => {
+    const left = st.tapes.filter(t => !t.out);
+    if (left.length === 1 || st.passes >= st.room.length) return winner(st, left);
+    const p = st.room[st.turn % st.room.length];
+    v.innerHTML = head + `<div class="passphone"><span class="kicker">Pass the phone to</span><b>${esc(p.name)}</b><span>Tap the one you veto, or pass.</span></div>
+      <div class="vlist">${st.tapes.map((t, i) => { const pp = posterOf(t.m, "w154"); return `<button class="vtape${t.out ? " out" : ""}" data-v="${i}" ${t.out ? "disabled" : ""}><i style="${pp ? `background-image:url('${pp}')` : ""}"></i><span>${esc(t.m.t)}<small>${esc(t.m.y)} · ${fmtRt(t.m.rt)}</small></span>${t.out ? `<em>VETOED</em>` : ""}</button>`; }).join("")}</div>
+      <div class="row center"><button class="ghost" id="gPass">Pass</button></div>`;
+    back();
+    v.querySelectorAll("[data-v]").forEach(b => b.onclick = () => { st.tapes[+b.dataset.v].out = true; st.passes = 0; st.turn++; snd.clunk(); veto(st); });
+    $("#gPass").onclick = () => { st.passes++; st.turn++; snd.click(); veto(st); };
+  };
+  const winner = (st, left) => {
+    const w = left.sort((a, b) => b.s - a.s)[0];
+    play([{ m: w.m, src: "wl" }], "group");
+  };
+  const play = (items, cab) => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); land(items, { arcade: cab }); };
+  setup();
+}
+
 // ---------- start ----------
 snd.setOn(store.prefs.get("sound", true));
 street();
-load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour(); });
+load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
+  if (profile?.username && navigator.onLine && (!profile.toppedAt || Date.now() - new Date(profile.toppedAt) > 12 * 36e5)) setTimeout(() => topUp(true), 4000); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
