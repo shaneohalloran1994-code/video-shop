@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=1b6";
-import * as tmdb from "./tmdb.js?v=1b6";
-import * as importer from "./importer.js?v=1b6";
-import * as lib from "./library.js?v=1b6";
-import * as snd from "./sound.js?v=1b6";
+import * as store from "./store.js?v=2a1";
+import * as tmdb from "./tmdb.js?v=2a1";
+import * as importer from "./importer.js?v=2a1";
+import * as lib from "./library.js?v=2a1";
+import * as snd from "./sound.js?v=2a1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -28,12 +28,31 @@ let N = store.prefs.get("n", 1);
 let picks = [], active = 0, rolling = false, rolledEmpty = false;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
-  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"], ["rewind", "Rewind"]],
+  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"]],
   house: [["all", "The shelves"], ["picks", "Staff picks"], ["untested", "Untested"]],
 };
+// Sections hang above the shelves like shop signs. Some only open at certain times.
+const isLate = () => { const h = new Date().getHours(); return h >= 23 || h < 5; };
+const isOctober = () => new Date().getMonth() === 9;
+function sections() {
+  const s = [];
+  if (isOctober()) s.push(["shock", "Shocktober", "orange"]);
+  if (isLate()) s.push(["midnight", "Midnight", "red"]);
+  if (!S?.house) s.push(["rewind", "Rewind", "blue"]);
+  s.push(["back", "Back room", "purple"], ["irish", "Irish shelf", "green"]);
+  if (!S?.house) s.push(["shame", "Shame list", "yellow"]);
+  return s;
+}
 const pools = () => POOLS[S?.house ? "house" : "own"];
+const allPools = () => [...pools(), ...sections()];
+const SEEN_POOLS = ["seen", "both", "rewind", "irish"];
+const CULT_KW = ["cult film", "surrealism", "absurdism", "b movie", "midnight movie", "experimental", "grindhouse", "exploitation", "psychotronic"];
+const isCult = m => (m.vc > 0 && m.vc < 400 && m.va >= 6.6) || (m.kw || []).some(k => CULT_KW.includes(k)) || (m.g.includes("Horror") && m.g.includes("Comedy"));
+const isIrish = m => m.c.includes("IE") || m.l === "ga";
+const MIDNIGHT_G = ["Horror", "Thriller", "Mystery", "Science Fiction"];
 const NOTICES = ["No food or drink near the tapes.", "Please keep off the rug. It really ties the room together.", "Shoplifters will be prosecuted. Everything's free, so good luck.",
-  "Horror is in the back. Obviously.", "Ask about the back room. (Not yet.)", "Late fees are a state of mind.", "Be kind. Rewind."];
+  "Horror is in the back. Obviously.", "The back room is for members. You're a member.", "Late fees are a state of mind.", "Be kind. Rewind.",
+  "Irish shelf restocked. Mostly Brendan Gleeson.", "Rasher's on break. Help yourself."];
 
 async function load() {
   profile = await store.get("profile");
@@ -49,7 +68,8 @@ async function loadHouse() {
 }
 function rebuild() {
   S = profile ? lib.build(profile, films, extra, log) : (mode === "house" && house ? lib.buildHouse(house, log) : null);
-  renderPoolKeys();
+  renderPoolKeys(); renderChalk();
+  document.body.classList.toggle("late", isLate()); document.body.classList.toggle("october", isOctober());
   buildFilterOptions(); syncFilters(); idleScreen(); renderPicks(); statsDirty = true;
   if ($("#v-receipt").hidden === false) renderReceipt();
   nudge(); counterState();
@@ -121,10 +141,11 @@ $("#neverRe").onchange = e => { F.neverRe = e.target.checked; changed(); };
 $("#taste").onchange = e => { F.taste = e.target.checked; changed(); };
 $("#clearF").onclick = () => { F = Object.assign({}, DEFAULT_F); changed(true); toast("Forget about it."); };
 function renderPoolKeys() {
-  const ps = pools();
-  if (!ps.some(p => p[0] === poolMode)) poolMode = ps[0][0];
+  const ps = pools(), ss = sections();
+  if (!allPools().some(p => p[0] === poolMode)) poolMode = ps[0][0];
   const box = $(".poolseg"); box.innerHTML = ps.map(([k, l]) => `<button data-pool="${k}" aria-pressed="${k === poolMode}">${l}</button>`).join("");
-  box.querySelectorAll("[data-pool]").forEach(b => b.onclick = () => { poolMode = b.dataset.pool; store.prefs.set("pool", poolMode); changed(); idleScreen(); });
+  $("#sections").innerHTML = ss.map(([k, l, c]) => `<button class="secsign ${c}" data-pool="${k}" aria-pressed="${k === poolMode}">${l}</button>`).join("");
+  $$("[data-pool]").forEach(b => b.onclick = () => { poolMode = b.dataset.pool; store.prefs.set("pool", poolMode); snd.click(); changed(); idleScreen(); });
 }
 $("#blindKey").onclick = () => { blind = !blind; store.prefs.set("blind", blind); syncFilters(); renderPicks(); };
 $("#lastChance").onchange = e => { F.last = e.target.checked; changed(); };
@@ -154,14 +175,14 @@ function syncFilters(full = true) {
   $("#crowdOn").checked = F.crowdOn; $("#c0").value = F.c0; $("#c1").value = F.c1; $("#c0").disabled = $("#c1").disabled = !F.crowdOn;
   $("#myMin").value = F.myMin; $("#neverRe").checked = F.neverRe; $("#taste").checked = F.taste;
   $$("[data-pool]").forEach(b => b.setAttribute("aria-pressed", b.dataset.pool === poolMode));
-  $(".seenonly").hidden = !!S?.house || !["seen", "both", "rewind"].includes(poolMode);
+  $(".seenonly").hidden = !!S?.house || !SEEN_POOLS.includes(poolMode);
   $("#blindKey").setAttribute("aria-pressed", blind); $("#lastChance").checked = !!F.last;
   $("#n1").setAttribute("aria-pressed", N === 1); $("#n3").setAttribute("aria-pressed", N === 3);
   $("#rollLabel").textContent = N === 3 ? "Take three" : "Take one";
   const n = pool().length;
   $("#inRun").textContent = S ? `${n.toLocaleString()} tape${n === 1 ? "" : "s"} in the running` : "";
   $("#roll").disabled = !S;
-  const act = F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && poolMode !== "wl" ? !!F.myMin + !!F.since + F.neverRe : 0);
+  const act = F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && SEEN_POOLS.includes(poolMode) ? !!F.myMin + !!F.since + F.neverRe : 0);
   $("#ftag").textContent = act ? `${act} filter${act > 1 ? "s" : ""} on` : "No filters";
 }
 
@@ -169,7 +190,14 @@ function pool() {
   if (!S) return [];
   let items = [];
   const nowY = Date.now();
-  if (S.house) {
+  const unseen = () => S.watchlist.map(x => ({ ...x, src: "wl" }));
+  const everything = () => { const u = unseen(), ids = new Set(u.map(x => x.m.id)); return S.house ? u : u.concat(S.seen.filter(s => !ids.has(s.m.id)).map(s => ({ ...s, src: "seen" }))); };
+  if (poolMode === "back") items = unseen().filter(x => isCult(x.m));
+  else if (poolMode === "irish") items = everything().filter(x => isIrish(x.m));
+  else if (poolMode === "midnight") items = unseen().filter(x => x.m.g.some(g => MIDNIGHT_G.includes(g)));
+  else if (poolMode === "shock") items = unseen().filter(x => x.m.g.includes("Horror"));
+  else if (poolMode === "shame") items = unseen().filter(x => x.added && (nowY - new Date(x.added)) / 864e5 > 365).sort((a, b) => a.added < b.added ? -1 : 1).slice(0, 80);
+  else if (S.house) {
     items = S.watchlist.filter(x => poolMode === "all" || (poolMode === "picks" ? x.pick : x.wl)).map(x => ({ ...x, src: "wl" }));
   } else if (poolMode === "rewind") {
     items = S.seen.filter(s => s.rating != null && s.rating >= 4.5 && (!s.last || (nowY - new Date(s.last)) / 31557600000 >= 2)).map(s => ({ ...s, src: "seen" }));
@@ -224,7 +252,7 @@ function idleScreen() {
     c.innerHTML = `<div class="idle"><span class="big">NO TAPES</span><span>BRING YOUR LETTERBOXD</span><span>EXPORT TO THE COUNTER</span><span>OR BROWSE THE HOUSE SHOP<span class="blink">_</span></span></div>`;
     return;
   }
-  const shelf = (pools().find(p => p[0] === poolMode) || ["", ""])[1].toUpperCase();
+  const shelf = (allPools().find(p => p[0] === poolMode) || ["", ""])[1].toUpperCase();
   const h = new Date().getHours(), late = h < 5;
   c.innerHTML = `<div class="idle"><span>${S.house ? "HOUSE SHOP" : "VIDEO 1"}</span><span class="big">${pool().length.toLocaleString()} TAPES</span><span>SHELF: ${shelf}</span><span>${late ? "THEY LIVE. WE SLEEP." : "PRESS TAKE ONE ▶"}<span class="blink">_</span></span></div>`;
 }
@@ -317,14 +345,33 @@ async function roll() {
     snd.stopDrone(); rack.classList.remove("rolling");
   } else el.style.transform = `translateX(${target}px)`;
   chosen.forEach(c => el.querySelector(`.spine[data-id="${c.m.id}"]`)?.classList.add("pulled"));
+  await land(chosen);
+}
+async function land(chosen) {
   snd.clunk();
   picks = chosen; active = 0; vetoes = F.last ? 1 : Infinity; swapRun = 0;
   if (!RM) await staticBurst();
-  playOnTV(picks[0]); snd.stab();
+  playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
   if (innerWidth < 700) $("#filters").open = false;
+}
+
+// ---------- the chalkboard: Rasher's film of the day ----------
+function chalkPick() {
+  if (!S) return null;
+  const list = (S.house ? S.bestFits : S.bestFits.slice(0, 40)).filter(x => !S.seen.some(s => s.m.id === x.m.id));
+  if (!list.length) return null;
+  const d = new Date(); const seed = d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate();
+  return list[(seed * 2654435761 >>> 0) % list.length];
+}
+function renderChalk() {
+  const it = chalkPick(), el = $("#chalk");
+  if (!it) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<span class="chalk-h">Tonight's special</span><span class="chalk-t">${esc(it.m.t)}</span><span class="chalk-s">${esc(it.m.y)} · ${fmtRt(it.m.rt)} · chalked up by Rasher</span>`;
+  el.onclick = async () => { if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land([{ ...it, src: "wl" }]); };
 }
 $("#roll").onclick = roll;
 
@@ -334,6 +381,7 @@ function caseHTML(it, i) {
   const sticker = `<span class="rental">TAKE ONE VIDEO<br>3 NIGHTS</span>`;
   const swapBtn = vetoes > 0 ? `<button class="tag" data-a="swap">${F.last ? "Use my veto" : "Swap"}</button>` : "";
   const locked = F.last && vetoes <= 0 ? `<span class="stamp">Locked in</span>` : "";
+  const fee = it.added && poolMode === "shame" ? lateFee(it.added) : "";
   if (hide) return `<article class="case blind ${i === active && picks.length > 1 ? "active" : ""}" data-i="${i}">
     <div class="sleeve"><button class="cover ${p ? "" : "none"}" data-a="tv" aria-label="Show this box on the telly" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : "?"}</button>${sticker}</div>
     <div class="info">${m.tag ? `<p class="tagline">“${esc(m.tag)}”</p>` : `<p class="tagline">No blurb on the box. Brave.</p>`}
@@ -348,6 +396,7 @@ function caseHTML(it, i) {
       ${m.tag ? `<p class="tagline">“${esc(m.tag)}”</p>` : ""}
       <div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()} · ${esc(langTxt.toUpperCase())}</div>
       <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}</div>
+      ${fee}
       ${m.dir.length ? `<div class="who">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
       <p class="syn" hidden>${esc(m.ov)}</p>
       <div class="acts">
@@ -358,6 +407,11 @@ function caseHTML(it, i) {
         <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
       </div>${locked}
     </div></article>`;
+}
+function lateFee(added) {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(added)) / 864e5) - 3);
+  const due = new Date(new Date(added).getTime() + 3 * 864e5).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" });
+  return `<div class="latefee"><span>DUE BACK ${esc(due.toUpperCase())}</span><b>LATE FEE €${(days * 0.5).toLocaleString("en-IE", { minimumFractionDigits: 2 })}</b></div>`;
 }
 function renderPicks() {
   const box = $("#cases");
