@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Take One</title>
+<meta name="description" content="A late-night video shop that picks your film for you.">
+<meta name="theme-color" content="#07080f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/app.css">
+<script src="vendor/jszip.min.js" defer></script>
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+<!-- Arrival: the street outside -->
+<section id="street" class="street" aria-label="Outside the shop">
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <div class="fog f1" aria-hidden="true"></div><div class="fog f2" aria-hidden="true"></div>
+  <div class="facade">
+    <div class="sign" aria-hidden="true"><span class="neon pink" id="neonTitle">TAKE ONE</span><span class="neon blue small">VIDEO</span></div>
+    <div class="window" aria-hidden="true"><div class="shelves"></div><div class="poster-strip"></div><span class="open">OPEN LATE</span></div>
+  </div>
+  <div class="puddle" aria-hidden="true"><span class="neon pink">TAKE ONE</span></div>
+  <button class="walkin" id="walkIn">Walk in</button>
+</section>
+
+<!-- Inside the shop -->
+<main id="shop" hidden>
+  <header class="topbar">
+    <div class="tube" aria-hidden="true"></div>
+    <h1 class="shopname"><span class="neon pink">Take One</span><small>Video · Open late</small></h1>
+  </header>
+
+  <!-- ROLL -->
+  <section id="v-roll" class="view">
+    <div class="nudge" id="nudge" hidden></div>
+    <div class="poolseg" role="group" aria-label="Which shelf">
+      <button data-pool="wl" aria-pressed="true">Watchlist</button><button data-pool="seen" aria-pressed="false">Seen it</button><button data-pool="both" aria-pressed="false">Both</button>
+    </div>
+
+    <div class="tv" id="tv">
+      <div class="tv-screen">
+        <div class="tv-content" id="tvContent"></div>
+        <canvas class="tv-static" id="tvStatic" aria-hidden="true"></canvas>
+        <div class="tv-scan" aria-hidden="true"></div>
+        <div class="tv-glare" aria-hidden="true"></div>
+        <div class="osd" id="osd" aria-hidden="true">PLAY ▶</div>
+      </div>
+      <div class="tv-panel" aria-hidden="true"><span class="brand">TAKE·ONE</span><span class="knob"></span><span class="knob"></span><span class="led" id="led"></span></div>
+    </div>
+
+    <div class="rack" aria-hidden="true"><div class="strip" id="strip"></div></div>
+
+    <div class="controls">
+      <div class="seg count" role="group" aria-label="How many films">
+        <button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button>
+      </div>
+      <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
+      <span class="inrun" id="inRun"></span>
+    </div>
+
+    <div class="cases" id="cases" aria-live="polite"></div>
+
+    <details class="board" id="filters">
+      <summary><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></summary>
+      <div class="fgroup"><h3>Genre <em>tap once for yes, twice for no</em></h3><div class="chips" id="genres"></div></div>
+      <div class="fgroup"><h3>Length</h3><div class="chips" id="lengths"></div></div>
+      <div class="fgroup"><h3>I've got</h3><div class="chips" id="slots"></div></div>
+      <div class="fgroup"><h3>Subtitles</h3>
+        <div class="chips"><button class="chip" data-lang="any">Don't mind</button><button class="chip" data-lang="en">No subtitles</button><button class="chip" data-lang="sub">Subtitled only</button></div>
+        <select id="langPick" aria-label="A specific language"><option value="">Any language</option></select>
+      </div>
+      <div class="fgroup"><h3>Released</h3>
+        <div class="row"><label>From <input id="y0" type="number" inputmode="numeric" placeholder="1920"></label><label>to <input id="y1" type="number" inputmode="numeric" placeholder="2026"></label></div>
+        <div class="chips" id="eras"></div>
+      </div>
+      <div class="fgroup"><h3>Crowd rating <em>never shown, only used to pick</em></h3>
+        <label class="tog"><input type="checkbox" id="crowdOn"> Only films the crowd rates between</label>
+        <div class="row"><select id="c0" aria-label="Lowest"></select><span>and</span><select id="c1" aria-label="Highest"></select></div>
+      </div>
+      <div class="fgroup seenonly"><h3>Rewatches</h3>
+        <div class="row"><label>I rated it at least <select id="myMin"><option value="">any</option><option>3</option><option>3.5</option><option>4</option><option>4.5</option><option>5</option></select></label></div>
+        <div class="chips" id="since"></div>
+        <label class="tog"><input type="checkbox" id="neverRe"> Never rewatched</label>
+      </div>
+      <div class="fgroup"><h3>Extras</h3>
+        <label class="tog"><input type="checkbox" id="taste"> Lean towards my taste</label>
+        <div class="row"><button class="ghost" id="clearF">Clear filters</button></div>
+      </div>
+    </details>
+  </section>
+
+  <!-- FOR YOU -->
+  <section id="v-picks" class="view" hidden>
+    <div class="neonhead"><span class="neon blue">Picked for you</span></div>
+    <p class="note">Ranked on how you rate similar directors, actors, genres and eras, and what you've been watching lately. No scores, just reasons.</p>
+    <h2 class="shelfname">Off your own shelf</h2>
+    <div class="list" id="bestFits"></div>
+    <button class="ghost more" id="moreFits">More</button>
+    <h2 class="shelfname">Not on your list yet</h2>
+    <p class="note" id="freshNote"></p>
+    <div class="list" id="fresh"></div>
+    <button class="ghost more" id="moreFresh">More</button>
+  </section>
+
+  <!-- RECEIPT -->
+  <section id="v-receipt" class="view" hidden>
+    <div class="receipt" id="receipt"></div>
+    <p class="note center">Screenshot it and send it on.</p>
+  </section>
+
+  <!-- COUNTER (settings + setup) -->
+  <section id="v-counter" class="view" hidden>
+    <div class="counter">
+      <h2 class="marker big">The counter</h2>
+      <div class="step" id="stepKey">
+        <h3>1 · Your TMDB key</h3>
+        <p>The shop looks films up on TMDB using your own free key. It's saved on this phone only.</p>
+        <div class="row"><input id="keyIn" type="password" autocomplete="off" placeholder="Paste your API key"><button class="btn" id="keySave">Save</button></div>
+        <p class="small" id="keyMsg"></p>
+      </div>
+      <div class="step" id="stepZip">
+        <h3>2 · Your Letterboxd export</h3>
+        <p>On letterboxd.com go to Settings → Data → Export your data, then pick the zip here.</p>
+        <label class="btn file">Choose the zip<input id="zipIn" type="file" accept=".zip,application/zip"></label>
+        <p class="small" id="zipMsg"></p>
+        <div class="progress" id="prog" hidden><div class="bar"><i id="progBar"></i></div><span id="progTxt"></span></div>
+      </div>
+      <div class="step">
+        <h3>Settings</h3>
+        <label class="tog"><input type="checkbox" id="soundOn" checked> Sound</label>
+        <label class="tog"><input type="checkbox" id="skipStreet"> Skip the street when I open the app</label>
+        <div class="row"><button class="ghost" id="unwatch" hidden></button></div>
+      </div>
+      <div class="step">
+        <h3>Start again</h3>
+        <p class="small">Removes your films, ratings and key from this phone.</p>
+        <button class="ghost danger" id="wipe">Clear everything</button>
+        <div class="confirm" id="wipeConfirm" hidden><span>Sure? This can't be undone.</span><button class="ghost danger" id="wipeYes">Yes, clear it</button><button class="ghost" id="wipeNo">Keep it</button></div>
+      </div>
+      <p class="credit">Film data and posters from TMDB.<br>This product uses the TMDB API but is not endorsed or certified by TMDB. Letterboxd is not involved with this app.</p>
+    </div>
+  </section>
+
+  <nav class="deck" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="roll" aria-selected="true"><span class="ic">▶</span>Roll</button>
+    <button role="tab" data-tab="picks" aria-selected="false"><span class="ic">★</span>For you</button>
+    <button role="tab" data-tab="receipt" aria-selected="false"><span class="ic">≡</span>Receipt</button>
+    <button role="tab" data-tab="counter" aria-selected="false"><span class="ic">●</span>Counter</button>
+  </nav>
+</main>
+
+<!-- Returning a tape -->
+<div class="sheet" id="returnSheet" hidden role="dialog" aria-modal="true" aria-labelledby="retTitle">
+  <div class="sheet-card">
+    <p class="kicker">Returning</p>
+    <h2 id="retTitle" class="titlecard"></h2>
+    <div id="retAsk">
+      <p>What did you make of it?</p>
+      <div class="stars" id="stars" role="radiogroup" aria-label="Your rating"></div>
+      <div class="row"><button class="btn" id="retGo" disabled>Hand it back</button><button class="ghost" id="retNoRate">Skip rating</button><button class="ghost" id="retCancel">Cancel</button></div>
+    </div>
+    <div id="retReveal" hidden></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+</body>
+</html>
