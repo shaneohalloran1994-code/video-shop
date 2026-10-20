@@ -878,3 +878,29 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 #pickBody .where{margin:4px 0 2px}
 #coming .wall{padding-bottom:14px}
 .pjump{background:#0b0a12;box-shadow:0 8px 10px -4px rgba(0,0,0,.8);padding-top:6px}
+
+/* ===== The box on the counter: compact; open it for everything ===== */
+.case.mini{grid-template-columns:104px 1fr;gap:12px;padding:10px 12px;cursor:pointer}
+.case.mini .titlecard{font-size:21px;line-height:1.1}
+.case.mini .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.case.mini .where{margin-top:6px}
+.cases.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cases.three .case.mini{display:flex;flex-direction:column;gap:6px;padding:7px}
+.cases.three .case.mini .sleeve{width:100%}
+.cases.three .case.mini .cover{width:100%;height:auto;aspect-ratio:2/3}
+.cases.three .case.mini .rental{display:none}
+.cases.three .case.mini .titlecard{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cases.three .case.mini .meta{font-size:13px}
+.cases.three .case.mini .acts{margin-top:2px}
+.cases.three .case.mini .tag{padding:5px 8px 4px;font-size:10.5px}
+.cases.three .case.mini.active{outline:2px solid var(--amber);outline-offset:2px}
+.casesheet{max-height:88vh}
+#caseBody .case{background:transparent;box-shadow:none;border:0;padding:0;cursor:default;grid-template-columns:96px 1fr}
+#caseBody .case::before,#caseBody .case::after{display:none}
+#caseBody .syn{color:var(--ink2);font-size:15px;margin:6px 0 0}
+/* One / Three / Blind now live in the Tonight I want panel */
+.howroll .howrow{display:flex;gap:10px;align-items:stretch}
+.howroll .seg.keys.count{flex:1}.howroll .seg.keys.count button{flex:1}
+.controls .wantbtn{flex:1 1 100%;flex-direction:row;align-items:center;justify-content:space-between;padding:10px 12px}
+.controls .wantbtn .marker{font-size:19px}
+.cases.three .case.mini .titlecard{word-break:normal;overflow-wrap:normal;hyphens:auto}

@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=pe">
+<link rel="stylesheet" href="css/app.css?v=pg">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=pe"></script>
+<script type="module" src="js/app.js?v=pg"></script>
 </head>
 <body>
 
@@ -60,10 +60,6 @@
     <div class="sections" id="sections" role="group" aria-label="Sections of the shop"></div>
 
     <div class="controls">
-      <div class="seg keys count" role="group" aria-label="How many films">
-        <button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button>
-      </div>
-      <div class="seg keys solo" role="group" aria-label="Rent it blind"><button id="blindKey" aria-pressed="false" title="Box art only until you rent it">Blind</button></div>
       <button class="wantbtn" id="openFilters" aria-haspopup="dialog"><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></button>
     </div>
     <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
@@ -80,6 +76,13 @@
   <div class="fsheet" id="filters" hidden role="dialog" aria-modal="true" aria-label="Tonight I want">
     <div class="board fpanel">
       <div class="fhead"><span class="marker">Tonight I want…</span><button class="tag hot" id="closeFilters">Done</button></div>
+      <div class="fgroup howroll"><h3>How it rolls</h3>
+        <div class="howrow">
+          <div class="seg keys count" role="group" aria-label="How many films"><button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button></div>
+          <div class="seg keys solo" role="group" aria-label="Rent it blind"><button id="blindKey" aria-pressed="false" title="Box art only until you rent it">Blind</button></div>
+        </div>
+        <p class="small">Three puts three tapes on the counter. Blind shows only the box art until you rent it.</p>
+      </div>
       <div class="fgroup moods-g"><h3>Moods <em>one tap sets it up and rolls</em></h3><div class="moods" id="moods"></div></div>
       <div class="fgroup"><h3>Vibe <em>pick any</em></h3><div class="chips" id="vibes"></div></div>
       <div class="fgroup"><h3>Genre <em>tap once for yes, twice for no</em></h3><div class="chips" id="genres"></div></div>
@@ -245,6 +248,10 @@
     <div class="fhead"><span class="marker">Ask Rasher</span><button class="tag" id="askClose">Never mind</button></div>
     <div id="askBody"></div>
   </div>
+</div>
+<!-- The rolled box, opened up -->
+<div class="sheet" id="caseSheet" hidden role="dialog" aria-modal="true" aria-label="The full box">
+  <div class="sheet-card dark casesheet"><div class="fhead"><span class="marker">The box</span><button class="tag hot" id="caseClose">Done</button></div><div id="caseBody"></div></div>
 </div>
 <!-- A staff pick, up close -->
 <div class="sheet" id="pickSheet" hidden role="dialog" aria-modal="true" aria-label="Staff pick">

@@ -1,6 +1,6 @@
 // Reads a Letterboxd export zip and looks every film up on TMDB, reusing anything already cached.
-import * as store from "./store.js?v=pe";
-import * as tmdb from "./tmdb.js?v=pe";
+import * as store from "./store.js?v=pg";
+import * as tmdb from "./tmdb.js?v=pg";
 
 function parseCSV(text) {
   const rows = []; let row = [], f = "", q = false;

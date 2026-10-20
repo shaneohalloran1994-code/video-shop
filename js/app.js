@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pe";
-import * as tmdb from "./tmdb.js?v=pe";
-import * as importer from "./importer.js?v=pe";
-import * as lib from "./library.js?v=pe";
-import * as snd from "./sound.js?v=pe";
-import * as arcade from "./arcade.js?v=pe";
-import * as coming from "./coming.js?v=pe";
-import * as rasher from "./rasher.js?v=pe";
-import { LINES } from "./lines.js?v=pe";
-import * as friends from "./friends.js?v=pe";
-import * as builder from "./builder.js?v=pe";
-import * as where from "./where.js?v=pe";
+import * as store from "./store.js?v=pg";
+import * as tmdb from "./tmdb.js?v=pg";
+import * as importer from "./importer.js?v=pg";
+import * as lib from "./library.js?v=pg";
+import * as snd from "./sound.js?v=pg";
+import * as arcade from "./arcade.js?v=pg";
+import * as coming from "./coming.js?v=pg";
+import * as rasher from "./rasher.js?v=pg";
+import { LINES } from "./lines.js?v=pg";
+import * as friends from "./friends.js?v=pg";
+import * as builder from "./builder.js?v=pg";
+import * as where from "./where.js?v=pg";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -266,7 +266,8 @@ function syncFilters(full = true) {
   $("#roll").disabled = !S; $("#askRasher").hidden = !S;
   const act = (F.vibes || []).length + F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && SEEN_POOLS.includes(poolMode) ? !!F.myMin + !!F.since + F.neverRe : 0);
   const mood = PRESETS.find(p => p[0] === F.mood);
-  $("#ftag").textContent = mood ? mood[1] : act ? `${act} filter${act > 1 ? "s" : ""} on` : "No filters";
+  const how = [N === 3 ? "Three" : "", blind ? "Blind" : ""].filter(Boolean).join(" · ");
+  $("#ftag").textContent = [mood ? mood[1] : act ? `${act} filter${act > 1 ? "s" : ""}` : how ? "" : "No filters", how].filter(Boolean).join(" · ");
   $$(".mood").forEach(b => b.setAttribute("aria-pressed", b.dataset.mood === F.mood));
 }
 
@@ -572,12 +573,35 @@ function renderPicks() {
   const box = $("#cases");
   if (!S) { box.innerHTML = ""; return; }
   if (!picks.length) { box.innerHTML = rolledEmpty ? `<div class="empty">Nothing on the shelf matches all that. Loosen a filter and try again.</div>` : ""; return; }
-  box.innerHTML = picks.map(caseHTML).join("");
-  fillWhere();
+  box.classList.toggle("three", picks.length > 1);
+  box.innerHTML = picks.map((it, i) => blind && !it.revealed ? caseHTML(it, i) : miniHTML(it, i)).join("");
+  fillWhere(box);
+  if (!$("#caseSheet").hidden) openCase(sheetI, true);
 }
+// The box as it lands on the counter: cover, title, where to watch. Tap for the full box.
+function miniHTML(it, i) {
+  const m = it.m, p = posterOf(m, "w342"), three = picks.length > 1;
+  return `<article class="case mini${i === active && three ? " active" : ""}" data-i="${i}">
+    <div class="sleeve"><button class="cover ${p ? "" : "none"}" data-a="open" aria-label="Open the box for ${esc(m.t)}" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : esc(m.t)}</button><span class="rental">TAKE ONE VIDEO<br>3 NIGHTS</span></div>
+    <div class="info"><h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div>
+      ${three ? "" : `<div class="where" data-where="${m.id}"><span class="wl">Checking where to watch…</span></div>`}
+      <div class="acts">${three ? "" : vetoes > 0 ? `<button class="tag" data-a="swap">${F.last ? "Use my veto" : "Swap"}</button>` : ""}<button class="tag hot" data-a="open">${three ? "Open ▸" : "Open the box ▸"}</button></div>
+      ${F.last && vetoes <= 0 && !three ? `<span class="stamp">Locked in</span>` : ""}</div></article>`;
+}
+let sheetI = 0;
+function openCase(i, refresh = false) {
+  const it = picks[i]; if (!it) return closeCase();
+  sheetI = i; const body = $("#caseBody");
+  body.innerHTML = caseHTML(it, i).replace('<p class="syn" hidden>', '<p class="syn">');
+  fillWhere(body);
+  if (!refresh) { $("#caseSheet").hidden = false; document.body.classList.add("noscroll"); snd.click(); }
+}
+function closeCase() { $("#caseSheet").hidden = true; document.body.classList.remove("noscroll"); }
+$("#caseClose").onclick = closeCase;
+$("#caseSheet").addEventListener("click", e => { if (e.target.id === "caseSheet") closeCase(); });
 // Streaming info lands a moment after the box: one lookup per film, remembered for the session.
-function fillWhere() {
-  $$("#cases [data-where]").forEach(async el => {
+function fillWhere(root = document) {
+  root.querySelectorAll("[data-where]").forEach(async el => {
     const it = picks.find(x => String(x.m.id) === el.dataset.where); if (!it) return;
     const w = await where.lookup((path, params) => tmdb.call(apiKey, path, params), it.m);
     if (!el.isConnected) return;
@@ -595,12 +619,15 @@ $("#strip").addEventListener("click", e => {
   const sp = e.target.closest(".spine.pulled"); if (!sp) return;
   const i = picks.findIndex(p => String(p.m.id) === sp.dataset.id); if (i >= 0) showOnTV(i);
 });
-$("#cases").addEventListener("click", e => {
+function caseClick(e) {
+  const inSheet = !!e.target.closest("#caseBody");
   const b = e.target.closest("[data-a]");
-  if (!b) { const card = e.target.closest(".case"); if (card && !e.target.closest("a,button")) showOnTV(+card.dataset.i); return; }
+  if (!b) { const card = e.target.closest(".case"); if (card && !inSheet && !e.target.closest("a,button")) { const i = +card.dataset.i; if (picks.length > 1) showOnTV(i); if (card.classList.contains("mini")) openCase(i); } return; }
   const card = b.closest(".case"), i = +card.dataset.i, it = picks[i];
   const a = b.dataset.a;
-  if (a === "tv") showOnTV(i);
+  if (a === "open") { if (picks.length > 1 && i !== active) { active = i; playOnTV(it); snd.clunk(); $$("#cases .case").forEach(c => c.classList.toggle("active", +c.dataset.i === i)); } openCase(i); return; }
+  if (a === "tv") { if (inSheet) return; showOnTV(i); }
+  if (inSheet && ["more", "poster", "ret"].includes(a)) closeCase();
   if (a === "syn") { const p = card.querySelector(".syn"); p.hidden = !p.hidden; b.textContent = p.hidden ? "Synopsis" : "Hide synopsis"; }
   if (a === "more") { tab("arcade"); arcade.moreLike(it.m); return; }
   if (a === "poster") { posterPicker(it.m); return; }
@@ -617,7 +644,9 @@ $("#cases").addEventListener("click", e => {
     else rasher.slip(swapRun === 2 && Math.random() < .4 ? rasher.quote("swap") : rasher.line("swap"));
   }
   if (a === "ret") openReturn(it);
-});
+}
+$("#cases").addEventListener("click", caseClick);
+$("#caseBody").addEventListener("click", caseClick);
 
 // ---------- custom posters ----------
 async function posterPicker(m) {
