@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=2a3";
-import * as tmdb from "./tmdb.js?v=2a3";
-import * as importer from "./importer.js?v=2a3";
-import * as lib from "./library.js?v=2a3";
-import * as snd from "./sound.js?v=2a3";
+import * as store from "./store.js?v=2a4";
+import * as tmdb from "./tmdb.js?v=2a4";
+import * as importer from "./importer.js?v=2a4";
+import * as lib from "./library.js?v=2a4";
+import * as snd from "./sound.js?v=2a4";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];

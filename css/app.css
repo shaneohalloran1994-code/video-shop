@@ -425,3 +425,5 @@ body.noscroll{overflow:hidden}
 @keyframes up{from{transform:translateY(40px);opacity:.4}}
 .fhead{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px;background:#2a1e17;border-bottom:2px dashed #4b2f1d}
 .fpanel .fgroup:first-of-type{margin-top:12px}
+
+@media (max-width:400px){.wantbtn .marker{font-size:14px}.wantbtn{padding:4px 8px}.controls .seg.keys button{padding:13px 9px 8px}}
