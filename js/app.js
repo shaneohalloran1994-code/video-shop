@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=1b5";
-import * as tmdb from "./tmdb.js?v=1b5";
-import * as importer from "./importer.js?v=1b5";
-import * as lib from "./library.js?v=1b5";
-import * as snd from "./sound.js?v=1b5";
+import * as store from "./store.js?v=1b6";
+import * as tmdb from "./tmdb.js?v=1b6";
+import * as importer from "./importer.js?v=1b6";
+import * as lib from "./library.js?v=1b6";
+import * as snd from "./sound.js?v=1b6";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -424,11 +424,11 @@ async function handBack(rating) {
   await store.set("log", log);
   const box = $("#retReveal");
   let verdict = "";
-  if (rating != null) { const d = rating - guess; verdict = Math.abs(d) <= .5 ? "Called it." : d > 0 ? "You liked it more than we thought." : "Not your night, then.";
+  if (rating != null) { const d = rating - guess; verdict = Math.abs(d) <= .5 ? "Rasher called it." : d > 0 ? "You liked it more than Rasher thought." : "Not your night, then.";
     if (rating === 0.5) verdict = "Yeah, well, that's just, like, your opinion, man.";
     else if (rating === 5 && guess <= 3.5) verdict = "Alright, alright, alright.";
     else if (rating >= 4.5 && m.dir.includes("John Carpenter")) verdict = "Carpenter never misses."; }
-  box.innerHTML = `${rating != null ? `<div class="reveal3"><div>YOU<b>${rating.toFixed(1)}★</b></div><div>CROWD<b>${crowd != null ? crowd.toFixed(1) + "★" : "–"}</b></div><div>${S.house ? "THE CLERK" : "WE GUESSED"}<b>${guess.toFixed(1)}★</b></div></div>
+  box.innerHTML = `${rating != null ? `<div class="reveal3"><div>YOU<b>${rating.toFixed(1)}★</b></div><div>CROWD<b>${crowd != null ? crowd.toFixed(1) + "★" : "–"}</b></div><div>${S.house ? "RASHER SAID" : "RASHER GUESSED"}<b>${guess.toFixed(1)}★</b></div></div>
     ${prev != null ? `<p class="kicker">Last time you gave it ${prev.toFixed(1)}★</p>` : ""}<p class="verdict">${verdict}</p>` : `<p class="verdict">Back on the shelf. Crowd gave it ${crowd != null ? crowd.toFixed(1) + "★" : "nothing yet"}.</p>`}
     <div class="row"><a class="btn" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Log it on Letterboxd</a><button class="ghost" id="retDone">Done</button></div>`;
   $("#retAsk").hidden = true; box.hidden = false;
@@ -449,14 +449,14 @@ function pickHTML(it) {
 }
 function renderForYou() {
   if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
-  $("#fitsHead").textContent = S.house ? "The clerk's favourites" : "Picked off your own shelf";
-  $("#freshHead").textContent = S.house ? "The clerk hasn't seen these either" : "Not on your list. Should be.";
-  $("#picksNote").textContent = S.house ? "The clerk's shelf. His own favourites, and the ones he still means to get to." : "The clerk's shelf. He's been through your history and pulled these for you. No scores, just his reasons.";
+  $("#fitsHead").textContent = S.house ? "Rasher's favourites" : "Picked off your own shelf";
+  $("#freshHead").textContent = S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
+  $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : "Rasher's shelf. He's been through your history and pulled these for you. No scores, just his reasons.";
   $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map(pickHTML).join("");
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
   $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(pickHTML).join("");
   $("#moreFresh").hidden = freshN >= S.fresh.length;
-  $("#freshNote").textContent = S.house ? "Films on the owner's watchlist that fit the shop's taste." : S.fresh.length ? "Off the back of the films you rated highest. He reckons you've missed these." : "Still restocking these. Check back in a minute.";
+  $("#freshNote").textContent = S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
 }
 $("#moreFits").onclick = () => { fitsN += 10; renderForYou(); };
 $("#moreFresh").onclick = () => { freshN += 10; renderForYou(); };
@@ -503,7 +503,7 @@ function counterState() {
   $("#keyIn").placeholder = apiKey ? "Key saved. Paste a new one to change it" : "Paste your API key";
   $("#keyMsg").textContent = apiKey ? "Key saved on this phone." : "Get one free at themoviedb.org → Settings → API.";
   $("#stepHouse").hidden = !!profile;
-  $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop instead: the owner's own shelves and favourites, with his ratings kept hidden. No key needed.";
+  $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop instead. Rasher's own shelves and favourites, his ratings kept to himself. No key needed.";
   $("#houseGo").textContent = mode === "house" ? "Leave the house shop" : "Browse the house shop";
   $("#zipMsg").textContent = profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
   const n = Object.keys(log).length;

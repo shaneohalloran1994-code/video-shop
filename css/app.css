@@ -350,3 +350,16 @@ input[type=number],input[type=password],select{border-radius:0}
 #shop::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;opacity:.09;mix-blend-mode:overlay;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
 #shop::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(10,5,2,.45) 100%)}
+
+.neonhead{display:flex;flex-direction:column;align-items:center;gap:6px}
+.byline{font:400 16px var(--marker);color:var(--amber);transform:rotate(-2deg)}
+/* More grime: coffee ring on the board, scuffed cases, yellowed paper */
+#shop::after{opacity:.13}
+.board{position:relative}
+.board::before{content:"";position:absolute;right:18px;top:-14px;width:84px;height:84px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,transparent 58%,rgba(92,52,20,.55) 61%,rgba(92,52,20,.25) 66%,transparent 70%);transform:rotate(12deg);mix-blend-mode:multiply}
+.case::before{content:"";position:absolute;inset:6px;pointer-events:none;opacity:.35;
+  background:linear-gradient(12deg,transparent 40%,rgba(255,255,255,.08) 41%,transparent 42%),linear-gradient(-30deg,transparent 70%,rgba(255,255,255,.06) 71%,transparent 72.5%),linear-gradient(80deg,transparent 20%,rgba(255,255,255,.05) 20.6%,transparent 21.4%)}
+.step,.nudge,.empty,.why.talker,.rental,.spine .rent{background-color:#f1e4c4;background-image:radial-gradient(120% 80% at 90% 10%,rgba(160,110,40,.18),transparent 60%),radial-gradient(60% 50% at 10% 95%,rgba(120,80,30,.14),transparent 70%)}
+.nudge.notice{background-color:#f5cf3a}
+.spine .rent{background-image:none;background-color:#efe2c0}
