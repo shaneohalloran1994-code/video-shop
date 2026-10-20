@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=pg">
+<link rel="stylesheet" href="css/app.css?v=ph">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=pg"></script>
+<script type="module" src="js/app.js?v=ph"></script>
 </head>
 <body>
 
@@ -55,9 +55,10 @@
     <div class="rasher" id="rasher" hidden aria-live="polite"></div>
     <div class="cases" id="cases" aria-live="polite"></div>
 
-    <div class="rack" title="Browse the shelves"><div class="strip" id="strip"></div><span class="browse">Browse ▸</span></div>
+    <div class="rack" title="Browse the shelves"><div class="strip" id="strip"></div><span class="browse">Walk the aisles ▸</span></div>
 
-    <div class="sections" id="sections" role="group" aria-label="Sections of the shop"></div>
+    <div class="sechead">Special shelves <small>tap one to roll from it</small></div>
+    <div class="sections" id="sections" role="group" aria-label="Special shelves"></div>
 
     <div class="controls">
       <button class="wantbtn" id="openFilters" aria-haspopup="dialog"><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></button>

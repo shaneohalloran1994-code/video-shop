@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pg";
-import * as tmdb from "./tmdb.js?v=pg";
-import * as importer from "./importer.js?v=pg";
-import * as lib from "./library.js?v=pg";
-import * as snd from "./sound.js?v=pg";
-import * as arcade from "./arcade.js?v=pg";
-import * as coming from "./coming.js?v=pg";
-import * as rasher from "./rasher.js?v=pg";
-import { LINES } from "./lines.js?v=pg";
-import * as friends from "./friends.js?v=pg";
-import * as builder from "./builder.js?v=pg";
-import * as where from "./where.js?v=pg";
+import * as store from "./store.js?v=ph";
+import * as tmdb from "./tmdb.js?v=ph";
+import * as importer from "./importer.js?v=ph";
+import * as lib from "./library.js?v=ph";
+import * as snd from "./sound.js?v=ph";
+import * as arcade from "./arcade.js?v=ph";
+import * as coming from "./coming.js?v=ph";
+import * as rasher from "./rasher.js?v=ph";
+import { LINES } from "./lines.js?v=ph";
+import * as friends from "./friends.js?v=ph";
+import * as builder from "./builder.js?v=ph";
+import * as where from "./where.js?v=ph";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -136,6 +136,7 @@ function rebuild() {
   else S = mine || (mode === "house" && house ? lib.buildHouse(house, log) : null);
   if (S?.house && !S.visit) friends.applyTune(S);
   document.body.classList.toggle("visiting", !!S?.visit);
+  staffIds = new Set((S?.bestFits || []).slice(0, 30).map(x => x.m.id));
   renderPoolKeys(); renderChalk(); renderClipping();
   document.body.classList.toggle("late", isLate()); document.body.classList.toggle("october", isOctober());
   buildFilterOptions(); syncFilters(); idleScreen(); renderPicks(); statsDirty = true;
@@ -223,8 +224,14 @@ function renderPoolKeys() {
   const ps = pools(), ss = sections();
   if (!allPools().some(p => p[0] === poolMode)) poolMode = ps[0][0];
   const box = $(".poolseg"); box.innerHTML = ps.map(([k, l]) => `<button data-pool="${k}" aria-pressed="${k === poolMode}">${l}</button>`).join("");
-  $("#sections").innerHTML = ss.map(([k, l, c]) => `<button class="secsign ${c}" data-pool="${k}" aria-pressed="${k === poolMode}">${l}</button>`).join("");
-  $$("[data-pool]").forEach(b => b.onclick = () => { poolMode = b.dataset.pool; store.prefs.set("pool", poolMode); snd.click(); changed(); idleScreen(); });
+  const keep = poolMode, count = k => { poolMode = k; const n = pool().length; poolMode = keep; return n; };
+  $("#sections").innerHTML = ss.map(([k, l, c]) => `<button class="secsign ${c}" data-pool="${k}" data-label="${esc(l)}" aria-pressed="${k === poolMode}">${l}<b>${S ? count(k) : ""}</b></button>`).join("");
+  $("#sections").classList.remove("flick"); void $("#sections").offsetWidth; $("#sections").classList.add("flick");
+  $$("[data-pool]").forEach(b => b.onclick = () => {
+    const back = b.classList.contains("secsign") && poolMode === b.dataset.pool;
+    poolMode = back ? ps[0][0] : b.dataset.pool; store.prefs.set("pool", poolMode); snd.click(); changed(); idleScreen();
+    if (!back && b.classList.contains("secsign")) toast(`Rolling from ${b.dataset.label}. Tap the sign again to go back.`);
+  });
 }
 $("#blindKey").onclick = () => { blind = !blind; store.prefs.set("blind", blind); syncFilters(); renderPicks(); };
 $("#lastChance").onchange = e => { F.last = e.target.checked; changed(); };
@@ -396,19 +403,23 @@ function staticBurst(ms = 650) {
 // ---------- the rack ----------
 const INKS = [["#111214", "#f2f2f2"], ["#f2efe6", "#b3150e"], ["#b3150e", "#fff6e0"], ["#1d3d8f", "#ffd23f"], ["#f2c230", "#111"], ["#24573f", "#f2efe6"], ["#5b1a50", "#ffd6ec"], ["#e86a17", "#111"], ["#0f5e7a", "#fff"], ["#2b2b2b", "#ff3ea5"]];
 const GDOT = { Horror: "#e3261d", Comedy: "#ffd23f", Drama: "#3b6fd8", Thriller: "#8a4fd1", Action: "#ff8a1f", "Science Fiction": "#4ee36a", Romance: "#ff6fb5", Documentary: "#f2efe6", Animation: "#3ec8ff", Crime: "#9a9a9a", Western: "#a0642f", War: "#6b7a3a", Fantasy: "#2ee0c0", Family: "#ffb547", Mystery: "#5b5bd6", Music: "#ff3ea5", History: "#c9a36b", Adventure: "#ff8a1f" };
+let staffIds = new Set();
 function spineHTML(m) {
   let h = m.id; h = ((h ^ (h >>> 7)) * 2654435761) >>> 0;
   const [bg, fg] = INKS[h % INKS.length], [bg2] = INKS[(h >>> 4) % INKS.length];
   const tpl = (h >>> 9) % 5, ht = 72 + ((h >>> 12) % 12), old = (parseInt(m.y) || 2000) < 1985;
+  const wid = [22, 28, 28, 28, 34, 40][(h >>> 3) % 6], lean = (h >>> 15) % 11 === 0 ? -3 : (h >>> 15) % 11 === 1 ? 2.5 : 0;
+  const fresh = m.rd && (Date.now() - new Date(m.rd)) / 864e5 < 365 && (Date.now() - new Date(m.rd)) > 0, staff = staffIds.has(m.id);
   const dot = GDOT[m.g[0]] || "#ddd";
   const t = esc(m.t);
-  let inner = "", style = `height:${ht}px;`;
+  let inner = "", style = `height:${ht}px;flex-basis:${wid}px;${lean ? `--lean:${lean}deg;` : ""}`;
   if (tpl === 0) { style += `background:linear-gradient(${bg2} 0 26%,${bg} 26%);color:${fg}`; inner = `<span class="st">${t}</span>`; }
   else if (tpl === 1) { style += `background:#111214;color:${bg === "#111214" ? "#ff3ea5" : bg}`; inner = `<i class="edge" style="background:${bg}"></i><span class="st glow">${t}</span>`; }
   else if (tpl === 2) { style += `background:#f2efe6;color:#111`; inner = `<span class="st heavy">${t}</span><i class="foot" style="background:${bg === "#f2efe6" ? "#b3150e" : bg}"></i>`; }
   else if (tpl === 3) { style += `background:${bg === "#f2efe6" ? "#2b2b2b" : bg}`; inner = `<span class="tape"><span class="st hand">${t}</span></span>`; }
   else { style += `background:linear-gradient(160deg,${bg} 0 55%,${bg2} 55%);color:${fg}`; inner = `<span class="st">${t}</span>`; }
-  return `<div class="spine t${tpl}${old ? " old" : ""}" style="${style}" data-id="${m.id}"><i class="gdot" style="background:${dot}"></i>${inner}<i class="rent">T1</i></div>`;
+  const stk = staff ? `<i class="stk pick">STAFF PICK</i>` : fresh ? `<i class="stk new">NEW</i>` : "";
+  return `<div class="spine t${tpl}${old ? " old" : ""}${wid >= 34 ? " fat" : wid <= 22 ? " thin" : ""}" style="${style}" data-id="${m.id}"><i class="gdot" style="background:${dot}"></i>${inner}${stk}<i class="rent">T1</i></div>`;
 }
 const SW = 31; // spine width + gap
 function fillRack(list) { $("#strip").innerHTML = list.map(spineHTML).join(""); $("#strip").style.transform = "translateX(0)"; }
@@ -426,7 +437,8 @@ async function roll() {
   fillRack(strip);
   const rack = $(".rack"), el = $("#strip");
   const center = rack.clientWidth / 2;
-  const target = -(at * SW + (chosen.length * SW) / 2 - center);
+  const kids = el.children, a0 = kids[at], a1 = kids[at + chosen.length - 1];
+  const target = a0 && a1 ? -((a0.offsetLeft + a1.offsetLeft + a1.offsetWidth) / 2 - center) : -(at * SW + (chosen.length * SW) / 2 - center);
   $("#led").classList.add("on");
   if (!RM) {
     rack.classList.add("rolling"); snd.startDrone();
@@ -441,7 +453,7 @@ async function roll() {
     });
     snd.stopDrone(); rack.classList.remove("rolling");
   } else el.style.transform = `translateX(${target}px)`;
-  chosen.forEach(c => el.querySelector(`.spine[data-id="${c.m.id}"]`)?.classList.add("pulled"));
+  chosen.forEach(c => { const sp = el.querySelector(`.spine[data-id="${c.m.id}"]`); if (!sp) return; sp.classList.add("pulled"); setTimeout(() => sp.classList.add("gone"), RM ? 0 : 900); });
   await land(chosen);
 }
 async function land(chosen, ctx = {}) {
