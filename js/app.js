@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=2a1";
-import * as tmdb from "./tmdb.js?v=2a1";
-import * as importer from "./importer.js?v=2a1";
-import * as lib from "./library.js?v=2a1";
-import * as snd from "./sound.js?v=2a1";
+import * as store from "./store.js?v=2a3";
+import * as tmdb from "./tmdb.js?v=2a3";
+import * as importer from "./importer.js?v=2a3";
+import * as lib from "./library.js?v=2a3";
+import * as snd from "./sound.js?v=2a3";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -245,7 +245,15 @@ function draw(arr, n) {
 }
 
 // ---------- the TV ----------
+function idleRack() {
+  if (!S || rolling || picks.length) return;
+  const pool0 = S.watchlist.length ? S.watchlist : S.seen;
+  fillRack(draw(pool0, 18).map(x => x.m));
+  const rack = $(".rack"), w = $("#strip").scrollWidth;
+  $("#strip").style.transform = `translateX(${Math.min(0, (rack.clientWidth - w) / 2)}px)`;
+}
 function idleScreen() {
+  idleRack();
   const c = $("#tvContent");
   if (rolling) return;
   if (!S) {
@@ -302,7 +310,7 @@ const GDOT = { Horror: "#e3261d", Comedy: "#ffd23f", Drama: "#3b6fd8", Thriller:
 function spineHTML(m) {
   let h = m.id; h = ((h ^ (h >>> 7)) * 2654435761) >>> 0;
   const [bg, fg] = INKS[h % INKS.length], [bg2] = INKS[(h >>> 4) % INKS.length];
-  const tpl = (h >>> 9) % 5, ht = 88 + ((h >>> 12) % 13), old = (parseInt(m.y) || 2000) < 1985;
+  const tpl = (h >>> 9) % 5, ht = 72 + ((h >>> 12) % 12), old = (parseInt(m.y) || 2000) < 1985;
   const dot = GDOT[m.g[0]] || "#ddd";
   const t = esc(m.t);
   let inner = "", style = `height:${ht}px;`;
@@ -355,7 +363,6 @@ async function land(chosen) {
   renderPicks();
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
-  if (innerWidth < 700) $("#filters").open = false;
 }
 
 // ---------- the chalkboard: Rasher's film of the day ----------
@@ -371,9 +378,21 @@ function renderChalk() {
   if (!it) { el.hidden = true; return; }
   el.hidden = false;
   el.innerHTML = `<span class="chalk-h">Tonight's special</span><span class="chalk-t">${esc(it.m.t)}</span><span class="chalk-s">${esc(it.m.y)} · ${fmtRt(it.m.rt)} · chalked up by Rasher</span>`;
-  el.onclick = async () => { if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land([{ ...it, src: "wl" }]); };
+  el.onclick = async () => {
+    if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on");
+    const r = $("#tv").getBoundingClientRect(); if (r.top < 60) scrollTo({ top: scrollY + r.top - 70, behavior: RM ? "auto" : "smooth" });
+    await land([{ ...it, src: "wl" }]);
+  };
 }
 $("#roll").onclick = roll;
+function openFilters(v) {
+  const s = $("#filters"); s.hidden = !v; document.body.classList.toggle("noscroll", v);
+  if (v) s.querySelector(".fpanel").scrollTop = 0; else $("#openFilters").focus();
+}
+$("#openFilters").onclick = () => openFilters(true);
+$("#closeFilters").onclick = () => openFilters(false);
+$("#filters").addEventListener("click", e => { if (e.target.id === "filters") openFilters(false); });
+addEventListener("keydown", e => { if (e.key === "Escape" && !$("#filters").hidden) openFilters(false); });
 
 // ---------- the picks (tape cases) ----------
 function caseHTML(it, i) {
@@ -606,8 +625,8 @@ $("#wipeYes").onclick = async () => { await store.clearAll(); ["key", "f", "pool
 
 function nudge() {
   const n = $("#nudge");
-  const notice = () => { n.hidden = false; n.classList.add("notice"); n.textContent = NOTICES[Math.floor(Math.random() * NOTICES.length)]; n.onclick = null; n.style.cursor = ""; };
-  n.classList.remove("notice");
+  const nt = $("#notice"); nt.hidden = !S; nt.textContent = NOTICES[Math.floor(Math.random() * NOTICES.length)];
+  const notice = () => { n.hidden = true; };
   if (!S) { n.hidden = false; n.textContent = "No tapes yet. Bring your Letterboxd export to the counter, or browse the house shop →"; n.onclick = () => tab("counter"); n.style.cursor = "pointer"; return; }
   if (!profile) return notice();
   const age = (Date.now() - new Date(profile.importedAt)) / 864e5;

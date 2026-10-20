@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=2a1">
+<link rel="stylesheet" href="css/app.css?v=2a3">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=2a1"></script>
+<script type="module" src="js/app.js?v=2a3"></script>
 </head>
 <body>
 
@@ -37,9 +37,8 @@
   </header>
 
   <!-- ROLL -->
-  <section id="v-roll" class="view">
+  <section id="v-roll" class="view roll">
     <div class="nudge" id="nudge" hidden></div>
-    <button class="chalk" id="chalk" hidden></button>
     <div class="poolseg keys" role="group" aria-label="Which shelf"></div>
     <div class="sections" id="sections" role="group" aria-label="Sections of the shop"></div>
 
@@ -61,14 +60,21 @@
         <button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button>
       </div>
       <div class="seg keys solo" role="group" aria-label="Rent it blind"><button id="blindKey" aria-pressed="false" title="Box art only until you rent it">Blind</button></div>
-      <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
-      <span class="inrun" id="inRun"></span>
+      <button class="wantbtn" id="openFilters" aria-haspopup="dialog"><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></button>
     </div>
+    <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
+    <span class="inrun" id="inRun"></span>
 
     <div class="cases" id="cases" aria-live="polite"></div>
 
-    <details class="board" id="filters">
-      <summary><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></summary>
+    <button class="chalk" id="chalk" hidden></button>
+    <div class="notice" id="notice" hidden></div>
+  </section>
+
+  <!-- Tonight I want: pull-up filter panel -->
+  <div class="fsheet" id="filters" hidden role="dialog" aria-modal="true" aria-label="Tonight I want">
+    <div class="board fpanel">
+      <div class="fhead"><span class="marker">Tonight I want…</span><button class="tag hot" id="closeFilters">Done</button></div>
       <div class="fgroup"><h3>Genre <em>tap once for yes, twice for no</em></h3><div class="chips" id="genres"></div></div>
       <div class="fgroup"><h3>Length</h3><div class="chips" id="lengths"></div></div>
       <div class="fgroup"><h3>I've got</h3><div class="chips" id="slots"></div></div>
@@ -94,8 +100,8 @@
         <label class="tog"><input type="checkbox" id="lastChance"> Last chance: one veto, then it's locked in</label>
         <div class="row"><button class="ghost" id="clearF">Clear filters</button></div>
       </div>
-    </details>
-  </section>
+    </div>
+  </div>
 
   <!-- FOR YOU -->
   <section id="v-picks" class="view" hidden>

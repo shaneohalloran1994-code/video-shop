@@ -395,3 +395,33 @@ body.october .topbar::after{content:"";position:absolute;left:0;right:0;bottom:-
 body.october .tv{position:relative}
 body.october .tv::after{content:"";position:absolute;right:6px;top:6px;width:64px;height:64px;pointer-events:none;opacity:.55;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23e8e8e8' stroke-width='.8'%3E%3Cpath d='M64 0L20 44M64 0L36 56M64 0L8 28M64 0L50 62M64 0L0 14'/%3E%3Cpath d='M56 2Q58 10 62 8M46 6Q52 18 60 18M36 10Q46 28 58 28M26 14Q40 36 56 40M16 18Q34 46 54 52'/%3E%3C/svg%3E") no-repeat right top/contain}
+
+/* ---------- 2a polish: the roll screen follows how you use it ---------- */
+.view.roll{gap:12px;padding-top:10px}
+.topbar{padding-top:calc(env(safe-area-inset-top) + 8px);padding-bottom:8px}
+.shopname{margin-top:4px}
+.shopname .neon{font-size:24px}
+.poolseg.keys button,.seg.keys button{padding:13px 6px 8px}
+.controls .seg.keys button{padding:13px 12px 8px}
+.sections{margin-top:-2px;padding-bottom:6px}
+.secsign{padding:7px 12px 6px;font-size:13px}
+.roll .tv{width:100%;max-width:calc(30vh * 4 / 3 + 28px);margin:0 auto;padding:12px 12px 8px;border-radius:18px}
+.roll .tv-panel{padding:6px 6px 0}
+.roll .rack{height:94px}
+.controls{flex-wrap:nowrap;gap:8px;align-items:stretch}
+.wantbtn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;border:3px solid #120604;border-radius:0;padding:4px 10px;
+  background:#2a1e17 radial-gradient(#140d09 1.5px,transparent 2px) 0 0/12px 12px;box-shadow:3px 3px 0 #000;text-align:left}
+.wantbtn .marker{font-size:16px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wantbtn .ftag{font-size:16px}
+.play{flex:none;width:100%;padding:13px}
+.inrun{margin-top:-6px}
+.notice{align-self:center;max-width:320px;font:400 15px var(--marker);color:#2a1306;padding:10px 14px;text-align:center;transform:rotate(1.5deg);
+  background-color:#f5cf3a;box-shadow:4px 4px 0 rgba(0,0,0,.6)}
+.chalk{margin-top:6px}
+/* the pull-up filter panel */
+body.noscroll{overflow:hidden}
+.fsheet{position:fixed;inset:0;z-index:15;background:rgba(5,4,8,.7);display:flex;align-items:flex-end;justify-content:center}
+.fpanel{width:min(100%,560px);max-height:86vh;overflow-y:auto;border-bottom:0;padding:0 14px calc(18px + env(safe-area-inset-bottom));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.fhead{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px;background:#2a1e17;border-bottom:2px dashed #4b2f1d}
+.fpanel .fgroup:first-of-type{margin-top:12px}
