@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pi";
-import * as tmdb from "./tmdb.js?v=pi";
-import * as importer from "./importer.js?v=pi";
-import * as lib from "./library.js?v=pi";
-import * as snd from "./sound.js?v=pi";
-import * as arcade from "./arcade.js?v=pi";
-import * as coming from "./coming.js?v=pi";
-import * as rasher from "./rasher.js?v=pi";
-import { LINES } from "./lines.js?v=pi";
-import * as friends from "./friends.js?v=pi";
-import * as builder from "./builder.js?v=pi";
-import * as where from "./where.js?v=pi";
+import * as store from "./store.js?v=pj";
+import * as tmdb from "./tmdb.js?v=pj";
+import * as importer from "./importer.js?v=pj";
+import * as lib from "./library.js?v=pj";
+import * as snd from "./sound.js?v=pj";
+import * as arcade from "./arcade.js?v=pj";
+import * as coming from "./coming.js?v=pj";
+import * as rasher from "./rasher.js?v=pj";
+import { LINES } from "./lines.js?v=pj";
+import * as friends from "./friends.js?v=pj";
+import * as builder from "./builder.js?v=pj";
+import * as where from "./where.js?v=pj";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -897,6 +897,7 @@ function counterState() {
   $("#stepHouse").hidden = !!profile;
   const showOwn = !!profile || !!apiKey || ownOpen;
   $("#stepKey").hidden = !showOwn || (tmdb.hasProxy && !apiKey && !profile); $("#stepZip").hidden = !showOwn;
+  $("#zipH").textContent = $("#stepKey").hidden ? "Your Letterboxd export" : "2 · Your Letterboxd export";
   $("#ownGo").hidden = showOwn;
   $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Start your own any time." : "Pick a way in.";
   $("#houseGo").innerHTML = mode === "house" ? "<b>Leave the house shop</b><span>Back to the counter.</span>" : "<b>Just browsing</b><span>Walk round Rasher's own shelves. Nothing to set up.</span>";
@@ -939,7 +940,18 @@ $("#zipIn").onchange = async e => {
     $("#zipMsg").textContent = err.code === "bad_key" ? "TMDB stopped accepting your key. Save it again and retry." : (err.message || "Something went wrong reading that zip.");
   }
 };
-$("#zipIos").hidden = !(/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+$("#zipIos").hidden = !IOS;
+$("#zipWhere").textContent = IOS ? "It goes to Files → Downloads. Don't open or unzip it." : /Android/.test(navigator.userAgent) ? "It goes to your Downloads folder. Don't open or unzip it." : "It goes to your Downloads folder. Don't unzip it.";
+// After they've gone off to Letterboxd, point at step 3 when they come back.
+let wentForZip = false;
+$("#zipOpen").addEventListener("click", () => { wentForZip = true; });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible" || !wentForZip) return;
+  wentForZip = false; $("#zipPick").classList.add("ready");
+  $("#zipPick").scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" });
+  toast("Got the zip? Tap Choose the zip and pick it from Downloads.");
+});
 $("#ownGo").onclick = () => { ownOpen = true; counterState(); $("#stepKey").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); };
 $("#houseGo").onclick = async () => {
   if (mode === "house") { mode = ""; store.prefs.del("mode"); picks = []; rebuild(); return; }

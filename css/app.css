@@ -939,3 +939,14 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 @keyframes signOn{0%{filter:brightness(.35)}20%{filter:brightness(1.3)}30%{filter:brightness(.5)}45%,100%{filter:none}}
 @media (prefers-reduced-motion:reduce){.sections.flick .secsign{animation:none}}
 @keyframes handOff{0%,55%{transform:translateX(0);opacity:1}85%{opacity:0}100%{transform:translateX(min(100vw,600px));opacity:0}}
+/* Guided Letterboxd export */
+.zsteps{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:12px}
+.zsteps li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;font:500 16px/1.35 var(--cond)}
+.zsteps .zn{width:28px;height:28px;border-radius:50%;background:#2a1306;color:#fff4d8;display:grid;place-items:center;font:800 15px var(--cond)}
+.zsteps small{display:block;color:#6b5a48;font-size:14px;margin-top:4px}
+.zsteps .btn{display:inline-block;margin-top:2px}
+#zipPick{margin-top:6px}
+#zipPick.ready{animation:zipPulse 1s ease-in-out 3;box-shadow:0 0 0 3px #e3261d,3px 3px 0 #2a1306}
+@keyframes zipPulse{50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){#zipPick.ready{animation:none}}
+#zipOpen{text-decoration:none}
