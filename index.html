@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=ph">
+<link rel="stylesheet" href="css/app.css?v=pi">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=ph"></script>
+<script type="module" src="js/app.js?v=pi"></script>
 </head>
 <body>
 
@@ -164,7 +164,8 @@
       <div class="step" id="stepZip">
         <h3>2 · Your Letterboxd export</h3>
         <p>On letterboxd.com go to Settings → Data → Export your data, then pick the zip here.</p>
-        <label class="btn file">Choose the zip<input id="zipIn" type="file" accept=".zip,application/zip"></label>
+        <label class="btn file">Choose the zip<input id="zipIn" type="file" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream"></label>
+        <p class="small" id="zipIos" hidden>On iPhone: if the zip is in Google Drive, open it in the Drive app, tap ⋯ → Open in → Save to Files first. Or skip the zip and use "I use Letterboxd" with just your username.</p>
         <p class="small" id="zipMsg"></p>
         <div class="row"><button class="ghost" id="buildMore" hidden>Tell Rasher more films</button></div>
         <div class="progress" id="prog" hidden><div class="bar"><i id="progBar"></i></div><span id="progTxt"></span></div>

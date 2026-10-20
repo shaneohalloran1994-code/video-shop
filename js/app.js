@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=ph";
-import * as tmdb from "./tmdb.js?v=ph";
-import * as importer from "./importer.js?v=ph";
-import * as lib from "./library.js?v=ph";
-import * as snd from "./sound.js?v=ph";
-import * as arcade from "./arcade.js?v=ph";
-import * as coming from "./coming.js?v=ph";
-import * as rasher from "./rasher.js?v=ph";
-import { LINES } from "./lines.js?v=ph";
-import * as friends from "./friends.js?v=ph";
-import * as builder from "./builder.js?v=ph";
-import * as where from "./where.js?v=ph";
+import * as store from "./store.js?v=pi";
+import * as tmdb from "./tmdb.js?v=pi";
+import * as importer from "./importer.js?v=pi";
+import * as lib from "./library.js?v=pi";
+import * as snd from "./sound.js?v=pi";
+import * as arcade from "./arcade.js?v=pi";
+import * as coming from "./coming.js?v=pi";
+import * as rasher from "./rasher.js?v=pi";
+import { LINES } from "./lines.js?v=pi";
+import * as friends from "./friends.js?v=pi";
+import * as builder from "./builder.js?v=pi";
+import * as where from "./where.js?v=pi";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -939,6 +939,7 @@ $("#zipIn").onchange = async e => {
     $("#zipMsg").textContent = err.code === "bad_key" ? "TMDB stopped accepting your key. Save it again and retry." : (err.message || "Something went wrong reading that zip.");
   }
 };
+$("#zipIos").hidden = !(/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 $("#ownGo").onclick = () => { ownOpen = true; counterState(); $("#stepKey").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); };
 $("#houseGo").onclick = async () => {
   if (mode === "house") { mode = ""; store.prefs.del("mode"); picks = []; rebuild(); return; }
