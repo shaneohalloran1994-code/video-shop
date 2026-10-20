@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=p1";
-import { prefs } from "./store.js?v=p1";
-import { QUOTES } from "./quotes.js?v=p1";
+import { LINES } from "./lines.js?v=p2";
+import { prefs } from "./store.js?v=p2";
+import { QUOTES } from "./quotes.js?v=p2";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -48,6 +48,11 @@ export function landLine(m, c = {}) {
   if (c.three) return line("land_three");
   const dirs = m.dir || [], roll = Math.random();
   if (c.mood === "hangover" && roll < .35) return quote("hangover", m.t) || line("land");
+  if (c.mood === "date" && roll < .25) return quote("date", m.t) || line("land");
+  if (dirs.includes("Francis Ford Coppola") && roll < .5) return quote("godfather", m.t) || line("land");
+  if ((m.l === "it" || (m.c || []).includes("IT")) && roll < .4) return quote("italian", m.t) || line("land");
+  if ((m.c || []).some(x => x === "CZ" || x === "XC") && roll < .4) return quote("czech", m.t) || line("land");
+  if ((m.g || []).includes("Western") && roll < .3) return quote("western", m.t) || line("g_western");
   if (dirs.includes("John Carpenter") && roll < .45) return quote("carpenter", m.t) || line("d_John Carpenter");
   if ((dirs.includes("Joel Coen") || dirs.includes("Ethan Coen")) && roll < .45) return quote("coen", m.t) || line("d_Joel Coen");
   if (dirs.includes("Richard Linklater") && roll < .3) return quote("linklater", m.t) || line("d_Richard Linklater");
@@ -70,10 +75,10 @@ export function verdict(rating, guess, prev, m) {
   if (rating === 5 && guess <= 3.5) return "Alright, alright, alright.";
   if (rating >= 4.5 && (m.dir || []).includes("John Carpenter")) return "Carpenter never misses.";
   if (prev != null && Math.abs(d) <= .5) return line("rewatch");
-  if (Math.abs(d) <= .5) return line("rate_called");
+  if (Math.abs(d) <= .5) return (Math.random() < .3 && quote("rate_called")) || line("rate_called");
   if (d > 0) return line("rate_surprise");
   if (guess >= 4 && d <= -1) return line("rate_he_loved");
-  return line("rate_low");
+  return (Math.random() < .3 && quote("rate_low")) || line("rate_low");
 }
 
 // ---------- drawings (hand-drawn SVG, no images) ----------

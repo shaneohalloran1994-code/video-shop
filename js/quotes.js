@@ -1,4 +1,4 @@
-// Film quotes Rasher drops now and then. Checked against Wikiquote; Shane approves them in the tracker.
+// Film and TV quotes Rasher drops now and then. Checked against Wikiquote and press coverage; Shane approves them in the tracker.
 export const QUOTES = [
 {
 "film": "The Big Lebowski",
@@ -107,5 +107,71 @@ export const QUOTES = [
 "who": "Wooderson",
 "q": "Alright, alright, alright!",
 "tag": "linklater"
+},
+{
+"film": "The Sopranos",
+"who": "Tony",
+"q": "In this house, Christopher Columbus is a hero. End of story.",
+"tag": "italian"
+},
+{
+"film": "The Sopranos",
+"who": "Tony",
+"q": "Whatever happened to Gary Cooper? The strong, silent type.",
+"tag": "quiet"
+},
+{
+"film": "The Sopranos",
+"who": "Tony",
+"q": "I'm like King Midas in reverse. Everything I touch turns to shit.",
+"tag": "rate_low"
+},
+{
+"film": "The Sopranos",
+"who": "Bobby",
+"q": "You know, Quasimodo predicted all of this.",
+"tag": "rate_called"
+},
+{
+"film": "The Sopranos",
+"who": "Christopher",
+"q": "Louis Brasi sleeps with the fishes.",
+"tag": "godfather"
+},
+{
+"film": "The Sopranos",
+"who": "Junior",
+"q": "Take it easy. We're not making a Western here.",
+"tag": "western"
+},
+{
+"film": "The Sopranos",
+"who": "Junior",
+"q": "Who's speaking here? Is somebody speaking?",
+"tag": "counter"
+},
+{
+"film": "The Sopranos",
+"who": "Paulie",
+"q": "He killed 16 Czechoslovakians. The guy was an interior decorator.",
+"tag": "czech"
+},
+{
+"film": "The Sopranos",
+"who": "Pussy",
+"q": "You know who had an arc? Noah.",
+"tag": "any"
+},
+{
+"film": "The Sopranos",
+"who": "Tony",
+"q": "Every day is a gift. It's just, does it have to be a pair of socks?",
+"tag": "any"
+},
+{
+"film": "The Sopranos",
+"who": "Tony",
+"q": "When you're married, you'll understand the importance of fresh produce.",
+"tag": "date"
 }
 ];

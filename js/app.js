@@ -1,13 +1,13 @@
-import * as store from "./store.js?v=p1";
-import * as tmdb from "./tmdb.js?v=p1";
-import * as importer from "./importer.js?v=p1";
-import * as lib from "./library.js?v=p1";
-import * as snd from "./sound.js?v=p1";
-import * as arcade from "./arcade.js?v=p1";
-import * as coming from "./coming.js?v=p1";
-import * as rasher from "./rasher.js?v=p1";
-import { LINES } from "./lines.js?v=p1";
-import * as friends from "./friends.js?v=p1";
+import * as store from "./store.js?v=p2";
+import * as tmdb from "./tmdb.js?v=p2";
+import * as importer from "./importer.js?v=p2";
+import * as lib from "./library.js?v=p2";
+import * as snd from "./sound.js?v=p2";
+import * as arcade from "./arcade.js?v=p2";
+import * as coming from "./coming.js?v=p2";
+import * as rasher from "./rasher.js?v=p2";
+import { LINES } from "./lines.js?v=p2";
+import * as friends from "./friends.js?v=p2";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -854,7 +854,7 @@ $("#houseGo").onclick = async () => {
 };
 $("#soundOn").onchange = e => { snd.setOn(e.target.checked); store.prefs.set("sound", e.target.checked); };
 $("#skipStreet").onchange = e => store.prefs.set("skipStreet", e.target.checked);
-$("#quietOn").onchange = e => { rasher.setQuiet(e.target.checked); counterState(); renderChalk(); toast(e.target.checked ? "Rasher's put his headphones on." : "Rasher's back."); };
+$("#quietOn").onchange = e => { rasher.setQuiet(e.target.checked); counterState(); renderChalk(); toast(e.target.checked ? "“Whatever happened to Gary Cooper? The strong, silent type.”" : "Rasher's back."); };
 $("#tourAgain").onclick = () => { if (rasher.quiet()) return toast("Turn quiet mode off first."); tour(); };
 $("#unwatch").onclick = async () => { log = {}; await store.set("log", log); rebuild(); toast("Marked-watched films are back on the shelf."); };
 $("#wipe").onclick = () => $("#wipeConfirm").hidden = false;
