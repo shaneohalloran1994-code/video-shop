@@ -690,7 +690,7 @@ function pickHTML(it, i, card) {
   return `<article class="pick"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="info" style="min-width:0">
     <h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}${m.l !== "en" ? " · " + esc(lang(m.l).toUpperCase()) : ""}</div>
     <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}${m.dir[0] ? " · " + esc(m.dir[0]) : ""}</div>
-    ${(it.why || []).length ? `<ul class="why talker${card ? " card" : ""}">${card ? `<li class="card-h">Rasher recommends</li>` : ""}${it.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+    ${(it.why || []).length ? `<ul class="why talker${card ? " card" : ""}">${card ? `<li class="card-h">${S.owner ? esc(S.owner) : "Rasher"} recommends</li>` : ""}${it.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
     <div class="acts">${card ? `<button class="tag hot" data-put="${i}">Put it on</button>` : ""}<a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a></div></div></article>`;
 }
 function renderForYou() {
@@ -1006,7 +1006,7 @@ $("#tuneOpen").onclick = () => {
 
 // ---------- group night (pass the phone) ----------
 function groupNight(v, head, back) {
-  const people = [...(mine ? [{ code: "me", name: "Me" }] : []), ...Object.values(FR).map(f => ({ code: f.code, name: f.name }))];
+  const people = [...(mine ? [{ code: "me", name: friends.shareInfo()?.name || profile.username || "You" }] : []), ...Object.values(FR).map(f => ({ code: f.code, name: f.name }))];
   if (people.length < 2) { v.innerHTML = head + `<div class="empty">Add a mate's code at the Counter first. Group night needs at least two shops.</div>`; back(); return; }
   const g = { who: new Set(people.map(p => p.code)), short: false, nosubs: false };
   const setup = () => {
