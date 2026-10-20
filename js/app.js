@@ -1,13 +1,14 @@
-import * as store from "./store.js?v=p2";
-import * as tmdb from "./tmdb.js?v=p2";
-import * as importer from "./importer.js?v=p2";
-import * as lib from "./library.js?v=p2";
-import * as snd from "./sound.js?v=p2";
-import * as arcade from "./arcade.js?v=p2";
-import * as coming from "./coming.js?v=p2";
-import * as rasher from "./rasher.js?v=p2";
-import { LINES } from "./lines.js?v=p2";
-import * as friends from "./friends.js?v=p2";
+import * as store from "./store.js?v=p3";
+import * as tmdb from "./tmdb.js?v=p3";
+import * as importer from "./importer.js?v=p3";
+import * as lib from "./library.js?v=p3";
+import * as snd from "./sound.js?v=p3";
+import * as arcade from "./arcade.js?v=p3";
+import * as coming from "./coming.js?v=p3";
+import * as rasher from "./rasher.js?v=p3";
+import { LINES } from "./lines.js?v=p3";
+import * as friends from "./friends.js?v=p3";
+import * as builder from "./builder.js?v=p3";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -105,7 +106,7 @@ function weekly() {
   weeklyCache = { wk, S, v };
   return v;
 }
-const pools = () => POOLS[S?.house ? "house" : "own"];
+const pools = () => S?.house ? POOLS.house : profile?.built ? POOLS.own.map(([k, l]) => [k, k === "wl" ? "The shelves" : l]) : POOLS.own;
 const allPools = () => [...pools(), ...sections()];
 const SEEN_POOLS = ["seen", "both", "rewind", "irish"];
 const CULT_KW = ["cult film", "surrealism", "absurdism", "b movie", "midnight movie", "experimental", "grindhouse", "exploitation", "psychotronic"];
@@ -700,7 +701,7 @@ function pageReasons(list) {
   return list.map(it => {
     if (!S.reasonPool || S.house) return it;
     const pool = S.reasonPool(it.m).sort((a, b) => KIND_RANK[a[0]] - KIND_RANK[b[0]]);
-    const why = [], mine = new Set();
+    const why = it.via ? [`Because you loved ${it.via}.`] : [], mine = new Set(it.via ? ["src"] : []);
     for (const [k, t] of pool) {
       const fam = k === "a" || k === "d" ? "who" : k === "g" || k === "hot" ? "genre" : k;
       if (why.length >= 2 || used.has(t) || mine.has(fam)) continue;
@@ -809,7 +810,8 @@ function counterState() {
   $("#ownGo").hidden = showOwn;
   $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop: Rasher's own shelves and favourites. Nothing to set up.";
   $("#houseGo").textContent = mode === "house" ? "Leave the house shop" : "Browse the house shop";
-  $("#zipMsg").textContent = profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
+  $("#buildMore").hidden = !profile?.built; $("#buildGo").hidden = !!profile; $("#buildTxt").hidden = !!profile;
+  $("#zipMsg").textContent = profile?.built ? `Built by hand: ${Object.keys(profile.ratings).length} films rated${profile.username ? `, plus your Letterboxd diary` : ""}. ${S.watchlist.length.toLocaleString()} tapes on your shelves. Bring a full export any time for the whole picture.` : profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
   const n = Object.keys(log).length;
   $("#unwatch").hidden = !n; $("#unwatch").textContent = `Forget ${n} film${n > 1 ? "s" : ""} marked watched here`;
   $("#soundOn").checked = snd.isOn(); $("#skipStreet").checked = store.prefs.get("skipStreet", false); $("#quietOn").checked = rasher.quiet();
@@ -1073,6 +1075,21 @@ function groupNight(v, head, back) {
   const play = (items, cab) => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); land(items, { arcade: cab }); };
   setup();
 }
+
+// ---------- start your own shop (no export) ----------
+builder.init({
+  house: async () => { await loadHouse(); return house; }, proxy: tmdb.hasProxy || !!apiKey,
+  details: id => tmdb.details(apiKey, id), search: q => tmdb.call(apiKey, "/search/movie", { query: q }),
+  posterOf, esc, head: rasher.HEAD, snd, toast,
+  save: async (p, f) => {
+    profile = p; films = { ...films, ...f }; await store.set("profile", profile); await store.set("films", films);
+    mode = ""; store.prefs.del("mode"); visit = ""; store.prefs.del("visit"); picks = []; poolMode = "wl"; store.prefs.set("pool", "wl");
+    rebuild(); tab("roll"); toast(`Shelves stocked. ${S.watchlist.length.toLocaleString()} tapes picked for you.`);
+    try { extra = await importer.enrichIds(apiKey, S.candidateIds); rebuild(); } catch { }
+  },
+});
+$("#buildGo").onclick = () => builder.open(null);
+$("#buildMore").onclick = () => builder.open({ profile, films });
 
 // ---------- start ----------
 snd.setOn(store.prefs.get("sound", true));

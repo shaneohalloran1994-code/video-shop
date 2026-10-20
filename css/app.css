@@ -764,3 +764,18 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 .bin2{height:160px}
 .bin2 .bintapes{inset:30px 4px 0;overflow:visible}
 .binwire{mask:none;background:repeating-linear-gradient(90deg,rgba(190,190,190,.5) 0 2px,transparent 2px 26px),repeating-linear-gradient(0deg,rgba(190,190,190,.35) 0 2px,transparent 2px 30px);opacity:.8}
+/* Start your own shop */
+.sheet-card.build{min-height:70vh}
+.bsearch{position:relative}
+.bsearch input{width:100%}
+#bRes{display:grid;gap:4px;margin-top:4px}
+.bhit{text-align:left;background:#fff4d8;color:#2a1306;border:0;padding:8px 10px;font:600 15px var(--cond)}
+.bhit small{color:#7a6a55}
+.bcard{display:grid;justify-items:center;gap:8px;margin:12px 0 6px}
+.bposter{width:min(52vw,200px);aspect-ratio:2/3;background:#222 center/cover;box-shadow:5px 5px 0 #000}
+.btitle{font:400 22px/1.15 var(--title);text-align:center;color:var(--paper)}.btitle small{font:400 16px var(--crt);color:var(--green)}
+.bbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bbtns .chip{padding:11px 8px;font-size:16px}
+.bbtns .b-5{background:#7cff7a}.bbtns .b-35{background:#d9f5b0}.bbtns .b-15{background:#ff9a8a}.bbtns .b-wl{background:var(--amber)}.bbtns .b-skip{grid-column:1/-1;background:#d8d0c0}
+.bfoot{align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px}
+#buildTxt{margin:0}

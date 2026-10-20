@@ -31,7 +31,7 @@ export function build(profile, films, extra, log) {
     const m = rec(w.key);
     if (!m || wlIds.has(m.id) || seen.has(m.id)) continue;
     wlIds.add(m.id);
-    watchlist.push({ m, added: w.added, uri: w.uri });
+    watchlist.push({ m, added: w.added, uri: w.uri, via: w.via });
   }
   const seenList = [...seen.values()];
   const unmatched = profile.watchlist.filter(w => !rec(w.key)).length;
@@ -104,7 +104,7 @@ export function build(profile, films, extra, log) {
     d: ["You rate {v} highly", "{v}. You know the drill.", "You've a soft spot for {v}", "Another {v} for the pile", "{v} rarely lets you down"],
     a: ["{v}'s in it. Say no more.", "You tend to like anything with {v}", "{v} again. You're consistent.", "Has {v}. That usually works for you."],
     g: ["{v} is your strong suit", "Good {v}. You'll know.", "You rarely miss on {v}", "{v}, the way you like it"],
-    dec: ["Proper {v} stuff", "You rate the {v} highly", "They don't make them like the {v} anymore", "A {v} one. Your era."],
+    dec: ["Proper {v} stuff", "You rate the {v} highly", "Good {v} stuff. You know the type.", "A {v} one. Your era."],
     hot: ["Keeps your {v} streak going", "Lots of {v} lately. This fits.", "Fits the {v} kick you're on"],
     src: ["Keeps coming up off {v}", "If you liked {v}, this one", "Off the back of {v}", "{v} fans end up here"],
   };

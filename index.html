@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=p2">
+<link rel="stylesheet" href="css/app.css?v=p3">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=p2"></script>
+<script type="module" src="js/app.js?v=p3"></script>
 </head>
 <body>
 
@@ -143,7 +143,8 @@
       <div class="step" id="stepHouse">
         <h3 id="houseH">Come in</h3>
         <p id="houseTxt"></p>
-        <div class="row"><button class="btn" id="houseGo">Browse the house shop</button><button class="ghost" id="ownGo">Got a Letterboxd export?</button></div>
+        <div class="row"><button class="btn" id="houseGo">Browse the house shop</button><button class="btn" id="buildGo">Start my own shop</button><button class="ghost" id="ownGo">Got a Letterboxd export?</button></div>
+        <p class="small" id="buildTxt">No export needed: give Rasher your Letterboxd username, or rate a few films, and he'll stock your shelves.</p>
       </div>
       <div class="step" id="stepKey">
         <h3>1 · Your TMDB key</h3>
@@ -156,6 +157,7 @@
         <p>On letterboxd.com go to Settings → Data → Export your data, then pick the zip here.</p>
         <label class="btn file">Choose the zip<input id="zipIn" type="file" accept=".zip,application/zip"></label>
         <p class="small" id="zipMsg"></p>
+        <div class="row"><button class="ghost" id="buildMore" hidden>Tell Rasher more films</button></div>
         <div class="progress" id="prog" hidden><div class="bar"><i id="progBar"></i></div><span id="progTxt"></span></div>
       </div>
       <div class="step" id="stepFriends">
@@ -245,6 +247,10 @@
 <div class="sheet" id="tuneSheet" hidden role="dialog" aria-modal="true" aria-label="Tell Rasher what you like">
   <div class="sheet-card dark"><div class="fhead"><span class="marker">Tell Rasher what you like</span><button class="tag hot" id="tuneDone">Done</button></div>
   <p class="small">Tap the ones you loved. Tap twice for ones you couldn't stand. Leave the rest.</p><div class="pgrid tgrid" id="tuneGrid"></div></div>
+</div>
+<!-- Start your own shop, no export -->
+<div class="sheet" id="buildSheet" hidden role="dialog" aria-modal="true" aria-label="Start your own shop">
+  <div class="sheet-card dark build"><div class="fhead"><span class="marker">Your own shop</span><button class="tag" id="buildClose">Not now</button></div><div id="buildBody"></div></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>
