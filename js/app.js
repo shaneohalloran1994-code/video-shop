@@ -1,14 +1,14 @@
-import * as store from "./store.js?v=p4";
-import * as tmdb from "./tmdb.js?v=p4";
-import * as importer from "./importer.js?v=p4";
-import * as lib from "./library.js?v=p4";
-import * as snd from "./sound.js?v=p4";
-import * as arcade from "./arcade.js?v=p4";
-import * as coming from "./coming.js?v=p4";
-import * as rasher from "./rasher.js?v=p4";
-import { LINES } from "./lines.js?v=p4";
-import * as friends from "./friends.js?v=p4";
-import * as builder from "./builder.js?v=p4";
+import * as store from "./store.js?v=p5";
+import * as tmdb from "./tmdb.js?v=p5";
+import * as importer from "./importer.js?v=p5";
+import * as lib from "./library.js?v=p5";
+import * as snd from "./sound.js?v=p5";
+import * as arcade from "./arcade.js?v=p5";
+import * as coming from "./coming.js?v=p5";
+import * as rasher from "./rasher.js?v=p5";
+import { LINES } from "./lines.js?v=p5";
+import * as friends from "./friends.js?v=p5";
+import * as builder from "./builder.js?v=p5";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];

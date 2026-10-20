@@ -1,5 +1,5 @@
 // TMDB lookups. The key is the viewer's own, saved on their device in Settings.
-import { TMDB_PROXY } from "./config.js?v=p4";
+import { TMDB_PROXY } from "./config.js?v=p5";
 const API = "https://api.themoviedb.org/3";
 export const hasProxy = !!TMDB_PROXY;
 export const IMG = "https://image.tmdb.org/t/p/";

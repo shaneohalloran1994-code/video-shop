@@ -794,3 +794,5 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 @keyframes rCase{0%{transform:translateX(320px) rotate(6deg)}45%{transform:translateX(0) rotate(-2deg)}55%,100%{transform:translateX(0) rotate(-2deg)}}
 @keyframes rHand2{0%{transform:translateX(320px);opacity:1}45%{transform:translateX(0);opacity:1}62%{transform:translateX(0);opacity:1}100%{transform:translateX(340px);opacity:1}}
 @media (prefers-reduced-motion:reduce){.r-hand2{display:none}}
+.sheet-card.dark .ghost{color:var(--paper);border-color:#b39a7c;background:rgba(255,244,216,.06)}
+.sheet-card.dark .ghost.danger{color:#ff8a80;border-color:#a3332c}
