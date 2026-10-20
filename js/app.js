@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=2a4";
-import * as tmdb from "./tmdb.js?v=2a4";
-import * as importer from "./importer.js?v=2a4";
-import * as lib from "./library.js?v=2a4";
-import * as snd from "./sound.js?v=2a4";
+import * as store from "./store.js?v=2a5";
+import * as tmdb from "./tmdb.js?v=2a5";
+import * as importer from "./importer.js?v=2a5";
+import * as lib from "./library.js?v=2a5";
+import * as snd from "./sound.js?v=2a5";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -26,6 +26,7 @@ let F = Object.assign({}, DEFAULT_F, store.prefs.get("f", {}));
 let poolMode = store.prefs.get("pool", "wl");
 let N = store.prefs.get("n", 1);
 let picks = [], active = 0, rolling = false, rolledEmpty = false;
+let ownOpen = false;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
   own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"]],
@@ -576,7 +577,10 @@ function counterState() {
   $("#keyIn").placeholder = apiKey ? "Key saved. Paste a new one to change it" : "Paste your API key";
   $("#keyMsg").textContent = apiKey ? "Key saved on this phone." : "Get one free at themoviedb.org → Settings → API.";
   $("#stepHouse").hidden = !!profile;
-  $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop instead. Rasher's own shelves and favourites, his ratings kept to himself. No key needed.";
+  const showOwn = !!profile || !!apiKey || ownOpen;
+  $("#stepKey").hidden = $("#stepZip").hidden = !showOwn;
+  $("#ownGo").hidden = showOwn;
+  $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop: Rasher's own shelves and favourites. Nothing to set up.";
   $("#houseGo").textContent = mode === "house" ? "Leave the house shop" : "Browse the house shop";
   $("#zipMsg").textContent = profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
   const n = Object.keys(log).length;
@@ -612,6 +616,7 @@ $("#zipIn").onchange = async e => {
     $("#zipMsg").textContent = err.code === "bad_key" ? "TMDB stopped accepting your key. Save it again and retry." : (err.message || "Something went wrong reading that zip.");
   }
 };
+$("#ownGo").onclick = () => { ownOpen = true; counterState(); $("#stepKey").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); };
 $("#houseGo").onclick = async () => {
   if (mode === "house") { mode = ""; store.prefs.del("mode"); picks = []; rebuild(); return; }
   mode = "house"; store.prefs.set("mode", "house"); await loadHouse(); picks = []; rebuild(); if (S) { tab("roll"); toast("Welcome in. Have a look around."); }

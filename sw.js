@@ -1,5 +1,5 @@
 // Offline shell + poster cache. Bump VERSION on every release.
-const VERSION = "take-one-2a-4";
+const VERSION = "take-one-2a-5";
 const SHELL = ["./", "index.html", "css/app.css", "js/app.js", "js/store.js", "js/tmdb.js", "js/importer.js", "js/library.js", "js/sound.js", "vendor/jszip.min.js", "manifest.webmanifest",
   "fonts/marcellus-latin-400-normal.woff2", "fonts/monoton-latin-400-normal.woff2", "fonts/permanent-marker-latin-400-normal.woff2", "fonts/vt323-latin-400-normal.woff2",
   "fonts/courier-prime-latin-400-normal.woff2", "fonts/courier-prime-latin-700-normal.woff2", "fonts/barlow-latin-400-normal.woff2", "fonts/barlow-latin-500-normal.woff2",
