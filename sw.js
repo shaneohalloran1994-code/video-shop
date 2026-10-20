@@ -1,5 +1,5 @@
 // Offline shell + poster cache. Bump VERSION on every release.
-const VERSION = "take-one-1b-1";
+const VERSION = "take-one-1b-2";
 const SHELL = ["./", "index.html", "css/app.css", "js/app.js", "js/store.js", "js/tmdb.js", "js/importer.js", "js/library.js", "js/sound.js", "vendor/jszip.min.js", "manifest.webmanifest",
   "fonts/marcellus-latin-400-normal.woff2", "fonts/monoton-latin-400-normal.woff2", "fonts/permanent-marker-latin-400-normal.woff2", "fonts/vt323-latin-400-normal.woff2",
   "fonts/courier-prime-latin-400-normal.woff2", "fonts/courier-prime-latin-700-normal.woff2", "fonts/barlow-latin-400-normal.woff2", "fonts/barlow-latin-500-normal.woff2",
@@ -14,5 +14,5 @@ self.addEventListener("fetch", e => {
   }
   if (u.origin !== location.origin) return;
   // App files: network first so updates land, cache when offline.
-  e.respondWith(fetch(e.request).then(r => { const cp = r.clone(); caches.open(VERSION).then(c => c.put(e.request, cp)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match("index.html"))));
+  e.respondWith(fetch(e.request, { cache: "no-cache" }).then(r => { const cp = r.clone(); caches.open(VERSION).then(c => c.put(e.request, cp)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match("index.html"))));
 });
