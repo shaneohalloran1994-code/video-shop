@@ -109,6 +109,22 @@ export function build(profile, films, extra, log) {
     src: ["Keeps coming up off {v}", "If you liked {v}, this one", "Off the back of {v}", "{v} fans end up here"],
   };
   const fill = (t, v) => t.replace("{v}", v);
+  const reasonPool = (m, src) => {
+    const out = [];
+    const fs = feats(m).map(f => [coef(f), f]).sort((a, b) => b[0] - a[0]);
+    if (src && src.length) out.push(["src", fill(pickT(T.src, m, 6), src.slice(0, 2).join(" and "))]);
+    const hot = m.g.find(g => (lift[g] || 0) > 0.06);
+    for (const [c, f] of fs) {
+      if (c < 0.05 || out.length >= 6) break;
+      const [t, ...rest] = f.split(":"); const v = rest.join(":");
+      if (t === "d") out.push(["d", fill(pickT(T.d, m, 1), v)]);
+      else if (t === "a") out.push(["a", fill(pickT(T.a, m, 2), v)]);
+      else if (t === "g") { const r = fill(pickT(T.g, m, 3), v.toLowerCase()); out.push(["g", r.charAt(0).toUpperCase() + r.slice(1)]); }
+      else if (t === "dec") out.push(["dec", fill(pickT(T.dec, m, 4), v)]);
+    }
+    if (hot) out.push(["hot", fill(pickT(T.hot, m, 5), hot.toLowerCase())]);
+    return out;
+  };
   const reasons = (m, src) => {
     const out = [];
     const fs = feats(m).map(f => [coef(f), f]).sort((a, b) => b[0] - a[0]);
@@ -153,7 +169,7 @@ export function build(profile, films, extra, log) {
 
   const bestFits = [...watchlist].sort((a, b) => b.fit - a.fit).slice(0, 60).map(x => ({ ...x, why: reasons(x.m) }));
 
-  return { watchlist, seen: seenList, unmatched, predict, fit, reasons, bestFits, fresh: fresh.slice(0, 60), candidateIds, lift, recent, overall, recentN: recentL.length, cut, lastDate, dated, mu, profile, films };
+  return { watchlist, seen: seenList, unmatched, predict, fit, reasons, reasonPool, bestFits, fresh: fresh.slice(0, 60), candidateIds, lift, recent, overall, recentN: recentL.length, cut, lastDate, dated, mu, profile, films };
 }
 
 // ---- the house shop: the owner's shelves for guests, with the owner's ratings left out ----
@@ -201,7 +217,8 @@ export function stats(S) {
   const vsCrowd = [...gd].filter(([, a]) => a.length >= 15).map(([g, a]) => ({ g, d: mean(a), n: a.length })).sort((a, b) => a.d - b.d);
   const dis = [...pairs].sort((a, b) => (a.mine - a.crowd) - (b.mine - b.crowd));
   const dist = {}; for (const s of ratedL) dist[s.rating] = (dist[s.rating] || 0) + 1;
-  const lately = Object.keys(S.recent).map(g => ({ g, r: S.recent[g] || 0, o: S.overall[g] || 0 })).sort((a, b) => (b.r - b.o) - (a.r - a.o));
+  const N = S.recentN || 0;
+  const lately = N < 8 ? [] : Object.keys(S.recent).map(g => ({ g, r: S.recent[g] || 0, o: S.overall[g] || 0, n: Math.round((S.recent[g] || 0) * N), of: N })).filter(x => x.n >= 3 && x.r > x.o).sort((a, b) => (b.r - b.o) - (a.r - a.o));
   return {
     watched: seen.length, rated: ratedL.length, hours: Math.round(mins / 60), avg, watchlist: S.watchlist.length,
     genres, decades, countries, langs, directors, actors, crowdAvg, vsCrowd,

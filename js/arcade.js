@@ -260,24 +260,77 @@ function renderChain() {
 
 // ---------- Spin the Globe ----------
 let globeAll = false;
+// Hand-drawn classroom globe. Rough continents in lon/lat, spun by sliding the map behind a round window.
+const LAND = [
+  [[-165,65],[-140,70],[-95,75],[-70,62],[-55,50],[-75,40],[-80,27],[-97,18],[-105,20],[-117,32],[-125,48],[-135,58],[-165,60]],
+  [[-97,18],[-88,14],[-80,8],[-77,8],[-83,15],[-90,21]],
+  [[-80,10],[-62,10],[-50,0],[-35,-7],[-40,-22],[-58,-38],[-68,-55],[-73,-45],[-71,-18],[-81,-5]],
+  [[-55,60],[-45,60],[-20,72],[-30,83],[-60,80],[-70,77]],
+  [[-10,36],[0,43],[-2,47],[5,52],[10,55],[5,62],[15,70],[30,71],[40,66],[40,50],[30,45],[25,36],[15,38],[10,44],[0,38]],
+  [[-17,15],[-10,28],[0,35],[10,37],[32,31],[35,28],[43,12],[51,12],[40,-5],[40,-15],[32,-28],[20,-35],[13,-20],[9,0],[-8,5]],
+  [[40,66],[60,70],[80,75],[110,77],[140,72],[170,68],[180,66],[160,60],[140,55],[135,43],[122,38],[122,30],[110,20],[105,10],[100,13],[95,18],[90,22],[80,15],[77,8],[72,20],[65,25],[57,25],[50,30],[48,28],[55,17],[45,12],[35,30],[30,45],[40,50]],
+  [[115,-22],[122,-17],[131,-12],[137,-12],[142,-11],[146,-18],[153,-25],[150,-37],[140,-38],[132,-32],[115,-34]],
+  [[130,32],[135,34],[141,38],[141,43],[138,38],[132,34]],
+  [[-6,50],[2,51],[0,54],[-3,58],[-6,57],[-5,54]], [[-10,52],[-6,52],[-6,55],[-9,54]],
+  [[95,5],[105,-6],[115,-8],[120,-5],[110,0]], [[172,-35],[178,-38],[174,-41],[168,-46],[167,-44]],
+  [[44,-13],[50,-15],[48,-25],[44,-22]], [[-180,-72],[180,-72],[180,-90],[-180,-90]],
+];
+const SPOT = { US:[-98,39],GB:[-2,53],IE:[-8,53],FR:[2,46],DE:[10,51],IT:[12,43],ES:[-4,40],PT:[-8,39],NL:[5,52],BE:[4,51],DK:[10,56],SE:[16,62],NO:[9,61],FI:[26,63],IS:[-19,65],PL:[19,52],CZ:[15,50],HU:[19,47],AT:[14,47],CH:[8,47],GR:[22,39],RU:[60,58],UA:[31,49],TR:[35,39],IR:[53,32],IL:[35,31],EG:[30,27],MA:[-6,32],NG:[8,9],ZA:[24,-29],SN:[-14,14],IN:[78,22],CN:[104,35],HK:[114,22],TW:[121,24],JP:[138,37],KR:[128,36],TH:[101,15],PH:[122,12],ID:[118,-2],AU:[134,-25],NZ:[172,-41],CA:[-100,57],MX:[-102,23],CU:[-79,22],BR:[-52,-10],AR:[-64,-34],CL:[-71,-33],CO:[-74,4],PE:[-75,-9],VE:[-66,7],SU:[60,58],XG:[10,51],YU:[20,44],RS:[20,44],RO:[25,46],BG:[25,43],LB:[36,34],PS:[35,32],SA:[45,24],AE:[54,24],KZ:[67,48],MN:[103,47],VN:[106,16],MY:[102,4],SG:[104,1],PK:[70,30],BD:[90,24],LK:[81,8],GE:[44,42],AM:[45,40],EE:[25,59],LV:[25,57],LT:[24,55],SK:[19,49],SI:[15,46],HR:[16,45],BA:[18,44],MK:[22,42],AL:[20,41],CY:[33,35],MT:[14,36],LU:[6,50],TN:[9,34],DZ:[3,28],ET:[39,8],KE:[38,0],GH:[-1,8],CM:[12,6],CD:[23,-3],BO:[-64,-17],UY:[-56,-33],PY:[-58,-23],EC:[-78,-1],JM:[-77,18],PR:[-66,18],DO:[-70,19],GT:[-90,15],CR:[-84,10],PA:[-80,9],QA:[51,25],IQ:[44,33],SY:[38,35],JO:[36,31],AF:[66,34],NP:[84,28],KH:[105,12],MM:[96,21] };
+const GK = 0.9, GW = 360 * GK;
+function landPaths(dx) { return LAND.map(poly => `<path d="M${poly.map(([lo, la]) => `${((lo + 180) * GK + dx).toFixed(1)} ${((90 - la) * GK).toFixed(1)}`).join("L")}Z"/>`).join(""); }
+function globeSVG() {
+  const lines = [30, 60, 90, 120, 150].map(y => `<line x1="0" x2="${GW * 2}" y1="${y * GK}" y2="${y * GK}"/>`).join("") + Array.from({ length: 24 }, (_, i) => `<line y1="0" y2="${180 * GK}" x1="${i * 30 * GK}" x2="${i * 30 * GK}"/>`).join("");
+  return `<svg viewBox="0 0 220 250" class="deskglobe" aria-hidden="true">
+    <defs><clipPath id="gclip"><circle cx="110" cy="105" r="78"/></clipPath>
+      <radialGradient id="gshade" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+      <linearGradient id="gbrass" x1="0" x2="1"><stop offset="0" stop-color="#7a5a22"/><stop offset=".5" stop-color="#d8b25a"/><stop offset="1" stop-color="#6b4c1a"/></linearGradient>
+      <linearGradient id="gwood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6a3c1e"/><stop offset="1" stop-color="#341b0c"/></linearGradient></defs>
+    <ellipse cx="110" cy="236" rx="62" ry="10" fill="url(#gwood)" stroke="#1d0f06"/><rect x="104" y="196" width="12" height="40" fill="url(#gbrass)"/>
+    <g transform="rotate(-18 110 105)">
+      <g clip-path="url(#gclip)"><rect x="20" y="20" width="180" height="180" fill="#3f7f8c"/>
+        <g id="gmap" transform="translate(0 ${105 - 90 * GK})"><g class="gl">${lines}</g><g class="gland">${landPaths(0)}${landPaths(GW)}</g></g>
+        <g id="gpin" opacity="0"><line x1="110" y1="0" x2="110" y2="-14" stroke="#222" stroke-width="1.6"/><circle cx="110" cy="-16" r="5" fill="#e3261d" stroke="#5c0805"/></g>
+        <circle cx="110" cy="105" r="78" fill="url(#gshade)"/></g>
+      <circle cx="110" cy="105" r="78" fill="none" stroke="#1d2a2c" stroke-width="2"/>
+      <path d="M110 17 A88 88 0 0 1 110 193" fill="none" stroke="url(#gbrass)" stroke-width="7"/>
+      <circle cx="110" cy="17" r="4" fill="#d8b25a" stroke="#5a3f12"/><circle cx="110" cy="193" r="4" fill="#d8b25a" stroke="#5a3f12"/></g>
+    <path d="M60 238 q50 -14 100 0" fill="none" stroke="rgba(255,255,255,.12)"/></svg>`;
+}
+let gx = 0;
+function setGlobe(x, pinLat) {
+  gx = x;
+  const m = ((x % GW) + GW) % GW, p = m < GW / 2 ? m + GW : m;
+  $("#gmap").setAttribute("transform", `translate(${(110 - p).toFixed(1)} ${105 - 90 * GK})`);
+  const pin = $("#gpin");
+  if (pinLat != null) { pin.setAttribute("transform", `translate(0 ${105 - pinLat * GK})`); pin.setAttribute("opacity", 1); } else pin.setAttribute("opacity", 0);
+}
 function globe() {
-  view().innerHTML = `${header("globe")}<div class="globe" id="globe"><div class="earth"></div></div>
-    <div class="country" id="country">Where to tonight?</div>
+  view().innerHTML = `${header("globe")}<div class="globewrap">${globeSVG()}</div>
+    <div class="country" id="country">Give it a spin</div>
     <div class="row center"><button class="play" id="spin"><span class="tri"></span><span>Spin it</span></button></div>
     <label class="tog center"><input type="checkbox" id="globeAll" ${globeAll ? "checked" : ""}> Include the US and UK</label>
     <div id="globeOut"></div>`;
-  bindBack();
+  bindBack(); setGlobe(gx || (8 + 180) * GK, null);
   $("#globeAll").onchange = e => globeAll = e.target.checked;
+  let busy = false;
   $("#spin").onclick = () => {
+    if (busy) return;
     const U = unseen(), by = new Map();
     U.forEach(x => x.m.c.slice(0, 2).forEach(c => { if (!globeAll && (c === "US" || c === "GB")) return; if (!by.has(c)) by.set(c, []); by.get(c).push(x); }));
     const cs = [...by.keys()]; if (!cs.length) { $("#globeOut").innerHTML = empty("Nothing from abroad on your shelves."); return; }
-    const c = rnd(cs), x = rnd(by.get(c));
-    $("#globe").classList.remove("spinning"); void $("#globe").offsetWidth; $("#globe").classList.add("spinning");
-    $("#country").textContent = "…"; $("#globeOut").innerHTML = "";
-    let k = 0; const t = setInterval(() => { C.snd.tick?.(1 + Math.random() * .3); $("#country").textContent = C.region(rnd(cs)); if (++k > 14) { clearInterval(t); land(); } }, 95);
-    function land() {
-      $("#country").textContent = C.region(c); C.snd.stab?.();
+    const c = rnd(cs), x = rnd(by.get(c)), spot = SPOT[c] || [Math.random() * 360 - 180, 20];
+    busy = true; $("#globeOut").innerHTML = ""; $("#country").textContent = "…"; setGlobe(gx, null);
+    const from = gx, cur = ((from % GW) + GW) % GW, want = (spot[0] + 180) * GK;
+    const to = from + (GW * 2 + ((want - cur + GW) % GW));
+    const dur = matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 2400, t0 = performance.now(); let lastTick = from;
+    (function f(t) {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3), xx = from + (to - from) * e;
+      setGlobe(xx, null);
+      if (xx - lastTick > 24) { lastTick = xx; C.snd.tick?.(0.9 + Math.random() * .3); }
+      if (k < 1) requestAnimationFrame(f); else { setGlobe(to, spot[1]); landed(); }
+    })(t0);
+    function landed() {
+      busy = false; $("#country").textContent = C.region(c); C.snd.stab?.();
       $("#globeOut").innerHTML = `${card(x, `<div class="note">${by.get(c).length} film${by.get(c).length > 1 ? "s" : ""} from ${C.esc(C.region(c))} on your shelf</div>`)}<div class="row center"><button class="play" id="gPlay"><span class="tri"></span><span>Put it on</span></button></div>`;
       $("#gPlay").onclick = () => C.play([x], "globe");
     }
@@ -285,16 +338,30 @@ function globe() {
 }
 
 // ---------- Bargain Bin ----------
+const BIN_INK = ["#b3150e", "#1d3d8f", "#f2c230", "#24573f", "#5b1a50", "#e86a17", "#0f5e7a", "#111214", "#f2efe6"];
+function binTapes(list) {
+  return list.map((x, i) => {
+    const h = ((x.m.id * 2654435761) >>> 0), ink = BIN_INK[h % BIN_INK.length], r = (h >>> 5) % 50 - 25, l = 1 + (i % 4) * 24 + ((h >>> 9) % 6), t = Math.floor(i / 4) * 30 + ((h >>> 13) % 10);
+    return `<span class="btape" data-i="${i}" style="left:${l}%;top:${t}px;transform:rotate(${r}deg);--ink:${ink}"><em>${C.esc(x.m.t)}</em></span>`;
+  }).join("");
+}
 function bargain() {
   const U = unseen().filter(x => x.m.vc >= 0).sort((a, b) => a.m.vc - b.m.vc);
   const bin = U.slice(0, Math.max(12, Math.round(U.length * 0.12)));
-  view().innerHTML = `${header("bargain")}<div class="bin"><span class="binsign">BARGAIN BIN<br><b>€1</b><small>NO REFUNDS</small></span></div>
+  let shown = shuffle(bin).slice(0, 10);
+  view().innerHTML = `${header("bargain")}<div class="bin2"><div class="bintapes" id="binTapes">${binTapes(shown)}</div><div class="binwire"></div><span class="binsign">BARGAIN BIN<br><b>€1</b><small>NO REFUNDS</small></span></div>
     <div class="row center"><button class="play" id="rummage"><span class="tri"></span><span>Rummage</span></button></div><div id="binOut"></div>`;
   bindBack();
   $("#rummage").onclick = () => {
-    const x = rnd(bin); C.snd.clunk?.();
-    $("#binOut").innerHTML = `${card(x, `<div class="note">Only ${x.m.vc.toLocaleString()} people have ever rated this. Brave.</div>`)}<div class="row center"><button class="play" id="bPlay"><span class="tri"></span><span>Take a chance</span></button><button class="ghost" id="bAgain">Rummage again</button></div>`;
-    $("#bPlay").onclick = () => C.play([x], "bargain"); $("#bAgain").onclick = () => $("#rummage").click();
+    const box = $("#binTapes"); box.classList.remove("rummage"); void box.offsetWidth; box.classList.add("rummage");
+    C.snd.clunk?.(); setTimeout(() => C.snd.tick?.(1.1), 160); setTimeout(() => C.snd.tick?.(.9), 320);
+    const x = rnd(bin);
+    setTimeout(() => {
+      shown = [x, ...shuffle(bin.filter(y => y !== x)).slice(0, 9)];
+      box.innerHTML = binTapes(shown); box.querySelector('[data-i="0"]').classList.add("pulled");
+      $("#binOut").innerHTML = `${card(x, `<div class="note">Only ${x.m.vc.toLocaleString()} people have ever rated this. Brave.</div>`)}<div class="row center"><button class="play" id="bPlay"><span class="tri"></span><span>Take a chance</span></button><button class="ghost" id="bAgain">Rummage again</button></div>`;
+      $("#bPlay").onclick = () => C.play([x], "bargain"); $("#bAgain").onclick = () => $("#rummage").click();
+    }, 520);
   };
 }
 

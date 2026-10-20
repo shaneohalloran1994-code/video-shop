@@ -663,3 +663,104 @@ body.noscroll{overflow:hidden}
 .vtape span{font:400 19px/1.15 var(--title)}.vtape small{display:block;font:400 14px var(--crt);color:var(--green)}
 .vtape.out{opacity:.45}.vtape em{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(-8deg);font:800 18px var(--cond);color:var(--red);border:3px solid var(--red);padding:2px 8px;font-style:normal}
 body.visiting .topbar .shopname small::after{content:" · visiting"}
+
+/* ================= POLISH RELEASE ================= */
+/* Keys: the one you've picked is switched on, lit from inside */
+.keys button[aria-pressed="true"]{background:linear-gradient(#ffd27f,#f0a03a 70%,#d98a26)!important;color:#2a1306!important;text-shadow:0 1px 0 rgba(255,255,255,.45);
+  box-shadow:inset 0 0 10px rgba(255,255,255,.55),inset 0 -3px 0 rgba(120,60,0,.35),0 0 16px rgba(255,181,71,.55)!important}
+.keys button[aria-pressed="true"]::before{background:#ff3b30;box-shadow:0 0 8px #ff3b30,0 0 2px #fff}
+.keys button{transition:background .15s,color .15s}
+
+/* Section signs now hang off the shelf edge like shelf labels */
+.sections{margin:-10px 4px 0;padding:0 0 6px;gap:10px;position:relative;z-index:1}
+.secsign{position:relative;padding:9px 11px 6px;font:800 12.5px/1 var(--cond);letter-spacing:.12em;box-shadow:2px 3px 0 rgba(0,0,0,.6);transform:rotate(-1deg)}
+.secsign:nth-child(2n){transform:rotate(1.2deg)}
+.secsign:nth-child(3n){transform:rotate(-.4deg)}
+.secsign::before{left:50%;top:3px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#bdbdbd;box-shadow:inset -1px -1px 0 #666}
+.secsign[aria-pressed="true"]{transform:translateY(3px) rotate(0);box-shadow:0 0 0 2px var(--amber),0 0 18px rgba(255,181,71,.7)}
+
+/* Controls: the "Tonight I want" board gets its own line on phones so it never gets cut off */
+.controls{flex-wrap:wrap}
+@media (max-width:440px){.wantbtn{flex:1 1 100%;flex-direction:row;align-items:center;justify-content:space-between;padding:8px 12px}
+  .wantbtn .marker{font-size:18px}.controls .keys.solo{margin-left:auto}}
+.controls .seg.keys.count{flex:1 1 auto}.controls .seg.keys.count button{flex:1}
+
+/* Bottom deck: punched label-maker strips stuck on a dark counter edge */
+.deck{background:linear-gradient(#2a1a10,#160e08);border-top:3px solid #4a2c18;gap:6px;padding-top:10px;box-shadow:0 -6px 16px rgba(0,0,0,.5)}
+.deck button{border-radius:0;padding:9px 2px 8px;background:linear-gradient(#262626,#0d0d0d);color:#f2f2f2;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),2px 2px 0 rgba(0,0,0,.7);
+  font:700 12px/1 var(--cond);letter-spacing:.14em;text-shadow:0 1px 0 rgba(255,255,255,.3),0 -1px 0 #000;clip-path:polygon(0 10%,3px 0,100% 0,100% 90%,calc(100% - 3px) 100%,0 100%)}
+.deck button:nth-child(1){transform:rotate(-1.2deg)}.deck button:nth-child(2){transform:rotate(.8deg)}.deck button:nth-child(3){transform:rotate(-.5deg)}.deck button:nth-child(4){transform:rotate(1.1deg)}.deck button:nth-child(5){transform:rotate(-.9deg)}
+.deck button .ic{display:none}
+.deck button[aria-selected="true"]{background:linear-gradient(#e0302a,#a8150f);color:#fff;text-shadow:0 1px 0 rgba(255,255,255,.4),0 -1px 0 #5c0805;box-shadow:0 0 14px rgba(224,48,42,.45),2px 2px 0 rgba(0,0,0,.7);transform:translateY(-2px) rotate(0)}
+@media (max-width:380px){.deck button{font-size:11px;letter-spacing:.08em}}
+.view{padding-bottom:84px}
+
+/* Arcade: every cabinet the same shape, coin slot always lit */
+.cabs{align-items:stretch}
+.cab{min-height:236px}
+.cab-screen{min-height:118px}
+.cab-coin{animation:coinglow 1.6s ease-in-out infinite;margin-top:auto}
+.cab-screen{margin-bottom:0}
+@keyframes coinglow{50%{color:#8a7020;box-shadow:none}0%,100%{color:#ffd23f;box-shadow:0 0 8px rgba(255,210,63,.4)}}
+@media (max-width:380px){.cab-screen{font-size:15px}.cab-top{font-size:15px}}
+
+/* Fewer fonts: shop surfaces use the condensed face; plain text only for long reading */
+.gen{font:600 14px/1.3 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.note{font:500 16px/1.4 var(--cond);letter-spacing:.02em}
+#picksNote{font:400 17px/1.3 var(--marker);color:#2a1306;background:#fff4d8;padding:10px 14px;transform:rotate(-.8deg);box-shadow:2px 3px 0 rgba(0,0,0,.55);align-self:stretch}
+.inrun{font-family:var(--crt)}
+.small{font-family:var(--cond);font-size:15px;letter-spacing:.02em}
+
+/* ---- lived-in grime ---- */
+/* Shelf edge: worn wood, chipped varnish */
+.rack{border-top-color:#6a4a2a}
+.rack::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0 8%,rgba(0,0,0,.35) 8% 9%,transparent 9% 37%,rgba(255,255,255,.08) 37% 39%,transparent 39% 71%,rgba(0,0,0,.4) 71% 72.5%,transparent 72.5%)}
+/* Old tapes: sun-faded spines */
+.spine.old{filter:saturate(.55) sepia(.25) brightness(.92)}
+/* Dust on the telly glass and a smudge */
+.tv-screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;border-radius:inherit;
+  background:radial-gradient(40% 25% at 78% 18%,rgba(255,255,255,.07),transparent 70%),radial-gradient(30% 20% at 20% 82%,rgba(200,190,170,.06),transparent 70%)}
+/* Peeling sellotape on the chalkboard and the notice */
+.chalk,.notice{position:relative}
+.chalk::after,.notice::after{content:"";position:absolute;top:-8px;left:22px;width:54px;height:16px;background:rgba(245,235,200,.55);transform:rotate(-8deg);box-shadow:0 1px 2px rgba(0,0,0,.3);
+  clip-path:polygon(0 10%,8% 0,92% 6%,100% 0,97% 90%,88% 100%,10% 94%,2% 100%)}
+.notice::after{left:auto;right:18px;transform:rotate(7deg)}
+/* Coffee ring on the counter card and the receipt */
+.receipt{position:relative}
+.receipt::after,.step:first-of-type::after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;pointer-events:none;mix-blend-mode:multiply;
+  background:radial-gradient(circle,transparent 57%,rgba(110,62,22,.35) 60%,rgba(110,62,22,.15) 65%,transparent 69%)}
+.receipt::after{right:-14px;top:38%;transform:rotate(30deg)}
+.step{position:relative}
+.step:first-of-type::after{right:-10px;bottom:-18px}
+/* Scuffed case edges */
+.case{box-shadow:5px 5px 0 #000,inset 0 0 0 1px rgba(255,255,255,.03)}
+.case{position:relative}
+/* Desk globe */
+.globewrap{display:flex;justify-content:center;margin-top:4px}
+.deskglobe{width:min(70vw,240px);height:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+.deskglobe .gland path{fill:#e2cf96;stroke:#8a7440;stroke-width:.8;stroke-linejoin:round}
+.deskglobe .gl line{stroke:rgba(255,255,255,.14);stroke-width:.6}
+.country{font:400 30px/1.1 var(--marker);color:var(--amber);text-align:center;min-height:34px}
+/* Wire bargain bin */
+.bin2{position:relative;height:180px;width:min(100%,340px);margin:26px auto 4px;background:linear-gradient(#1a1410,#0d0a08);border:5px solid #9a9a9a;border-top-width:7px;border-radius:2px 2px 14px 14px;overflow:hidden;box-shadow:0 10px 20px rgba(0,0,0,.6)}
+.bin2 .binsign{z-index:3;top:-6px}
+.binwire{position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(90deg,rgba(190,190,190,.55) 0 2px,transparent 2px 26px),repeating-linear-gradient(0deg,rgba(190,190,190,.4) 0 2px,transparent 2px 30px);mask:linear-gradient(transparent 0 30%,#000 30%)}
+.bintapes{position:absolute;inset:40px 0 0}
+.btape{position:absolute;width:30%;height:26px;background:var(--ink);border:2px solid #000;box-shadow:2px 2px 0 rgba(0,0,0,.6);display:flex;align-items:center;padding:0 6px;transition:transform .35s}
+.btape em{font:700 10px/1 var(--cond);letter-spacing:.06em;text-transform:uppercase;font-style:normal;background:#f2efe6;color:#111;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.btape.pulled{z-index:4;transform:translateY(-34px) rotate(-3deg)!important;box-shadow:0 0 0 2px var(--amber),0 8px 16px rgba(0,0,0,.6)}
+.bintapes.rummage .btape{animation:jumble .5s ease-in-out}
+.bintapes.rummage .btape:nth-child(2n){animation-delay:.05s}.bintapes.rummage .btape:nth-child(3n){animation-delay:.1s}
+@keyframes jumble{25%{translate:6px -10px;rotate:8deg}50%{translate:-8px 4px;rotate:-10deg}75%{translate:4px -6px;rotate:5deg}}
+@media (prefers-reduced-motion:reduce){.bintapes.rummage .btape{animation:none}}
+.deck button{white-space:nowrap}
+@media (max-width:400px){.deck button{font-size:10.5px;letter-spacing:.05em}}
+.bin2{height:190px;margin-top:40px;overflow:visible}
+.bin2 .bintapes{inset:62px 0 0;overflow:hidden}
+.bin2 .binsign{left:auto;right:10px;top:-30px;transform:rotate(5deg);font-size:13px;padding:6px 10px}
+.bin2 .binsign b{font-size:24px}
+.btape{width:27%}
+.bin2{height:160px}
+.bin2 .bintapes{inset:30px 4px 0;overflow:visible}
+.binwire{mask:none;background:repeating-linear-gradient(90deg,rgba(190,190,190,.5) 0 2px,transparent 2px 26px),repeating-linear-gradient(0deg,rgba(190,190,190,.35) 0 2px,transparent 2px 30px);opacity:.8}

@@ -1,13 +1,13 @@
-import * as store from "./store.js?v=4a1";
-import * as tmdb from "./tmdb.js?v=4a1";
-import * as importer from "./importer.js?v=4a1";
-import * as lib from "./library.js?v=4a1";
-import * as snd from "./sound.js?v=4a1";
-import * as arcade from "./arcade.js?v=4a1";
-import * as coming from "./coming.js?v=4a1";
-import * as rasher from "./rasher.js?v=4a1";
-import { LINES } from "./lines.js?v=4a1";
-import * as friends from "./friends.js?v=4a1";
+import * as store from "./store.js?v=p1";
+import * as tmdb from "./tmdb.js?v=p1";
+import * as importer from "./importer.js?v=p1";
+import * as lib from "./library.js?v=p1";
+import * as snd from "./sound.js?v=p1";
+import * as arcade from "./arcade.js?v=p1";
+import * as coming from "./coming.js?v=p1";
+import * as rasher from "./rasher.js?v=p1";
+import { LINES } from "./lines.js?v=p1";
+import * as friends from "./friends.js?v=p1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -693,6 +693,35 @@ function pickHTML(it, i, card) {
     ${(it.why || []).length ? `<ul class="why talker${card ? " card" : ""}">${card ? `<li class="card-h">${S.owner ? esc(S.owner) : "Rasher"} recommends</li>` : ""}${it.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
     <div class="acts">${card ? `<button class="tag hot" data-put="${i}">Put it on</button>` : ""}<a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a></div></div></article>`;
 }
+// Reasons for a page of picks: no line twice, specific ones (people, what you've watched lately) before genre and decade.
+const KIND_RANK = { a: 0, d: 0, src: 1, hot: 2, g: 3, dec: 4 };
+function pageReasons(list) {
+  const used = new Set(), kinds = {};
+  return list.map(it => {
+    if (!S.reasonPool || S.house) return it;
+    const pool = S.reasonPool(it.m).sort((a, b) => KIND_RANK[a[0]] - KIND_RANK[b[0]]);
+    const why = [], mine = new Set();
+    for (const [k, t] of pool) {
+      const fam = k === "a" || k === "d" ? "who" : k === "g" || k === "hot" ? "genre" : k;
+      if (why.length >= 2 || used.has(t) || mine.has(fam)) continue;
+      mine.add(fam);
+      if ((k === "g" || k === "dec") && (kinds[k] || 0) >= 2) continue;
+      why.push(t); used.add(t); kinds[k] = (kinds[k] || 0) + 1;
+    }
+    if (!why.length) why.push(fallbackReason(it));
+    return { ...it, why };
+  });
+}
+function fallbackReason(it) {
+  const m = it.m;
+  const d = m.dir.find(x => S.seen.some(s => s.m.dir.includes(x)));
+  if (d) { const n = S.seen.filter(s => s.m.dir.includes(d)).length; return n > 1 ? `You've seen ${n} by ${d}. Here's another.` : `You've seen one by ${d}. Time for a second.`; }
+  const a = m.cast.slice(0, 4).find(x => S.seen.some(s => s.m.cast.slice(0, 5).includes(x)));
+  if (a) { const o = S.seen.find(s => s.m.cast.slice(0, 5).includes(a)); return `${a}, last seen in ${o.m.t}.`; }
+  if (it.added && +it.added.slice(0, 4) < new Date().getFullYear()) return `On your list since ${it.added.slice(0, 4)}. Its time has come.`;
+  if (m.y && +m.y < 1970) return `Older than most of the shop. Still holds up.`;
+  return "Rasher's got a hunch about this one.";
+}
 function renderForYou() {
   if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
   const who = S.owner;
@@ -700,7 +729,7 @@ function renderForYou() {
   $("#freshHead").textContent = who ? `Still on ${who}'s list` : S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
   $("#picksNote").textContent = who ? `${who}'s shelf. The ones they swear by, and the ones they still mean to get to. No scores.` : S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
   renderTuneCard();
-  $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map((x, i) => pickHTML(x, i, true)).join("");
+  $("#bestFits").innerHTML = pageReasons(S.bestFits.slice(0, fitsN)).map((x, i) => pickHTML(x, i, true)).join("");
   renderDeepDive();
   coming.render();
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
@@ -750,7 +779,7 @@ function renderReceipt() {
     ${ln("MEMBER", who)}${ln("DATE", d.toLocaleDateString("en-IE"))}${ln("TIME", d.toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" }))}<hr>
     ${ln("FILMS RENTED", t.watched.toLocaleString())}${ln("HOURS IN FRONT OF THE TELLY", t.hours.toLocaleString())}${ln("RATINGS GIVEN", t.rated.toLocaleString())}${ln("YOUR AVERAGE", t.avg.toFixed(2) + "★")}${ln("THE CROWD, SAME FILMS", (t.crowdAvg || 0).toFixed(2) + "★")}${ln("STILL ON THE WATCHLIST", t.watchlist.toLocaleString())}<hr>
     <div class="sec">TOP GENRES</div>${t.genres.slice(0, 6).map(g => ln(g.k.toUpperCase(), `${g.n} · ${g.avg ? g.avg.toFixed(1) + "★" : "–"}`)).join("")}<hr>
-    <div class="sec">LATELY YOU'RE INTO</div>${t.lately.map(g => ln(g.g.toUpperCase(), `${Math.round(g.r * 100)}% (USUALLY ${Math.round(g.o * 100)}%)`)).join("")}<hr>
+    ${t.lately.length ? `<div class="sec">LATELY YOU'RE INTO</div>${t.lately.map(g => ln(g.g.toUpperCase(), `${g.n} OF LAST ${g.of} · USUALLY ${Math.round(g.o * 100)}%`)).join("")}<hr>` : ""}
     <div class="sec">BY DECADE</div><div class="hash">${t.decades.map(x => `${x.k.padEnd(6)}${bar(x.n, dmax).padEnd(13)}${String(x.n).padStart(4)}`).join("\n")}</div><hr>
     <div class="sec">DIRECTORS YOU RENT MOST</div>${t.directors.most.map(p => ln(p.k.toUpperCase(), p.n + " FILMS")).join("")}<hr>
     <div class="sec">DIRECTORS YOU RATE HIGHEST</div>${t.directors.best.map(p => ln(p.k.toUpperCase(), p.avg.toFixed(2) + "★")).join("")}<hr>
