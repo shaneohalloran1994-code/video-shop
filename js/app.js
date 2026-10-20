@@ -1,14 +1,14 @@
-import * as store from "./store.js?v=p3";
-import * as tmdb from "./tmdb.js?v=p3";
-import * as importer from "./importer.js?v=p3";
-import * as lib from "./library.js?v=p3";
-import * as snd from "./sound.js?v=p3";
-import * as arcade from "./arcade.js?v=p3";
-import * as coming from "./coming.js?v=p3";
-import * as rasher from "./rasher.js?v=p3";
-import { LINES } from "./lines.js?v=p3";
-import * as friends from "./friends.js?v=p3";
-import * as builder from "./builder.js?v=p3";
+import * as store from "./store.js?v=p4";
+import * as tmdb from "./tmdb.js?v=p4";
+import * as importer from "./importer.js?v=p4";
+import * as lib from "./library.js?v=p4";
+import * as snd from "./sound.js?v=p4";
+import * as arcade from "./arcade.js?v=p4";
+import * as coming from "./coming.js?v=p4";
+import * as rasher from "./rasher.js?v=p4";
+import { LINES } from "./lines.js?v=p4";
+import * as friends from "./friends.js?v=p4";
+import * as builder from "./builder.js?v=p4";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -449,7 +449,7 @@ async function land(chosen, ctx = {}) {
   playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
   const first = picks[0], shame = poolMode === "shame" && !ctx.arcade && !ctx.direct && first.added;
-  rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, mood: F.mood, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true);
+  rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, mood: F.mood, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true, { poster: blind && !first.revealed ? "" : posterOf(first.m, "w185"), title: blind && !first.revealed ? "?" : first.m.t });
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
 }

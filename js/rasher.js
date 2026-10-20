@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=p3";
-import { prefs } from "./store.js?v=p3";
-import { QUOTES } from "./quotes.js?v=p3";
+import { LINES } from "./lines.js?v=p4";
+import { prefs } from "./store.js?v=p4";
+import { QUOTES } from "./quotes.js?v=p4";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -102,11 +102,23 @@ export const HEAD = `<svg class="r-head" viewBox="0 0 120 110" aria-hidden="true
 
 // ---------- the counter slip under the telly ----------
 function hideSlip() { const s = $("#rasher"); if (s) s.hidden = true; }
-export function slip(text, hand = false) {
+// A hand seen from above, flat on the box, pushing it across the counter.
+export const HAND2 = `<svg class="r-hand2" viewBox="0 0 230 110" aria-hidden="true">${SLEEVE}
+  <g stroke="#4a2c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="#eab894">
+    <rect x="18" y="20" width="66" height="15" rx="7.5"/><rect x="12" y="37" width="74" height="15" rx="7.5"/><rect x="16" y="54" width="70" height="15" rx="7.5"/><rect x="26" y="71" width="60" height="14" rx="7"/>
+    <path d="M70 18 C98 8 126 14 136 30 C142 50 141 70 134 84 C114 99 88 97 70 88 Z"/><path d="M84 36 C96 32 110 33 120 38" fill="none" stroke="#c98d6a"/>
+    <path d="M86 86 C76 96 62 102 50 100 C44 99 44 92 50 90 C60 87 70 82 76 76"/>
+  </g>
+  <path d="M30 27h8M26 44h8M30 61h8M38 78h7" stroke="#c98d6a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M132 16 L230 10 L230 100 L134 94 C128 70 128 40 132 16Z" fill="url(#rcheck)" stroke="#2a110d" stroke-width="2"/>
+  <path d="M132 16 C127 40 127 70 134 94" fill="none" stroke="#2a110d" stroke-width="7" opacity=".45"/></svg>`;
+export function slip(text, hand = false, film = null) {
   const s = $("#rasher"); if (!s) return;
   if (!text) { s.hidden = true; return; }
   s.hidden = false;
-  s.innerHTML = `${hand ? HAND : ""}<p class="said"><b>Rasher</b>${esc(text)}</p>`;
+  const box = hand ? `<div class="r-deal"><div class="r-case${film?.poster ? "" : " plain"}" style="${film?.poster ? `background-image:url('${film.poster}')` : ""}">${film?.poster ? "" : `<span>${esc(film?.title || "")}</span>`}<i class="r-sticker">TAKE ONE</i></div>${HAND2}</div>` : "";
+  s.classList.toggle("dealt", hand);
+  s.innerHTML = `${box}<p class="said"><b>Rasher</b>${esc(text)}</p>`;
   s.classList.remove("slide"); void s.offsetWidth;
   if (hand && !RM) s.classList.add("slide");
 }
