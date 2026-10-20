@@ -801,3 +801,15 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 .case .acts.wide .tag{padding:7px 10px 6px;font-size:12px}
 .case > .stamp{grid-column:1/-1}
 .receipt::after{right:6px}
+/* Ways in for newcomers */
+.doors{display:grid;gap:10px}
+.door{display:grid;gap:3px;text-align:left;border:0;padding:12px 14px;background:var(--amber);color:#1b0d04;box-shadow:3px 3px 0 #2a1306}
+.door b{font:800 18px/1.1 var(--cond);letter-spacing:.06em;text-transform:uppercase}
+.door span{font:500 15px/1.3 var(--cond)}
+#houseGo.door{background:#f3ecdc;border:2px solid #8e7660}
+#ownGo{align-self:flex-start}
+/* Install tip */
+.a2hs{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom));z-index:30;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
+.a2hs-card{pointer-events:auto;width:100%;max-width:460px;background:#16100c;border:1px solid var(--line);padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.7);display:grid;gap:8px}
+.a2hs-card .said{margin:0;padding:9px 12px;background:#fff4d8;color:#2a1306;font:400 16px/1.3 var(--marker);transform:rotate(-.6deg)}
+.a2hs-card .row{display:flex;gap:8px;justify-content:flex-end}

@@ -1,6 +1,6 @@
 // Start your own shop without a Letterboxd export: read a username's public diary and/or swipe through films.
 // Produces the same profile + films shape as the zip importer, so the rest of the app can't tell the difference.
-import * as friends from "./friends.js?v=p6";
+import * as friends from "./friends.js?v=p7";
 
 let C = null;
 export function init(ctx) { C = ctx; }
@@ -31,7 +31,7 @@ function deck(items, skip) {
 
 const st = { profile: null, films: {}, answers: new Map(), deck: [], i: 0 };
 
-export async function open(existing) {
+export async function open(existing, swipeFirst = false) {
   const house = await C.house(); if (!house) return C.toast("Couldn't open the shop's stock. Check your connection.");
   st.films = existing ? { ...existing.films } : {};
   st.profile = existing ? JSON.parse(JSON.stringify(existing.profile)) : { importedAt: new Date().toISOString(), username: "", watchlist: [], watched: [], ratings: {}, diary: [], built: true };
@@ -39,7 +39,7 @@ export async function open(existing) {
   const known = new Set(Object.values(st.films).filter(Boolean).map(m => m.id));
   st.deck = deck(house.items, known); st.i = 0;
   $("#buildSheet").hidden = false; document.body.classList.add("noscroll");
-  if (existing || !C.proxy) swipeView(); else startView();
+  if (existing || swipeFirst || !C.proxy) swipeView(); else startView();
 }
 function close() { $("#buildSheet").hidden = true; document.body.classList.remove("noscroll"); }
 

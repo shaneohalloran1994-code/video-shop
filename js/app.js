@@ -1,14 +1,14 @@
-import * as store from "./store.js?v=p6";
-import * as tmdb from "./tmdb.js?v=p6";
-import * as importer from "./importer.js?v=p6";
-import * as lib from "./library.js?v=p6";
-import * as snd from "./sound.js?v=p6";
-import * as arcade from "./arcade.js?v=p6";
-import * as coming from "./coming.js?v=p6";
-import * as rasher from "./rasher.js?v=p6";
-import { LINES } from "./lines.js?v=p6";
-import * as friends from "./friends.js?v=p6";
-import * as builder from "./builder.js?v=p6";
+import * as store from "./store.js?v=p7";
+import * as tmdb from "./tmdb.js?v=p7";
+import * as importer from "./importer.js?v=p7";
+import * as lib from "./library.js?v=p7";
+import * as snd from "./sound.js?v=p7";
+import * as arcade from "./arcade.js?v=p7";
+import * as coming from "./coming.js?v=p7";
+import * as rasher from "./rasher.js?v=p7";
+import { LINES } from "./lines.js?v=p7";
+import * as friends from "./friends.js?v=p7";
+import * as builder from "./builder.js?v=p7";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -809,9 +809,9 @@ function counterState() {
   const showOwn = !!profile || !!apiKey || ownOpen;
   $("#stepKey").hidden = !showOwn || (tmdb.hasProxy && !apiKey && !profile); $("#stepZip").hidden = !showOwn;
   $("#ownGo").hidden = showOwn;
-  $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Bring your own export below to stock your own shelves." : "Walk into the house shop: Rasher's own shelves and favourites. Nothing to set up.";
-  $("#houseGo").textContent = mode === "house" ? "Leave the house shop" : "Browse the house shop";
-  $("#buildMore").hidden = !profile?.built; $("#buildGo").hidden = !!profile; $("#buildTxt").hidden = !!profile;
+  $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Start your own any time." : "Pick a way in.";
+  $("#houseGo").innerHTML = mode === "house" ? "<b>Leave the house shop</b><span>Back to the counter.</span>" : "<b>Just browsing</b><span>Walk round Rasher's own shelves. Nothing to set up.</span>";
+  $("#buildMore").hidden = !profile?.built; $("#buildGo").hidden = $("#buildSwipe").hidden = !!profile;
   $("#zipMsg").textContent = profile?.built ? `Built by hand: ${Object.keys(profile.ratings).length} films rated${profile.username ? `, plus your Letterboxd diary` : ""}. ${S.watchlist.length.toLocaleString()} tapes on your shelves. Bring a full export any time for the whole picture.` : profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
   const n = Object.keys(log).length;
   $("#unwatch").hidden = !n; $("#unwatch").textContent = `Forget ${n} film${n > 1 ? "s" : ""} marked watched here`;
@@ -890,9 +890,27 @@ function tour() {
   const W = LINES.welcome;
   const steps = [{ text: W[0], before: () => tab("roll") }, { text: W[1], at: "#roll" }, { text: W[2], at: "#sections" }, { text: W[3], at: "#openFilters" }, { text: W[4], at: ".deck" }];
   if (!S) steps.push({ text: LINES.counter[3], at: "#stepHouse", before: () => tab("counter") });
-  rasher.welcome({ steps, done: () => { touring = false; scrollTo(0, 0); } });
+  rasher.welcome({ steps, done: () => { touring = false; scrollTo(0, 0); setTimeout(installTip, 1500); } });
 }
-function maybeTour() { if (loaded && !$("#shop").hidden && !store.prefs.get("welcomed", false) && !rasher.quiet()) setTimeout(tour, RM ? 0 : 700); }
+function maybeTour() {
+  if (!loaded || $("#shop").hidden) return;
+  if (!store.prefs.get("welcomed", false) && !rasher.quiet()) setTimeout(tour, RM ? 0 : 700);
+  else setTimeout(installTip, 2500);
+}
+// ---------- one-off tip: put the shop on your home screen ----------
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; });
+function installTip() {
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone || touring || store.prefs.get("a2hs", false) || !$("#a2hs").hidden) return;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  $("#a2hsTxt").textContent = ios ? "Put the shop on your home screen. In Safari, tap Share (the square with the arrow), then Add to Home Screen." : installEvt ? "Put the shop on your home screen. One tap and it opens like a proper app." : "Put the shop on your home screen. In your browser menu, tap Add to Home screen or Install app.";
+  $("#a2hsGo").hidden = !installEvt;
+  $("#a2hs").hidden = false;
+}
+const closeTip = () => { $("#a2hs").hidden = true; store.prefs.set("a2hs", true); };
+$("#a2hsNo").onclick = closeTip;
+$("#a2hsGo").onclick = async () => { if (!installEvt) return closeTip(); installEvt.prompt(); try { await installEvt.userChoice; } catch { } installEvt = null; closeTip(); };
 
 // ---------- Ask Rasher: three questions, then he picks ----------
 const ASK = [
@@ -1090,6 +1108,7 @@ builder.init({
   },
 });
 $("#buildGo").onclick = () => builder.open(null);
+$("#buildSwipe").onclick = () => builder.open(null, true);
 $("#buildMore").onclick = () => builder.open({ profile, films });
 
 // ---------- start ----------
