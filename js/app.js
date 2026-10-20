@@ -1,8 +1,9 @@
-import * as store from "./store.js?v=2a7";
-import * as tmdb from "./tmdb.js?v=2a7";
-import * as importer from "./importer.js?v=2a7";
-import * as lib from "./library.js?v=2a7";
-import * as snd from "./sound.js?v=2a7";
+import * as store from "./store.js?v=2b2";
+import * as tmdb from "./tmdb.js?v=2b2";
+import * as importer from "./importer.js?v=2b2";
+import * as lib from "./library.js?v=2b2";
+import * as snd from "./sound.js?v=2b2";
+import * as arcade from "./arcade.js?v=2b2";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -21,6 +22,16 @@ function toast(t) { const e = $("#toast"); e.textContent = t; e.hidden = false; 
 // ---------- state ----------
 let profile = null, films = {}, extra = {}, log = {}, S = null;
 let apiKey = store.prefs.get("key", "");
+const PRESETS = [
+  ["friday", "Friday after work", { inc: ["Comedy", "Action", "Crime"], slot: "120", lang: "en", taste: true }],
+  ["hangover", "Sunday hangover", { inc: ["Comedy", "Animation", "Family"], exc: ["Horror", "War"], slot: "100", lang: "en" }],
+  ["date", "Date night", { inc: ["Romance", "Comedy", "Drama"], exc: ["Horror", "War"], slot: "150", crowdOn: true, c0: "3.5", c1: "5" }],
+  ["group", "Group night", { inc: ["Action", "Comedy", "Crime", "Adventure"], exc: ["Documentary"], lang: "en", slot: "150", crowdOn: true, c0: "3", c1: "5" }],
+  ["classics", "Classics", { y1: "1979", crowdOn: true, c0: "3.8", c1: "5" }],
+  ["ridiculous", "Ridiculous", { crowdOn: true, c0: "0.5", c1: "3" }],
+  ["brainon", "Brain on", { inc: ["Drama", "Mystery", "Science Fiction", "History"], crowdOn: true, c0: "3.8", c1: "5" }],
+  ["rainy", "Rainy day", { len: ["epic"] }],
+];
 const DEFAULT_F = { inc: [], exc: [], len: [], slot: "", lang: "any", lp: "", y0: "", y1: "", crowdOn: false, c0: "3", c1: "5", myMin: "", since: "", neverRe: false, taste: false };
 let F = Object.assign({}, DEFAULT_F, store.prefs.get("f", {}));
 let poolMode = store.prefs.get("pool", "wl");
@@ -42,7 +53,31 @@ function sections() {
   if (!S?.house) s.push(["rewind", "Rewind", "blue"]);
   s.push(["back", "Back room", "purple"], ["irish", "Irish shelf", "green"]);
   if (!S?.house) s.push(["shame", "Shame list", "yellow"]);
+  const w = weekly(); if (w) s.unshift(["weekly", w.label, "teal"]);
   return s;
+}
+// A new sign every Monday, built from your own shelves.
+let weeklyCache = null;
+function weekly() {
+  if (!S) return null;
+  const d = new Date(), mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7)); mon.setHours(0, 0, 0, 0);
+  const wk = Math.floor(mon.getTime() / 6048e5);
+  if (weeklyCache && weeklyCache.wk === wk && weeklyCache.S === S) return weeklyCache.v;
+  const unseen = S.watchlist, all = S.house ? unseen : unseen.concat(S.seen);
+  const seedPick = arr => arr[(wk * 2654435761 >>> 0) % arr.length];
+  const count = (list, fn) => { const c = new Map(); list.forEach(x => fn(x.m).forEach(k => c.set(k, (c.get(k) || 0) + 1))); return c; };
+  const types = ["dir", "dec", "country", "short", "epic"];
+  let v = null;
+  for (let i = 0; i < types.length && !v; i++) {
+    const t = types[(wk + i) % types.length];
+    if (t === "dir") { const c = [...count(unseen, m => m.dir)].filter(([, n]) => n >= 3).map(([k]) => k).sort(); if (c.length) { const p = seedPick(c); v = { label: p.split(" ").slice(-1)[0] + " week", fn: m => m.dir.includes(p) }; } }
+    if (t === "dec") { const c = [...count(unseen, m => m.y ? [m.y.slice(0, 3) + "0"] : [])].filter(([, n]) => n >= 10).map(([k]) => k).sort(); if (c.length) { const p = seedPick(c); v = { label: `'${p.slice(2)}s week`, fn: m => (m.y || "").startsWith(p.slice(0, 3)) }; } }
+    if (t === "country") { const c = [...count(unseen, m => m.c.slice(0, 1))].filter(([k, n]) => n >= 5 && !["US", "GB"].includes(k)).map(([k]) => k).sort(); if (c.length) { const p = seedPick(c); v = { label: region(p) + " week", fn: m => m.c.includes(p) }; } }
+    if (t === "short") v = { label: "Under-90s week", fn: m => m.rt > 0 && m.rt < 90 };
+    if (t === "epic") v = { label: "Epic week", fn: m => m.rt > 150 };
+  }
+  weeklyCache = { wk, S, v };
+  return v;
 }
 const pools = () => POOLS[S?.house ? "house" : "own"];
 const allPools = () => [...pools(), ...sections()];
@@ -110,12 +145,13 @@ function rain() {
 }
 
 // ---------- tabs ----------
-const TABS = ["roll", "picks", "receipt", "counter"];
+const TABS = ["roll", "picks", "arcade", "receipt", "counter"];
 function tab(n) {
   TABS.forEach(t => { $("#v-" + t).hidden = t !== n; $(`[data-tab="${t}"]`).setAttribute("aria-selected", t === n); });
   store.prefs.set("tab", n);
   if (n === "receipt") renderReceipt();
   if (n === "picks") renderForYou();
+  if (n === "arcade") arcade.open();
   scrollTo(0, 0);
 }
 $$("[data-tab]").forEach(b => b.onclick = () => tab(b.dataset.tab));
@@ -141,6 +177,14 @@ $("#myMin").onchange = e => { F.myMin = e.target.value; changed(); };
 $("#neverRe").onchange = e => { F.neverRe = e.target.checked; changed(); };
 $("#taste").onchange = e => { F.taste = e.target.checked; changed(); };
 $("#clearF").onclick = () => { F = Object.assign({}, DEFAULT_F); changed(true); toast("Forget about it."); };
+PRESETS.forEach(([k, l, f]) => {
+  const b = document.createElement("button"); b.className = "mood"; b.dataset.mood = k; b.textContent = l;
+  b.onclick = () => {
+    F = Object.assign({}, DEFAULT_F, { inc: [], exc: [], len: [] }, f, { mood: k, last: F.last }); changed(true);
+    openFilters(false); snd.click(); roll();
+  };
+  $("#moods").append(b);
+});
 function renderPoolKeys() {
   const ps = pools(), ss = sections();
   if (!allPools().some(p => p[0] === poolMode)) poolMode = ps[0][0];
@@ -153,6 +197,8 @@ $("#lastChance").onchange = e => { F.last = e.target.checked; changed(); };
 $("#n1").onclick = () => { N = 1; store.prefs.set("n", 1); changed(); };
 $("#n3").onclick = () => { N = 3; store.prefs.set("n", 3); changed(); };
 function changed(full = true) { store.prefs.set("f", F); syncFilters(full); }
+// Any manual change to a filter means it's no longer a preset.
+$("#filters").addEventListener("click", e => { if (e.target.closest(".chip,input,select") && F.mood) { F.mood = ""; store.prefs.set("f", F); setTimeout(() => syncFilters(false)); } }, true);
 
 function buildFilterOptions() {
   const all = S ? [...S.watchlist, ...S.seen] : [];
@@ -184,7 +230,9 @@ function syncFilters(full = true) {
   $("#inRun").textContent = S ? `${n.toLocaleString()} tape${n === 1 ? "" : "s"} in the running` : "";
   $("#roll").disabled = !S;
   const act = F.inc.length + F.exc.length + F.len.length + !!F.slot + (F.lang !== "any") + !!F.lp + !!(F.y0 || F.y1) + F.crowdOn + (!S?.house && SEEN_POOLS.includes(poolMode) ? !!F.myMin + !!F.since + F.neverRe : 0);
-  $("#ftag").textContent = act ? `${act} filter${act > 1 ? "s" : ""} on` : "No filters";
+  const mood = PRESETS.find(p => p[0] === F.mood);
+  $("#ftag").textContent = mood ? mood[1] : act ? `${act} filter${act > 1 ? "s" : ""} on` : "No filters";
+  $$(".mood").forEach(b => b.setAttribute("aria-pressed", b.dataset.mood === F.mood));
 }
 
 function pool() {
@@ -193,7 +241,8 @@ function pool() {
   const nowY = Date.now();
   const unseen = () => S.watchlist.map(x => ({ ...x, src: "wl" }));
   const everything = () => { const u = unseen(), ids = new Set(u.map(x => x.m.id)); return S.house ? u : u.concat(S.seen.filter(s => !ids.has(s.m.id)).map(s => ({ ...s, src: "seen" }))); };
-  if (poolMode === "back") items = unseen().filter(x => isCult(x.m));
+  if (poolMode === "weekly") { const w = weekly(); items = w ? unseen().filter(x => w.fn(x.m)) : []; }
+  else if (poolMode === "back") items = unseen().filter(x => isCult(x.m));
   else if (poolMode === "irish") items = everything().filter(x => isIrish(x.m));
   else if (poolMode === "midnight") items = unseen().filter(x => x.m.g.some(g => MIDNIGHT_G.includes(g)));
   else if (poolMode === "shock") items = unseen().filter(x => x.m.g.includes("Horror"));
@@ -365,6 +414,12 @@ async function land(chosen) {
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
 }
+
+// The arcade sends its winners to the telly.
+arcade.init({
+  get S() { return S; }, esc, poster, fmtRt, lang, region, draw: (arr, n) => draw(arr, n), toast, snd,
+  play: async items => { tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land(items.map(x => ({ ...x, src: x.src || "wl" }))); },
+});
 
 // ---------- the chalkboard: Rasher's film of the day ----------
 function chalkPick() {

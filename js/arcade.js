@@ -1,0 +1,298 @@
+// The Arcade: other ways to pick, each in its own cabinet.
+let C = null;
+export function init(ctx) { C = ctx; }
+
+const $ = s => document.querySelector(s);
+const view = () => $("#v-arcade");
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const unseen = () => C.S ? C.S.watchlist : [];
+const everything = () => { if (!C.S) return []; if (C.S.house) return C.S.watchlist; const ids = new Set(C.S.watchlist.map(x => x.m.id)); return C.S.watchlist.concat(C.S.seen.filter(s => !ids.has(s.m.id))); };
+const hhmm = mins => { const m = ((mins % 1440) + 1440) % 1440; return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
+
+const CABS = [
+  ["allday", "All-Dayer", "Two to five films, a proper day of it. Printed listings, start times, the lot.", "red"],
+  ["double", "Double Bill", "Two films that belong together. Rasher pairs them.", "blue"],
+  ["knockout", "Knockout", "Eight tapes, one winner. Pick between pairs till it's settled.", "orange"],
+  ["swipe", "Swipe", "Tonight or not tonight. It learns your mood as you go.", "pink"],
+  ["chain", "Chain", "Follow an actor or director from your last film to the next.", "green"],
+  ["globe", "Spin the Globe", "A random country. A film from it. No arguments.", "teal"],
+  ["bargain", "Bargain Bin", "Obscure stuff hardly anyone's rated. €1, no refunds.", "yellow"],
+];
+
+function card(it, extra = "") {
+  const m = it.m, p = C.poster(m.p, "w185");
+  return `<div class="acard"><div class="acover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(m.t)}</div>
+    <div class="ainfo"><h3 class="titlecard">${C.esc(m.t)}</h3>
+    <div class="meta">${C.esc(m.y)} · ${C.fmtRt(m.rt).toUpperCase()}${m.l && m.l !== "en" ? " · " + C.esc(C.lang(m.l).toUpperCase()) : ""}</div>
+    <div class="gen">${C.esc(m.g.slice(0, 3).join(" / "))}${m.dir[0] ? " · " + C.esc(m.dir[0]) : ""}</div>${extra}</div></div>`;
+}
+function header(k) {
+  const c = CABS.find(x => x[0] === k);
+  return `<div class="ahead"><button class="tag" data-back>◀ Arcade</button><span class="amarquee ${c[3]}">${c[1]}</span></div>`;
+}
+function bindBack() { view().querySelectorAll("[data-back]").forEach(b => b.onclick = () => { C.snd.click(); open(); }); }
+function empty(msg) { return `<div class="empty">${msg}</div>`; }
+
+export function open() {
+  const v = view();
+  if (!C.S) { v.innerHTML = `<div class="neonhead"><span class="neon pink">Arcade</span></div>${empty("Stock the shelves at the counter first.")}`; return; }
+  v.innerHTML = `<div class="neonhead"><span class="neon pink">Arcade</span><span class="byline">other ways to pick</span></div>
+    <div class="cabs">${CABS.map(([k, n, d, c]) => `<button class="cab ${c}" data-cab="${k}"><span class="cab-top">${n}</span><span class="cab-screen">${d}</span><span class="cab-coin">Insert coin</span></button>`).join("")}</div>`;
+  v.querySelectorAll("[data-cab]").forEach(b => b.onclick = () => { C.snd.coin?.(); GAMES[b.dataset.cab](); scrollTo(0, 0); });
+}
+
+// ---------- All-Dayer / Double Bill ----------
+const LIGHT = ["Comedy", "Animation", "Adventure", "Family", "Romance"], HEAVY = ["Drama", "Crime", "War", "History", "Thriller"], NIGHT = ["Horror", "Science Fiction", "Mystery"];
+const AD = { n: 3, style: "curated", genres: [], start: null, cap: 0 };
+const STYLES = [["curated", "Rasher's curated"], ["same", "Same vibe"], ["mix", "Mix it up"], ["pick", "Pick the genres"], ["director", "One director"], ["decade", "One decade"]];
+function defaultStart() { const d = new Date(); let m = d.getHours() * 60 + d.getMinutes() + 30; m = Math.ceil(m / 30) * 30; return Math.min(Math.max(m, 600), 1320); }
+
+function slotsFor(n, style, U) {
+  const has = (m, gs) => m.g.some(g => gs.includes(g));
+  if (style === "curated") {
+    const arc = [m => has(m, LIGHT), m => (parseInt(m.y) || 2000) < 1980 && m.va >= 7.2, m => has(m, HEAVY), m => has(m, NIGHT), m => m.g.includes("Comedy")];
+    const order = { 2: [0, 2], 3: [0, 1, 2], 4: [0, 1, 2, 3], 5: [0, 1, 2, 4, 3] }[n];
+    return { slots: order.map(i => arc[i]), why: "Light to start, a classic after, the heavy one in the evening, the weird one late." };
+  }
+  if (style === "same") {
+    const counts = new Map(); U.forEach(x => x.m.g.forEach(g => counts.set(g, (counts.get(g) || 0) + 1)));
+    const ok = [...counts].filter(([, c]) => c >= n * 2).map(([g]) => g); const g = rnd(ok.length ? ok : [...counts.keys()]);
+    return { slots: Array(n).fill(m => m.g.includes(g)), why: `All ${g.toLowerCase()}, all day.` };
+  }
+  if (style === "mix") { const used = new Set(); return { slots: Array(n).fill(0).map(() => m => { const g = m.g[0]; if (!g || used.has(g)) return false; used.add(g); return true; }), why: "A different genre every time.", stateful: used }; }
+  if (style === "pick") { const gs = AD.genres.length ? AD.genres : ["Comedy"]; return { slots: Array(n).fill(0).map((_, i) => m => m.g.includes(gs[i % gs.length])), why: gs.join(", then ") + "." }; }
+  if (style === "director") {
+    const c = new Map(); U.forEach(x => x.m.dir.forEach(d => c.set(d, (c.get(d) || 0) + 1)));
+    const ok = [...c].filter(([, k]) => k >= n).map(([d]) => d);
+    if (!ok.length) return null;
+    const d = rnd(ok); return { slots: Array(n).fill(m => m.dir.includes(d)), why: `A ${d} day.`, sortYear: true };
+  }
+  if (style === "decade") {
+    const c = new Map(); U.forEach(x => { const k = (x.m.y || "").slice(0, 3); if (k) c.set(k, (c.get(k) || 0) + 1); });
+    const ok = [...c].filter(([, k]) => k >= n * 2).map(([d]) => d);
+    if (!ok.length) return null;
+    const d = rnd(ok); return { slots: Array(n).fill(m => (m.y || "").startsWith(d)), why: `Straight out of the ${d}0s.`, sortYear: true };
+  }
+}
+function buildDay(n, style) {
+  const U = style === "director" ? everything() : unseen();
+  let best = null;
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const plan = slotsFor(n, style, U); if (!plan) return null;
+    plan.stateful?.clear?.();
+    const chosen = [];
+    for (const pred of plan.slots) {
+      const opts = shuffle(U).filter(x => !chosen.includes(x) && x.m.rt >= 60);
+      const pick = opts.find(x => pred(x.m)); if (!pick) break; chosen.push(pick);
+    }
+    if (chosen.length < n) continue;
+    if (plan.sortYear) chosen.sort((a, b) => (a.m.y || "") < (b.m.y || "") ? -1 : 1);
+    const total = chosen.reduce((s, x) => s + x.m.rt, 0) + 20 * (n - 1);
+    const res = { films: chosen, why: plan.why, total, plan };
+    if (!AD.cap || total <= AD.cap * 60) return res;
+    if (!best || total < best.total) best = res;
+  }
+  if (best) best.over = true;
+  return best;
+}
+let day = null;
+function allDayer(double = false) {
+  if (AD.start == null) AD.start = defaultStart();
+  if (double) AD.n = 2;
+  const v = view();
+  const starts = []; for (let m = 600; m <= 1380; m += 30) starts.push(m);
+  const genres = [...new Set(unseen().flatMap(x => x.m.g))].sort();
+  v.innerHTML = `${header(double ? "double" : "allday")}
+    <div class="aset">
+      ${double ? "" : `<div class="fgroup"><h3>How many</h3><div class="chips">${[2, 3, 4, 5].map(n => `<button class="chip" data-n="${n}" aria-pressed="${AD.n === n}">${n} films</button>`).join("")}</div></div>
+      <div class="fgroup"><h3>Style</h3><div class="chips">${STYLES.map(([k, l]) => `<button class="chip" data-st="${k}" aria-pressed="${AD.style === k}">${l}</button>`).join("")}</div>
+        <div class="chips" id="adGenres" ${AD.style === "pick" ? "" : "hidden"}>${genres.map(g => `<button class="chip ${AD.genres.includes(g) ? "on" : ""}" data-g="${g}">${g}</button>`).join("")}</div></div>`}
+      <div class="fgroup"><h3>Timing</h3><div class="row">
+        <label>Starts <select id="adStart">${starts.map(m => `<option value="${m}" ${m === AD.start ? "selected" : ""}>${hhmm(m)}</option>`).join("")}</select></label>
+        ${double ? "" : `<label>Fit it in <select id="adCap">${[[0, "no limit"], [5, "5 hours"], [6, "6 hours"], [8, "8 hours"], [10, "10 hours"], [12, "12 hours"]].map(([v, l]) => `<option value="${v}" ${v === AD.cap ? "selected" : ""}>${l}</option>`).join("")}</select></label>`}
+      </div><p class="note">20 minutes between films for the kettle and the toilet.</p></div>
+      <button class="play" id="adGo"><span class="tri"></span><span>${double ? "Pair them up" : "Print the listings"}</span></button>
+    </div>
+    <div id="adOut"></div>`;
+  bindBack();
+  v.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { AD.n = +b.dataset.n; C.snd.click(); allDayer(); });
+  v.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { AD.style = b.dataset.st; C.snd.click(); allDayer(); });
+  v.querySelectorAll("#adGenres [data-g]").forEach(b => b.onclick = () => { const g = b.dataset.g; AD.genres = AD.genres.includes(g) ? AD.genres.filter(x => x !== g) : [...AD.genres, g]; b.classList.toggle("on"); });
+  $("#adStart").onchange = e => { AD.start = +e.target.value; if (day) renderDay(double); };
+  if (!double) $("#adCap").onchange = e => { AD.cap = +e.target.value; };
+  $("#adGo").onclick = () => {
+    day = double ? buildPair() : buildDay(AD.n, AD.style);
+    if (!day) { $("#adOut").innerHTML = empty("Not enough on your shelves for that. Try another style."); return; }
+    C.snd.stab?.(); renderDay(double);
+    setTimeout(() => $("#adOut").scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+  if (day && day.double === double) renderDay(double);
+}
+function buildPair() {
+  const U = unseen().filter(x => x.m.rt >= 60);
+  for (let i = 0; i < 60; i++) {
+    const a = rnd(U), others = U.filter(x => x !== a);
+    let b = shuffle(others).find(x => x.m.dir.some(d => a.m.dir.includes(d))), why;
+    if (b) why = `Both ${a.m.dir.find(d => b.m.dir.includes(d))}.`;
+    if (!b) { b = shuffle(others).find(x => x.m.cast.slice(0, 3).some(c => a.m.cast.slice(0, 3).includes(c))); if (b) why = `${a.m.cast.find(c => b.m.cast.includes(c))} in both.`; }
+    if (!b && i > 30) { b = shuffle(others).find(x => x.m.g[0] === a.m.g[0] && (x.m.y || "").slice(0, 3) === (a.m.y || "").slice(0, 3)); if (b) why = `Two ${a.m.g[0].toLowerCase()} films from the ${(a.m.y || "").slice(0, 3)}0s.`; }
+    if (b) { const films = [a, b].sort((x, y) => (x.m.y || "") < (y.m.y || "") ? -1 : 1); return { films, why, total: a.m.rt + b.m.rt + 20, double: true }; }
+  }
+  return null;
+}
+function renderDay(double) {
+  let t = AD.start;
+  const rows = day.films.map((x, i) => { const s = t; t += x.m.rt + 20; return `<div class="lrow"><span class="ltime">${hhmm(s)}</span><span class="ltitle">${C.esc(x.m.t)}</span><span class="lmeta">${C.esc(x.m.y)} · ${C.fmtRt(x.m.rt)} · ${C.esc(x.m.g.slice(0, 2).join("/"))}</span>${double ? "" : `<button class="tag" data-swap="${i}">Swap</button>`}</div>`; }).join("");
+  const end = t - 20;
+  $("#adOut").innerHTML = `<div class="listings"><div class="lhead">TAKE ONE PICTURE HOUSE<small>${double ? "DOUBLE BILL" : "TODAY'S PROGRAMME"}</small></div>${rows}
+    <div class="lfoot">${C.esc(day.why)} Finishes around ${hhmm(end)}.${day.over ? " Couldn't quite squeeze it in, so this is the shortest day on the shelves." : ""}</div></div>
+    <div class="row center"><button class="play" id="adPlay"><span class="tri"></span><span>Start the first one</span></button><button class="ghost" id="adAgain">Reprint</button></div>`;
+  day.double = double;
+  $("#adOut").querySelectorAll("[data-swap]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.swap, pred = day.plan.slots[i];
+    day.plan.stateful?.delete?.(day.films[i].m.g[0]);
+    const pick = shuffle(unseen()).find(x => !day.films.includes(x) && x.m.rt >= 60 && (day.plan.stateful ? !day.films.some(f => f.m.g[0] === x.m.g[0]) : pred(x.m)));
+    if (!pick) return C.toast("Nothing else fits that slot.");
+    day.films[i] = pick; C.snd.click(); renderDay(double);
+  });
+  $("#adPlay").onclick = () => C.play(day.films);
+  $("#adAgain").onclick = () => $("#adGo").click();
+}
+
+// ---------- Knockout ----------
+let ko = null;
+function knockout() {
+  const U = unseen(); if (U.length < 8) { view().innerHTML = header("knockout") + empty("Need at least 8 tapes on the shelf."); bindBack(); return; }
+  ko = { round: shuffle(U).slice(0, 8), next: [], i: 0 };
+  renderKo();
+}
+const RN = { 8: "Quarter-finals", 4: "Semi-finals", 2: "The final" };
+function renderKo() {
+  const v = view();
+  if (ko.round.length === 1) {
+    const w = ko.round[0];
+    v.innerHTML = `${header("knockout")}<div class="champ"><span class="marker">Tonight's champion</span>${card(w)}</div>
+      <div class="row center"><button class="play" id="koPlay"><span class="tri"></span><span>Put it on</span></button><button class="ghost" id="koAgain">New bracket</button></div>`;
+    bindBack(); C.snd.stab?.();
+    $("#koPlay").onclick = () => C.play([w]); $("#koAgain").onclick = () => { C.snd.click(); knockout(); };
+    return;
+  }
+  const a = ko.round[ko.i * 2], b = ko.round[ko.i * 2 + 1];
+  const vs = x => { const p = C.poster(x.m.p, "w342"); return `<button class="kopick" data-w="${x.m.id}"><span class="kocover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(x.m.t)}</span><span class="kot">${C.esc(x.m.t)}</span><span class="kom">${C.esc(x.m.y)} · ${C.fmtRt(x.m.rt)}</span></button>`; };
+  v.innerHTML = `${header("knockout")}<div class="kohead"><span>${RN[ko.round.length]}</span><small>Match ${ko.i + 1} of ${ko.round.length / 2}</small></div>
+    <div class="kovs">${vs(a)}<span class="kov">VS</span>${vs(b)}</div><p class="note center">Tap the one you'd rather watch tonight.</p>`;
+  bindBack();
+  v.querySelectorAll("[data-w]").forEach(btn => btn.onclick = () => {
+    C.snd.click(); ko.next.push(+btn.dataset.w === a.m.id ? a : b); ko.i++;
+    if (ko.i * 2 >= ko.round.length) { ko.round = ko.next; ko.next = []; ko.i = 0; }
+    renderKo();
+  });
+}
+
+// ---------- Swipe ----------
+let sw = null;
+function swipe() { sw = { left: shuffle(unseen()).slice(0, 60), yes: [], no: 0, w: {}, cur: null }; nextSwipe(); }
+const feats = m => [...m.g.map(g => "g:" + g), "d:" + (m.y || "").slice(0, 3), "r:" + (m.rt < 95 ? "s" : m.rt < 130 ? "m" : "l"), "l:" + (m.l === "en" ? "en" : "sub")];
+const swScore = m => feats(m).reduce((s, f) => s + (sw.w[f] || 0), 0);
+function nextSwipe() {
+  if (sw.yes.length >= 3 || !sw.left.length) return shortlist();
+  const sc = sw.left.map(x => Math.exp(swScore(x.m) * 0.8)), tot = sc.reduce((a, b) => a + b, 0);
+  let r = Math.random() * tot, i = 0; while (r > sc[i] && i < sc.length - 1) { r -= sc[i]; i++; }
+  sw.cur = sw.left.splice(i, 1)[0];
+  const x = sw.cur, p = C.poster(x.m.p, "w342");
+  view().innerHTML = `${header("swipe")}<div class="swhead"><span>${sw.yes.length} of 3 on the shortlist</span></div>
+    <div class="swcard" id="swCard"><span class="swcover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(x.m.t)}</span>
+    <span class="kot">${C.esc(x.m.t)}</span><span class="kom">${C.esc(x.m.y)} · ${C.fmtRt(x.m.rt)} · ${C.esc(x.m.g.slice(0, 2).join(" / "))}</span>
+    <span class="swstamp yes">TONIGHT</span><span class="swstamp no">NAH</span></div>
+    <div class="row center"><button class="ghost big" id="swNo">✕ Not tonight</button><button class="btn big" id="swYes">✓ Tonight</button></div>
+    <p class="note center">Or swipe the tape left or right.</p>`;
+  bindBack();
+  const decide = yes => {
+    feats(x.m).forEach(f => sw.w[f] = (sw.w[f] || 0) + (yes ? 1 : -0.5));
+    if (yes) sw.yes.push(x); C.snd.click(); nextSwipe();
+  };
+  $("#swNo").onclick = () => decide(false); $("#swYes").onclick = () => decide(true);
+  const el = $("#swCard"); let sx = null, dx = 0;
+  el.addEventListener("pointerdown", e => { sx = e.clientX; el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointermove", e => { if (sx == null) return; dx = e.clientX - sx; el.style.transform = `translateX(${dx}px) rotate(${dx / 20}deg)`; el.classList.toggle("lean-yes", dx > 40); el.classList.toggle("lean-no", dx < -40); });
+  el.addEventListener("pointerup", () => { if (sx == null) return; sx = null; if (Math.abs(dx) > 80) decide(dx > 0); else { el.style.transform = ""; el.classList.remove("lean-yes", "lean-no"); } dx = 0; });
+}
+function shortlist() {
+  const v = view();
+  if (!sw.yes.length) { v.innerHTML = header("swipe") + empty("Nothing took your fancy. Fair enough.") + `<div class="row center"><button class="ghost" id="swAgain">Go again</button></div>`; bindBack(); $("#swAgain").onclick = swipe; return; }
+  v.innerHTML = `${header("swipe")}<div class="kohead"><span>Your shortlist</span><small>Tap one, or let Rasher decide</small></div>
+    <div class="list">${sw.yes.map(x => `<button class="pickbtn" data-id="${x.m.id}">${card(x)}</button>`).join("")}</div>
+    <div class="row center"><button class="play" id="swRasher"><span class="tri"></span><span>Rasher decides</span></button><button class="ghost" id="swAgain">Go again</button></div>`;
+  bindBack();
+  v.querySelectorAll("[data-id]").forEach(b => b.onclick = () => C.play([sw.yes.find(x => x.m.id === +b.dataset.id)]));
+  $("#swRasher").onclick = () => { const best = sw.yes.slice().sort((a, b) => swScore(b.m) - swScore(a.m))[0]; C.toast(`Rasher says ${best.m.t}. He's not wrong.`); C.play([best]); };
+  $("#swAgain").onclick = () => { C.snd.click(); swipe(); };
+}
+
+// ---------- Chain ----------
+let chain = null;
+function startFilm() {
+  const S = C.S;
+  if (!S.house && S.dated && S.dated.length) { const m = S.dated[S.dated.length - 1].m; return { m }; }
+  const log = S.seen.slice().sort((a, b) => (a.last || "") < (b.last || "") ? 1 : -1)[0];
+  return log || rnd(S.bestFits.length ? S.bestFits : S.watchlist);
+}
+function chainGame() { chain = [{ it: startFilm(), via: null }]; renderChain(); }
+function renderChain() {
+  const cur = chain[chain.length - 1].it, used = new Set(chain.map(c => c.it.m.id));
+  const pool = everything().filter(x => !used.has(x.m.id));
+  const people = [...cur.m.dir.slice(0, 2).map(p => [p, "dir"]), ...cur.m.cast.slice(0, 4).map(p => [p, "cast"])];
+  const opts = people.map(([p, k]) => { const ms = pool.filter(x => (k === "dir" ? x.m.dir : x.m.cast).includes(p)); const un = ms.filter(x => C.S.watchlist.includes(x)); return { p, k, ms: un.length ? un : ms }; });
+  const path = chain.map((c, i) => `${i ? `<span class="via">→ ${C.esc(c.via)} →</span>` : ""}<span class="node">${C.esc(c.it.m.t)}</span>`).join("");
+  view().innerHTML = `${header("chain")}<div class="chainpath">${path}</div>
+    <p class="note">${chain.length === 1 ? "Starting from the last thing you watched." : "Keep following, or put this one on."}</p>${card(cur)}
+    <div class="fgroup"><h3>Follow a thread</h3><div class="chips">${opts.map((o, i) => `<button class="chip" data-o="${i}" ${o.ms.length ? "" : "disabled"}>${o.k === "dir" ? "Dir. " : ""}${C.esc(o.p)} <b>${o.ms.length}</b></button>`).join("")}</div></div>
+    <div class="row center">${chain.length > 1 ? `<button class="play" id="chPlay"><span class="tri"></span><span>Put this one on</span></button>` : ""}<button class="ghost" id="chReset">Start over</button></div>`;
+  bindBack();
+  view().querySelectorAll("[data-o]").forEach(b => b.onclick = () => { const o = opts[+b.dataset.o]; if (!o.ms.length) return; chain.push({ it: rnd(o.ms), via: o.p }); C.snd.click(); renderChain(); });
+  const pl = $("#chPlay"); if (pl) pl.onclick = () => C.play([cur]);
+  $("#chReset").onclick = () => { C.snd.click(); chainGame(); };
+}
+
+// ---------- Spin the Globe ----------
+let globeAll = false;
+function globe() {
+  view().innerHTML = `${header("globe")}<div class="globe" id="globe"><div class="earth"></div></div>
+    <div class="country" id="country">Where to tonight?</div>
+    <div class="row center"><button class="play" id="spin"><span class="tri"></span><span>Spin it</span></button></div>
+    <label class="tog center"><input type="checkbox" id="globeAll" ${globeAll ? "checked" : ""}> Include the US and UK</label>
+    <div id="globeOut"></div>`;
+  bindBack();
+  $("#globeAll").onchange = e => globeAll = e.target.checked;
+  $("#spin").onclick = () => {
+    const U = unseen(), by = new Map();
+    U.forEach(x => x.m.c.slice(0, 2).forEach(c => { if (!globeAll && (c === "US" || c === "GB")) return; if (!by.has(c)) by.set(c, []); by.get(c).push(x); }));
+    const cs = [...by.keys()]; if (!cs.length) { $("#globeOut").innerHTML = empty("Nothing from abroad on your shelves."); return; }
+    const c = rnd(cs), x = rnd(by.get(c));
+    $("#globe").classList.remove("spinning"); void $("#globe").offsetWidth; $("#globe").classList.add("spinning");
+    $("#country").textContent = "…"; $("#globeOut").innerHTML = "";
+    let k = 0; const t = setInterval(() => { C.snd.tick?.(1 + Math.random() * .3); $("#country").textContent = C.region(rnd(cs)); if (++k > 14) { clearInterval(t); land(); } }, 95);
+    function land() {
+      $("#country").textContent = C.region(c); C.snd.stab?.();
+      $("#globeOut").innerHTML = `${card(x, `<div class="note">${by.get(c).length} film${by.get(c).length > 1 ? "s" : ""} from ${C.esc(C.region(c))} on your shelf</div>`)}<div class="row center"><button class="play" id="gPlay"><span class="tri"></span><span>Put it on</span></button></div>`;
+      $("#gPlay").onclick = () => C.play([x]);
+    }
+  };
+}
+
+// ---------- Bargain Bin ----------
+function bargain() {
+  const U = unseen().filter(x => x.m.vc >= 0).sort((a, b) => a.m.vc - b.m.vc);
+  const bin = U.slice(0, Math.max(12, Math.round(U.length * 0.12)));
+  view().innerHTML = `${header("bargain")}<div class="bin"><span class="binsign">BARGAIN BIN<br><b>€1</b><small>NO REFUNDS</small></span></div>
+    <div class="row center"><button class="play" id="rummage"><span class="tri"></span><span>Rummage</span></button></div><div id="binOut"></div>`;
+  bindBack();
+  $("#rummage").onclick = () => {
+    const x = rnd(bin); C.snd.clunk?.();
+    $("#binOut").innerHTML = `${card(x, `<div class="note">Only ${x.m.vc.toLocaleString()} people have ever rated this. Brave.</div>`)}<div class="row center"><button class="play" id="bPlay"><span class="tri"></span><span>Take a chance</span></button><button class="ghost" id="bAgain">Rummage again</button></div>`;
+    $("#bPlay").onclick = () => C.play([x]); $("#bAgain").onclick = () => $("#rummage").click();
+  };
+}
+
+const GAMES = { allday: () => allDayer(false), double: () => allDayer(true), knockout, swipe, chain: chainGame, globe, bargain };

@@ -203,3 +203,10 @@ export function click() {
   if (!on || !ac()) return;
   o("square", 900, ctx.currentTime, .03, .05, master);
 }
+
+// Coin drop for the arcade.
+export function coin() {
+  if (!on || !ac()) return;
+  const t = ctx.currentTime;
+  o("square", 988, t, .08, .07, master); o("square", 1319, t + .08, .25, .07, master);
+}

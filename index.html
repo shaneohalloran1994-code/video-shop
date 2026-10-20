@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=2a7">
+<link rel="stylesheet" href="css/app.css?v=2b2">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=2a7"></script>
+<script type="module" src="js/app.js?v=2b2"></script>
 </head>
 <body>
 
@@ -75,6 +75,7 @@
   <div class="fsheet" id="filters" hidden role="dialog" aria-modal="true" aria-label="Tonight I want">
     <div class="board fpanel">
       <div class="fhead"><span class="marker">Tonight I want…</span><button class="tag hot" id="closeFilters">Done</button></div>
+      <div class="fgroup moods-g"><h3>Moods <em>one tap sets it up and rolls</em></h3><div class="moods" id="moods"></div></div>
       <div class="fgroup"><h3>Genre <em>tap once for yes, twice for no</em></h3><div class="chips" id="genres"></div></div>
       <div class="fgroup"><h3>Length</h3><div class="chips" id="lengths"></div></div>
       <div class="fgroup"><h3>I've got</h3><div class="chips" id="slots"></div></div>
@@ -115,6 +116,9 @@
     <div class="list" id="fresh"></div>
     <button class="ghost more" id="moreFresh">More</button>
   </section>
+
+  <!-- ARCADE -->
+  <section id="v-arcade" class="view" hidden></section>
 
   <!-- RECEIPT -->
   <section id="v-receipt" class="view" hidden>
@@ -164,6 +168,7 @@
   <nav class="deck" role="tablist" aria-label="Sections">
     <button role="tab" data-tab="roll" aria-selected="true"><span class="ic">▶</span>Roll</button>
     <button role="tab" data-tab="picks" aria-selected="false"><span class="ic">★</span>Staff picks</button>
+    <button role="tab" data-tab="arcade" aria-selected="false"><span class="ic">◆</span>Arcade</button>
     <button role="tab" data-tab="receipt" aria-selected="false"><span class="ic">≡</span>Receipt</button>
     <button role="tab" data-tab="counter" aria-selected="false"><span class="ic">●</span>Counter</button>
   </nav>
