@@ -541,3 +541,10 @@ body.noscroll{overflow:hidden}
 .dnext .cover{width:56px;aspect-ratio:2/3;background:#222 center/cover}
 .dnext .titlecard{font-size:18px}
 .dnext .tag{margin-top:4px}
+
+/* Cabinet marquees: their own block so two-line titles never run into the screen */
+.cab{background:#151519!important}
+.cab-top{display:flex;align-items:center;justify-content:center;min-height:62px;padding:8px 8px;font-size:17px;line-height:1.05;margin-bottom:10px}
+.cab.red .cab-top{background:#b3150e}.cab.blue .cab-top{background:#1d3d8f}.cab.orange .cab-top{background:#d9611c}.cab.pink .cab-top{background:#c22c7f}
+.cab.green .cab-top{background:#1f6b45}.cab.teal .cab-top{background:#0f6e72}.cab.yellow .cab-top{background:#c9a21a}.cab.purple .cab-top{background:#5b1a50}.cab.lime .cab-top{background:#5f8f1a}
+.cab-screen{flex:1}
