@@ -235,9 +235,13 @@ function shortlist() {
 
 // ---------- Chain ----------
 let chain = null;
+function links(m) {
+  const pool = everything().filter(x => x.m.id !== m.id);
+  return [...m.dir.slice(0, 2), ...m.cast.slice(0, 4)].some(p => pool.some(x => x.m.dir.includes(p) || x.m.cast.includes(p)));
+}
 function startFilm() {
   const S = C.S;
-  if (!S.house && S.dated && S.dated.length) { const m = S.dated[S.dated.length - 1].m; return { m }; }
+  if (!S.house && S.dated && S.dated.length) { for (let i = S.dated.length - 1; i >= Math.max(0, S.dated.length - 25); i--) { const m = S.dated[i].m; if (links(m)) return { m }; } }
   const log = S.seen.slice().sort((a, b) => (a.last || "") < (b.last || "") ? 1 : -1)[0];
   return log || rnd(S.bestFits.length ? S.bestFits : S.watchlist);
 }
@@ -249,8 +253,8 @@ function renderChain() {
   const opts = people.map(([p, k]) => { const ms = pool.filter(x => (k === "dir" ? x.m.dir : x.m.cast).includes(p)); const un = ms.filter(x => C.S.watchlist.includes(x)); return { p, k, ms: un.length ? un : ms }; });
   const path = chain.map((c, i) => `${i ? `<span class="via">→ ${C.esc(c.via)} →</span>` : ""}<span class="node">${C.esc(c.it.m.t)}</span>`).join("");
   view().innerHTML = `${header("chain")}<div class="chainpath">${path}</div>
-    <p class="note">${chain.length === 1 ? "Starting from the last thing you watched." : "Keep following, or put this one on."}</p>${card(cur)}
-    <div class="fgroup"><h3>Follow a thread</h3><div class="chips">${opts.map((o, i) => `<button class="chip" data-o="${i}" ${o.ms.length ? "" : "disabled"}>${o.k === "dir" ? "Dir. " : ""}${C.esc(o.p)} <b>${o.ms.length}</b></button>`).join("")}</div></div>
+    <p class="note">${chain.length === 1 ? "Starting from one you watched lately." : "Keep following, or put this one on."}</p>${card(cur)}${opts.some(o => o.ms.length) ? "" : `<p class="note">Dead end. Nobody from this one turns up anywhere else on your shelves.</p>`}
+    <div class="fgroup"><h3>Follow a thread</h3><div class="chips">${opts.map((o, i) => [o, i]).filter(([o]) => o.ms.length).map(([o, i]) => `<button class="chip" data-o="${i}" ${o.ms.length ? "" : "disabled"}>${o.k === "dir" ? "Dir. " : ""}${C.esc(o.p)} <b>${o.ms.length}</b></button>`).join("")}</div></div>
     <div class="row center">${chain.length > 1 ? `<button class="play" id="chPlay"><span class="tri"></span><span>Put this one on</span></button>` : ""}<button class="ghost" id="chReset">Start over</button></div>`;
   bindBack();
   view().querySelectorAll("[data-o]").forEach(b => b.onclick = () => { const o = opts[+b.dataset.o]; if (!o.ms.length) return; chain.push({ it: rnd(o.ms), via: o.p }); C.snd.click(); renderChain(); });

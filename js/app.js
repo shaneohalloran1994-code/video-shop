@@ -1,14 +1,14 @@
-import * as store from "./store.js?v=p5";
-import * as tmdb from "./tmdb.js?v=p5";
-import * as importer from "./importer.js?v=p5";
-import * as lib from "./library.js?v=p5";
-import * as snd from "./sound.js?v=p5";
-import * as arcade from "./arcade.js?v=p5";
-import * as coming from "./coming.js?v=p5";
-import * as rasher from "./rasher.js?v=p5";
-import { LINES } from "./lines.js?v=p5";
-import * as friends from "./friends.js?v=p5";
-import * as builder from "./builder.js?v=p5";
+import * as store from "./store.js?v=p6";
+import * as tmdb from "./tmdb.js?v=p6";
+import * as importer from "./importer.js?v=p6";
+import * as lib from "./library.js?v=p6";
+import * as snd from "./sound.js?v=p6";
+import * as arcade from "./arcade.js?v=p6";
+import * as coming from "./coming.js?v=p6";
+import * as rasher from "./rasher.js?v=p6";
+import { LINES } from "./lines.js?v=p6";
+import * as friends from "./friends.js?v=p6";
+import * as builder from "./builder.js?v=p6";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -536,7 +536,8 @@ function caseHTML(it, i) {
       ${fee}${bday(m)}
       ${m.dir.length ? `<div class="who">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
       <p class="syn" hidden>${esc(m.ov)}</p>
-      <div class="acts">
+    </div>
+      <div class="acts wide">
         <button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button>
         ${swapBtn}
         ${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
@@ -545,7 +546,7 @@ function caseHTML(it, i) {
         <a class="tag" href="https://open.spotify.com/search/${encodeURIComponent(m.t + " " + m.y + " soundtrack")}" target="_blank" rel="noopener">Soundtrack</a>
         <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
       </div>${locked}
-    </div></article>`;
+    </article>`;
 }
 function bday(m) {
   const a = new Date().getFullYear() - (parseInt(m.y) || 0);
@@ -1044,7 +1045,7 @@ function groupNight(v, head, back) {
     v.innerHTML = head + `<p class="note">Who's on the couch? Rasher finds films none of you have seen, then you pass the phone round and veto.</p>
       <div class="chips" id="gWho">${people.map(p => `<button class="chip" data-who="${p.code}" aria-pressed="${g.who.has(p.code)}">${esc(p.name)}</button>`).join("")}</div>
       <label class="tog"><input type="checkbox" id="gShort" ${g.short ? "checked" : ""}> Keep it under 2 hours</label><label class="tog"><input type="checkbox" id="gSubs" ${g.nosubs ? "checked" : ""}> No subtitles</label>
-      <div class="row center"><button class="play" id="gGo"><span class="tri"></span><span>Five tapes on the counter</span></button></div>`;
+      <div class="row center"><button class="play" id="gGo"><span class="tri"></span><span>Deal five tapes</span></button></div>`;
     back();
     v.querySelectorAll("[data-who]").forEach(b => b.onclick = () => { const c = b.dataset.who; g.who.has(c) ? g.who.delete(c) : g.who.add(c); b.setAttribute("aria-pressed", g.who.has(c)); snd.click(); });
     $("#gShort").onchange = e => g.short = e.target.checked; $("#gSubs").onchange = e => g.nosubs = e.target.checked;

@@ -796,3 +796,8 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 @media (prefers-reduced-motion:reduce){.r-hand2{display:none}}
 .sheet-card.dark .ghost{color:var(--paper);border-color:#b39a7c;background:rgba(255,244,216,.06)}
 .sheet-card.dark .ghost.danger{color:#ff8a80;border-color:#a3332c}
+/* Walkthrough fixes */
+.case .acts.wide{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 8px;margin-top:2px}
+.case .acts.wide .tag{padding:7px 10px 6px;font-size:12px}
+.case > .stamp{grid-column:1/-1}
+.receipt::after{right:6px}
