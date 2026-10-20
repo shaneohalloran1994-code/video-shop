@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pc";
-import * as tmdb from "./tmdb.js?v=pc";
-import * as importer from "./importer.js?v=pc";
-import * as lib from "./library.js?v=pc";
-import * as snd from "./sound.js?v=pc";
-import * as arcade from "./arcade.js?v=pc";
-import * as coming from "./coming.js?v=pc";
-import * as rasher from "./rasher.js?v=pc";
-import { LINES } from "./lines.js?v=pc";
-import * as friends from "./friends.js?v=pc";
-import * as builder from "./builder.js?v=pc";
-import * as where from "./where.js?v=pc";
+import * as store from "./store.js?v=pd";
+import * as tmdb from "./tmdb.js?v=pd";
+import * as importer from "./importer.js?v=pd";
+import * as lib from "./library.js?v=pd";
+import * as snd from "./sound.js?v=pd";
+import * as arcade from "./arcade.js?v=pd";
+import * as coming from "./coming.js?v=pd";
+import * as rasher from "./rasher.js?v=pd";
+import { LINES } from "./lines.js?v=pd";
+import * as friends from "./friends.js?v=pd";
+import * as builder from "./builder.js?v=pd";
+import * as where from "./where.js?v=pd";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -450,6 +450,7 @@ async function land(chosen, ctx = {}) {
   playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
   const first = picks[0], shame = poolMode === "shame" && !ctx.arcade && !ctx.direct && first.added;
+  dealBox();
   rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, mood: F.mood, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true, { poster: blind && !first.revealed ? "" : posterOf(first.m, "w185"), title: blind && !first.revealed ? "?" : first.m.t });
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
@@ -540,20 +541,27 @@ function caseHTML(it, i) {
       <p class="syn" hidden>${esc(m.ov)}</p>
     </div>
       <div class="acts wide">
-        <button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button>
-        ${swapBtn}
-        ${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
+        <span class="ag act"><button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button>
+        ${swapBtn}</span>
+        <span class="ag look">${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
-        <button class="tag" data-a="poster">Poster</button>
-        <a class="tag" href="${esc(where.jwLink(m))}" target="_blank" rel="noopener">JustWatch</a>
+        <button class="tag" data-a="poster">Poster</button></span>
+        <span class="ag ext"><a class="tag" href="${esc(where.jwLink(m))}" target="_blank" rel="noopener">JustWatch</a>
         <a class="tag" href="https://open.spotify.com/search/${encodeURIComponent(m.t + " " + m.y + " soundtrack")}" target="_blank" rel="noopener">Soundtrack</a>
-        <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
+        <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a></span>
       </div>${locked}
     </article>`;
 }
 function bday(m) {
   const a = new Date().getFullYear() - (parseInt(m.y) || 0);
   return a > 0 && a < 120 && (a % 10 === 0 || a === 25) ? `<span class="bday">${a} this year</span>` : "";
+}
+// Rasher's hand slides the first box across under the telly, then lets go.
+function dealBox() {
+  const c = $("#cases .case"); if (!c || RM) return;
+  c.classList.remove("dealt"); void c.offsetWidth; c.classList.add("dealt");
+  if (!c.querySelector(".r-hand2")) c.insertAdjacentHTML("beforeend", rasher.HAND2);
+  setTimeout(() => { c.classList.remove("dealt"); c.querySelector(".r-hand2")?.remove(); }, 3000);
 }
 function lateFee(added) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(added)) / 864e5) - 3);

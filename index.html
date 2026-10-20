@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=pc">
+<link rel="stylesheet" href="css/app.css?v=pd">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=pc"></script>
+<script type="module" src="js/app.js?v=pd"></script>
 </head>
 <body>
 
@@ -53,6 +53,7 @@
     </div>
 
     <div class="rasher" id="rasher" hidden aria-live="polite"></div>
+    <div class="cases" id="cases" aria-live="polite"></div>
 
     <div class="rack" title="Browse the shelves"><div class="strip" id="strip"></div><span class="browse">Browse ▸</span></div>
 
@@ -68,11 +69,11 @@
     <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
     <div class="underplay"><span class="inrun" id="inRun"></span><button class="askr" id="askRasher">Or ask Rasher ▸</button></div>
 
-    <div class="cases" id="cases" aria-live="polite"></div>
-
-    <button class="chalk" id="chalk" hidden></button>
-    <button class="clipping" id="clipping" hidden></button>
-    <div class="notice" id="notice" hidden></div>
+    <div class="cork" id="cork">
+      <button class="chalk" id="chalk" hidden></button>
+      <button class="clipping" id="clipping" hidden></button>
+      <div class="notice" id="notice" hidden></div>
+    </div>
   </section>
 
   <!-- Tonight I want: pull-up filter panel -->

@@ -1,5 +1,5 @@
 // Where to watch: streaming, rent and buy options for your country, from JustWatch via TMDB.
-import { prefs } from "./store.js?v=pc";
+import { prefs } from "./store.js?v=pd";
 
 export const COUNTRIES = ["IE", "GB", "US", "CA", "AU", "NZ", "DE", "FR", "ES", "IT", "NL", "BE", "DK", "SE", "NO", "FI", "PL", "PT", "AT", "CH", "BR", "MX", "AR", "IN", "JP", "KR", "ZA"];
 export const country = () => prefs.get("region", "IE");
@@ -9,7 +9,7 @@ const jwCode = c => c === "GB" ? "uk" : c.toLowerCase();
 export const jwLink = m => `https://www.justwatch.com/${jwCode(country())}/search?q=${encodeURIComponent(m.t)}`;
 
 // "Netflix Standard with Ads" is still Netflix; "Apple TV Store" is Apple TV.
-const tidy = n => n.replace(/ (Amazon|Apple TV|Roku Premium) Channel$/, "").replace(/ (Standard|Basic)? ?with Ads$/, "").replace(/ (Premium|Plus|Store|Movies)$/, "").trim();
+const tidy = n => n.replace(/ (Amazon|Apple TV|Roku Premium) Channel$/, "").replace(/ (Standard|Basic)? ?with Ads$/, "").replace(/ (Premium|Store|Movies)$/, "").trim();
 const placeName = () => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(country()); } catch { return "your country"; } };
 const cache = new Map();
 export async function lookup(call, m) {

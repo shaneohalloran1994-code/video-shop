@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=pc";
-import { prefs } from "./store.js?v=pc";
-import { QUOTES } from "./quotes.js?v=pc";
+import { LINES } from "./lines.js?v=pd";
+import { prefs } from "./store.js?v=pd";
+import { QUOTES } from "./quotes.js?v=pd";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -116,9 +116,8 @@ export function slip(text, hand = false, film = null) {
   const s = $("#rasher"); if (!s) return;
   if (!text) { s.hidden = true; return; }
   s.hidden = false;
-  const box = hand ? `<div class="r-deal"><div class="r-case${film?.poster ? "" : " plain"}" style="${film?.poster ? `background-image:url('${film.poster}')` : ""}">${film?.poster ? "" : `<span>${esc(film?.title || "")}</span>`}<i class="r-sticker">TAKE ONE</i></div>${HAND2}</div>` : "";
-  s.classList.toggle("dealt", hand);
-  s.innerHTML = `${box}<p class="said"><b>Rasher</b>${esc(text)}</p>`;
+  s.classList.remove("dealt"); s.classList.toggle("pinned", hand);
+  s.innerHTML = `<p class="said"><b>Rasher</b>${esc(text)}</p>`;
   s.classList.remove("slide"); void s.offsetWidth;
   if (hand && !RM) s.classList.add("slide");
 }
