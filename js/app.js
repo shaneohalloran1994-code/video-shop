@@ -1,14 +1,14 @@
-import * as store from "./store.js?v=p7";
-import * as tmdb from "./tmdb.js?v=p7";
-import * as importer from "./importer.js?v=p7";
-import * as lib from "./library.js?v=p7";
-import * as snd from "./sound.js?v=p7";
-import * as arcade from "./arcade.js?v=p7";
-import * as coming from "./coming.js?v=p7";
-import * as rasher from "./rasher.js?v=p7";
-import { LINES } from "./lines.js?v=p7";
-import * as friends from "./friends.js?v=p7";
-import * as builder from "./builder.js?v=p7";
+import * as store from "./store.js?v=p8";
+import * as tmdb from "./tmdb.js?v=p8";
+import * as importer from "./importer.js?v=p8";
+import * as lib from "./library.js?v=p8";
+import * as snd from "./sound.js?v=p8";
+import * as arcade from "./arcade.js?v=p8";
+import * as coming from "./coming.js?v=p8";
+import * as rasher from "./rasher.js?v=p8";
+import { LINES } from "./lines.js?v=p8";
+import * as friends from "./friends.js?v=p8";
+import * as builder from "./builder.js?v=p8";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -718,7 +718,7 @@ function fallbackReason(it) {
   const m = it.m;
   const d = m.dir.find(x => S.seen.some(s => s.m.dir.includes(x)));
   if (d) { const n = S.seen.filter(s => s.m.dir.includes(d)).length; return n > 1 ? `You've seen ${n} by ${d}. Here's another.` : `You've seen one by ${d}. Time for a second.`; }
-  const a = m.cast.slice(0, 4).find(x => S.seen.some(s => s.m.cast.slice(0, 5).includes(x)));
+  const a = m.g.includes("Documentary") ? null : m.cast.slice(0, 3).find(x => S.seen.some(s => s.m.cast.slice(0, 5).includes(x)));
   if (a) { const o = S.seen.find(s => s.m.cast.slice(0, 5).includes(a)); return `${a}, last seen in ${o.m.t}.`; }
   if (it.added && +it.added.slice(0, 4) < new Date().getFullYear()) return `On your list since ${it.added.slice(0, 4)}. Its time has come.`;
   if (m.y && +m.y < 1970) return `Older than most of the shop. Still holds up.`;

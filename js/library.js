@@ -109,6 +109,8 @@ export function build(profile, films, extra, log) {
     src: ["Keeps coming up off {v}", "If you liked {v}, this one", "Off the back of {v}", "{v} fans end up here"],
   };
   const fill = (t, v) => t.replace("{v}", v);
+  // Only name an actor as a reason if they're top-billed, and never in documentaries (their "cast" is often reenactments or archive).
+  const castOk = (m, v) => !m.g.includes("Documentary") && m.cast.indexOf(v) > -1 && m.cast.indexOf(v) < 3;
   const reasonPool = (m, src) => {
     const out = [];
     const fs = feats(m).map(f => [coef(f), f]).sort((a, b) => b[0] - a[0]);
@@ -118,7 +120,7 @@ export function build(profile, films, extra, log) {
       if (c < 0.05 || out.length >= 6) break;
       const [t, ...rest] = f.split(":"); const v = rest.join(":");
       if (t === "d") out.push(["d", fill(pickT(T.d, m, 1), v)]);
-      else if (t === "a") out.push(["a", fill(pickT(T.a, m, 2), v)]);
+      else if (t === "a") { if (castOk(m, v)) out.push(["a", fill(pickT(T.a, m, 2), v)]); }
       else if (t === "g") { const r = fill(pickT(T.g, m, 3), v.toLowerCase()); out.push(["g", r.charAt(0).toUpperCase() + r.slice(1)]); }
       else if (t === "dec") out.push(["dec", fill(pickT(T.dec, m, 4), v)]);
     }
@@ -132,7 +134,7 @@ export function build(profile, films, extra, log) {
       if (c < 0.08 || out.length >= 2) break;
       const [t, ...rest] = f.split(":"); const v = rest.join(":");
       if (t === "d") out.push(fill(pickT(T.d, m, 1), v));
-      else if (t === "a") out.push(fill(pickT(T.a, m, 2), v));
+      else if (t === "a") { if (castOk(m, v)) out.push(fill(pickT(T.a, m, 2), v)); }
       else if (t === "g") { const r = fill(pickT(T.g, m, 3), v.toLowerCase()); out.push(r.charAt(0).toUpperCase() + r.slice(1)); }
       else if (t === "dec") out.push(fill(pickT(T.dec, m, 4), v));
     }
