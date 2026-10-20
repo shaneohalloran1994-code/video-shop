@@ -1,8 +1,8 @@
-import * as store from "./store.js?v=1b4";
-import * as tmdb from "./tmdb.js?v=1b4";
-import * as importer from "./importer.js?v=1b4";
-import * as lib from "./library.js?v=1b4";
-import * as snd from "./sound.js?v=1b4";
+import * as store from "./store.js?v=1b5";
+import * as tmdb from "./tmdb.js?v=1b5";
+import * as importer from "./importer.js?v=1b5";
+import * as lib from "./library.js?v=1b5";
+import * as snd from "./sound.js?v=1b5";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -365,11 +365,23 @@ function renderPicks() {
   if (!picks.length) { box.innerHTML = rolledEmpty ? `<div class="empty">Nothing on the shelf matches all that. Loosen a filter and try again.</div>` : ""; return; }
   box.innerHTML = picks.map(caseHTML).join("");
 }
+function showOnTV(i) {
+  const it = picks[i]; if (!it) return;
+  active = i; playOnTV(it); snd.clunk();
+  $$(".case").forEach(c => c.classList.toggle("active", +c.dataset.i === i && picks.length > 1));
+  const tv = $("#tv"), r = tv.getBoundingClientRect();
+  if (r.top < 60 || r.bottom > innerHeight) scrollTo({ top: scrollY + r.top - 70, behavior: RM ? "auto" : "smooth" });
+}
+$("#strip").addEventListener("click", e => {
+  const sp = e.target.closest(".spine.pulled"); if (!sp) return;
+  const i = picks.findIndex(p => String(p.m.id) === sp.dataset.id); if (i >= 0) showOnTV(i);
+});
 $("#cases").addEventListener("click", e => {
-  const b = e.target.closest("[data-a]"); if (!b) return;
+  const b = e.target.closest("[data-a]");
+  if (!b) { const card = e.target.closest(".case"); if (card && !e.target.closest("a,button")) showOnTV(+card.dataset.i); return; }
   const card = b.closest(".case"), i = +card.dataset.i, it = picks[i];
   const a = b.dataset.a;
-  if (a === "tv") { active = i; playOnTV(it); snd.clunk(); $$(".case").forEach(c => c.classList.toggle("active", +c.dataset.i === i && picks.length > 1)); }
+  if (a === "tv") showOnTV(i);
   if (a === "syn") { const p = card.querySelector(".syn"); p.hidden = !p.hidden; b.textContent = p.hidden ? "Synopsis" : "Hide synopsis"; }
   if (a === "rent") { it.revealed = true; active = i; snd.clunk(); playOnTV(it); renderPicks(); }
   if (a === "swap") {

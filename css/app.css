@@ -340,3 +340,13 @@ input[type=number],input[type=password],select{border-radius:0}
 .why.talker::before{content:"";position:absolute;top:-8px;left:40%;width:46px;height:16px;background:rgba(240,230,190,.75);transform:rotate(3deg)}
 .why.talker li::before{content:"– "}
 #v-picks .pick:nth-child(2n) .why.talker{transform:rotate(1deg)}
+
+/* Blind is its own switch, set apart from One / Three */
+.controls .keys.solo{margin-left:4px}
+.controls .keys.solo button{background:linear-gradient(#3a2a40,#271c2c 70%,#1f1623)}
+.case{cursor:pointer}
+.spine.pulled{cursor:pointer}
+/* A bit of grime: fine grain and a vignette over the shop */
+#shop::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;opacity:.09;mix-blend-mode:overlay;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
+#shop::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(10,5,2,.45) 100%)}

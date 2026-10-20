@@ -98,20 +98,31 @@ export function build(profile, films, extra, log) {
   const lift = {}; for (const g of new Set([...Object.keys(recent), ...Object.keys(overall)])) lift[g] = (recent[g] || 0) - (overall[g] || 0);
 
   const fit = m => predict(m) + m.g.reduce((a, g) => a + Math.max(0, lift[g] || 0) * 1.5, 0);
+  // Varied wording so the shelf-talker cards don't all read the same.
+  const pickT = (arr, m, salt) => arr[(((m.id * 2654435761) ^ salt) >>> 0) % arr.length];
+  const T = {
+    d: ["You rate {v} highly", "{v}. You know the drill.", "You've a soft spot for {v}", "Another {v} for the pile", "{v} rarely lets you down"],
+    a: ["{v}'s in it. Say no more.", "You tend to like anything with {v}", "{v} again. You're consistent.", "Has {v}. That usually works for you."],
+    g: ["{v} is your strong suit", "Good {v}. You'll know.", "You rarely miss on {v}", "{v}, the way you like it"],
+    dec: ["Proper {v} stuff", "You rate the {v} highly", "They don't make them like the {v} anymore", "A {v} one. Your era."],
+    hot: ["Keeps your {v} run going", "You've been on a {v} run lately", "Fits the {v} kick you're on"],
+    src: ["Keeps coming up off {v}", "If you liked {v}, this one", "Off the back of {v}", "{v} fans end up here"],
+  };
+  const fill = (t, v) => t.replace("{v}", v);
   const reasons = (m, src) => {
     const out = [];
     const fs = feats(m).map(f => [coef(f), f]).sort((a, b) => b[0] - a[0]);
     for (const [c, f] of fs) {
       if (c < 0.08 || out.length >= 2) break;
       const [t, ...rest] = f.split(":"); const v = rest.join(":");
-      if (t === "d") out.push(`You rate ${v} films highly`);
-      else if (t === "a") out.push(`You tend to like films with ${v}`);
-      else if (t === "g") out.push(`${v} is one of your strongest genres`);
-      else if (t === "dec") out.push(`You rate films from the ${v} highly`);
+      if (t === "d") out.push(fill(pickT(T.d, m, 1), v));
+      else if (t === "a") out.push(fill(pickT(T.a, m, 2), v));
+      else if (t === "g") out.push(fill(pickT(T.g, m, 3), v));
+      else if (t === "dec") out.push(fill(pickT(T.dec, m, 4), v));
     }
     const hot = m.g.find(g => (lift[g] || 0) > 0.06);
-    if (hot) out.unshift(`You've been on a ${hot.toLowerCase()} run lately`);
-    if (src && src.length) out.unshift("Keeps coming up off " + src.slice(0, 2).join(" and "));
+    if (hot) out.unshift(fill(pickT(T.hot, m, 5), hot.toLowerCase()));
+    if (src && src.length) out.unshift(fill(pickT(T.src, m, 6), src.slice(0, 2).join(" and ")));
     return out.slice(0, 3);
   };
 

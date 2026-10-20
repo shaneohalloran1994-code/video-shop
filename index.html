@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=1b4">
+<link rel="stylesheet" href="css/app.css?v=1b5">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=1b4"></script>
+<script type="module" src="js/app.js?v=1b5"></script>
 </head>
 <body>
 
@@ -56,8 +56,9 @@
 
     <div class="controls">
       <div class="seg keys count" role="group" aria-label="How many films">
-        <button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button><button id="blindKey" aria-pressed="false" title="Box art only until you rent it">Blind</button>
+        <button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button>
       </div>
+      <div class="seg keys solo" role="group" aria-label="Rent it blind"><button id="blindKey" aria-pressed="false" title="Box art only until you rent it">Blind</button></div>
       <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
       <span class="inrun" id="inRun"></span>
     </div>
