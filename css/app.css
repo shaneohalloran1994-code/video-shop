@@ -824,3 +824,7 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 .where .wl b{font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#7cff7a;margin-right:2px}
 .field{display:flex;align-items:center;gap:10px;font:600 15px var(--cond);text-transform:uppercase;letter-spacing:.06em}
 .field select{flex:1}
+/* Dropdowns on the cream Counter cards: light box, dark text, light native list */
+.step select{color-scheme:light;background:#fffaf0;color:#2a1306;border:1px solid #8e7660;border-radius:0;padding:8px 10px;font:600 16px var(--cond)}
+.step select option{background:#fffaf0;color:#2a1306}
+.field{color:#2a1306}
