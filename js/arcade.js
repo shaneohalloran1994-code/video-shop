@@ -23,7 +23,7 @@ const CABS = [
 ];
 
 function card(it, extra = "") {
-  const m = it.m, p = C.poster(m.p, "w185");
+  const m = it.m, p = C.posterOf(m, "w185");
   return `<div class="acard"><div class="acover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(m.t)}</div>
     <div class="ainfo"><h3 class="titlecard">${C.esc(m.t)}</h3>
     <div class="meta">${C.esc(m.y)} · ${C.fmtRt(m.rt).toUpperCase()}${m.l && m.l !== "en" ? " · " + C.esc(C.lang(m.l).toUpperCase()) : ""}</div>
@@ -181,7 +181,7 @@ function renderKo() {
     return;
   }
   const a = ko.round[ko.i * 2], b = ko.round[ko.i * 2 + 1];
-  const vs = x => { const p = C.poster(x.m.p, "w342"); return `<button class="kopick" data-w="${x.m.id}"><span class="kocover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(x.m.t)}</span><span class="kot">${C.esc(x.m.t)}</span><span class="kom">${C.esc(x.m.y)} · ${C.fmtRt(x.m.rt)}</span></button>`; };
+  const vs = x => { const p = C.posterOf(x.m, "w342"); return `<button class="kopick" data-w="${x.m.id}"><span class="kocover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(x.m.t)}</span><span class="kot">${C.esc(x.m.t)}</span><span class="kom">${C.esc(x.m.y)} · ${C.fmtRt(x.m.rt)}</span></button>`; };
   v.innerHTML = `${header("knockout")}<div class="kohead"><span>${RN[ko.round.length]}</span><small>Match ${ko.i + 1} of ${ko.round.length / 2}</small></div>
     <div class="kovs">${vs(a)}<span class="kov">VS</span>${vs(b)}</div><p class="note center">Tap the one you'd rather watch tonight.</p>`;
   bindBack();
@@ -202,7 +202,7 @@ function nextSwipe() {
   const sc = sw.left.map(x => Math.exp(swScore(x.m) * 0.8)), tot = sc.reduce((a, b) => a + b, 0);
   let r = Math.random() * tot, i = 0; while (r > sc[i] && i < sc.length - 1) { r -= sc[i]; i++; }
   sw.cur = sw.left.splice(i, 1)[0];
-  const x = sw.cur, p = C.poster(x.m.p, "w342");
+  const x = sw.cur, p = C.posterOf(x.m, "w342");
   view().innerHTML = `${header("swipe")}<div class="swhead"><span>${sw.yes.length} of 3 on the shortlist</span></div>
     <div class="swcard" id="swCard"><span class="swcover" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : C.esc(x.m.t)}</span>
     <span class="kot">${C.esc(x.m.t)}</span><span class="kom">${C.esc(x.m.y)} · ${C.fmtRt(x.m.rt)} · ${C.esc(x.m.g.slice(0, 2).join(" / "))}</span>

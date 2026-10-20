@@ -1,9 +1,15 @@
-// Take One: TMDB proxy for Cloudflare Workers.
+// Take One: TMDB proxy for Cloudflare Workers. Version 2 (adds Coming Soon and In Cinemas Now).
 // Lets people use the app without their own TMDB key. Your key stays here as a secret, never in the app.
 // Setup: add a secret called TMDB_KEY (Settings > Variables and Secrets) with your TMDB API key.
 
 const ALLOWED_ORIGINS = ["https://shaneohalloran1994-code.github.io", "http://localhost:8765"];
-const ALLOWED_PATHS = [/^\/3\/configuration$/, /^\/3\/search\/movie$/, /^\/3\/movie\/\d+$/];
+const ALLOWED_PATHS = [
+  /^\/3\/configuration$/,
+  /^\/3\/search\/movie$/,
+  /^\/3\/movie\/\d+$/,
+  /^\/3\/movie\/(upcoming|now_playing)$/,
+  /^\/3\/discover\/movie$/,
+];
 
 export default {
   async fetch(request, env) {
@@ -24,7 +30,7 @@ export default {
     for (const [k, v] of url.searchParams) if (k !== "api_key") target.searchParams.set(k, v);
     target.searchParams.set("api_key", env.TMDB_KEY);
 
-    const r = await fetch(target, { cf: { cacheTtl: 86400, cacheEverything: true } });
+    const r = await fetch(target, { cf: { cacheTtl: url.pathname.includes("upcoming") || url.pathname.includes("now_playing") || url.pathname.includes("discover") ? 21600 : 86400, cacheEverything: true } });
     const body = await r.text();
     return new Response(body, { status: r.status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "public, max-age=86400" } });
   },

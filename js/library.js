@@ -105,7 +105,7 @@ export function build(profile, films, extra, log) {
     a: ["{v}'s in it. Say no more.", "You tend to like anything with {v}", "{v} again. You're consistent.", "Has {v}. That usually works for you."],
     g: ["{v} is your strong suit", "Good {v}. You'll know.", "You rarely miss on {v}", "{v}, the way you like it"],
     dec: ["Proper {v} stuff", "You rate the {v} highly", "They don't make them like the {v} anymore", "A {v} one. Your era."],
-    hot: ["Keeps your {v} run going", "You've been on a {v} run lately", "Fits the {v} kick you're on"],
+    hot: ["Keeps your {v} streak going", "Lots of {v} lately. This fits.", "Fits the {v} kick you're on"],
     src: ["Keeps coming up off {v}", "If you liked {v}, this one", "Off the back of {v}", "{v} fans end up here"],
   };
   const fill = (t, v) => t.replace("{v}", v);
@@ -117,7 +117,7 @@ export function build(profile, films, extra, log) {
       const [t, ...rest] = f.split(":"); const v = rest.join(":");
       if (t === "d") out.push(fill(pickT(T.d, m, 1), v));
       else if (t === "a") out.push(fill(pickT(T.a, m, 2), v));
-      else if (t === "g") out.push(fill(pickT(T.g, m, 3), v));
+      else if (t === "g") { const r = fill(pickT(T.g, m, 3), v.toLowerCase()); out.push(r.charAt(0).toUpperCase() + r.slice(1)); }
       else if (t === "dec") out.push(fill(pickT(T.dec, m, 4), v));
     }
     const hot = m.g.find(g => (lift[g] || 0) > 0.06);

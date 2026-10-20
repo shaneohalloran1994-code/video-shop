@@ -1,9 +1,10 @@
-import * as store from "./store.js?v=2c3";
-import * as tmdb from "./tmdb.js?v=2c3";
-import * as importer from "./importer.js?v=2c3";
-import * as lib from "./library.js?v=2c3";
-import * as snd from "./sound.js?v=2c3";
-import * as arcade from "./arcade.js?v=2c3";
+import * as store from "./store.js?v=2d2";
+import * as tmdb from "./tmdb.js?v=2d2";
+import * as importer from "./importer.js?v=2d2";
+import * as lib from "./library.js?v=2d2";
+import * as snd from "./sound.js?v=2d2";
+import * as arcade from "./arcade.js?v=2d2";
+import * as coming from "./coming.js?v=2d2";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -15,6 +16,8 @@ const lang = c => c === "xx" ? "No dialogue" : c === "cn" ? "Cantonese" : (() =>
 const region = c => { try { return RN ? RN.of(c) : c; } catch { return c; } };
 const fmtRt = m => m ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m` : "runtime n/a";
 const poster = (p, size = "w342") => p ? tmdb.IMG + size + p : "";
+let customPosters = store.prefs.get("posters", {});
+const posterOf = (m, size = "w342") => poster(customPosters[m.id] || m.p, size);
 const today = () => new Date().toISOString().slice(0, 10);
 const lbLink = it => it.uri || `https://letterboxd.com/tmdb/${it.m.id}/`;
 function toast(t) { const e = $("#toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => e.hidden = true, 2600); }
@@ -339,7 +342,7 @@ function idleScreen() {
 }
 function playOnTV(it) {
   const m = it.m, c = $("#tvContent"), hide = blind && !it.revealed;
-  const p = poster(m.p, "w500");
+  const p = posterOf(m, "w500");
   c.innerHTML = `<div class="play-screen">${p ? `<div class="bg" style="background-image:url('${p}')"></div>` : ""}
     <div class="frame">${p ? `<img src="${p}" alt="Poster for ${esc(m.t)}">` : `<div class="noposter">${esc(m.t)}</div>`}</div>
     <div class="bars t"></div><div class="bars b"><div class="ttl">${hide ? "· · ·" : esc(m.t)}</div></div></div>`;
@@ -438,9 +441,10 @@ async function land(chosen) {
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
 }
 
+coming.init({ get S() { return S; }, key: () => apiKey, tmdb, store, posterOf, esc });
 // The arcade sends its winners to the telly.
 arcade.init({
-  get S() { return S; }, esc, poster, fmtRt, lang, region, draw: (arr, n) => draw(arr, n), toast, snd,
+  get S() { return S; }, esc, poster, posterOf, fmtRt, lang, region, draw: (arr, n) => draw(arr, n), toast, snd,
   vibes: VIBE_KW, vibeName: k => (VIBES.find(v => v[0] === k) || ["", k])[1],
   api: {
     search: q => tmdb.call(apiKey, "/search/movie", { query: q }),
@@ -481,7 +485,7 @@ addEventListener("keydown", e => { if (e.key === "Escape" && !$("#filters").hidd
 
 // ---------- the picks (tape cases) ----------
 function caseHTML(it, i) {
-  const m = it.m, p = poster(m.p, "w185"), hide = blind && !it.revealed;
+  const m = it.m, p = posterOf(m, "w185"), hide = blind && !it.revealed;
   const sticker = `<span class="rental">TAKE ONE VIDEO<br>3 NIGHTS</span>`;
   const swapBtn = vetoes > 0 ? `<button class="tag" data-a="swap">${F.last ? "Use my veto" : "Swap"}</button>` : "";
   const locked = F.last && vetoes <= 0 ? `<span class="stamp">Locked in</span>` : "";
@@ -508,6 +512,7 @@ function caseHTML(it, i) {
         ${swapBtn}
         ${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
+        <button class="tag" data-a="poster">Poster</button>
         <a class="tag" href="https://open.spotify.com/search/${encodeURIComponent(m.t + " " + m.y + " soundtrack")}" target="_blank" rel="noopener">Soundtrack</a>
         <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
       </div>${locked}
@@ -543,6 +548,7 @@ $("#cases").addEventListener("click", e => {
   if (a === "tv") showOnTV(i);
   if (a === "syn") { const p = card.querySelector(".syn"); p.hidden = !p.hidden; b.textContent = p.hidden ? "Synopsis" : "Hide synopsis"; }
   if (a === "more") { tab("arcade"); arcade.moreLike(it.m); return; }
+  if (a === "poster") { posterPicker(it.m); return; }
   if (a === "rent") { it.revealed = true; active = i; snd.clunk(); playOnTV(it); renderPicks(); }
   if (a === "swap") {
     if (vetoes <= 0) return;
@@ -555,6 +561,57 @@ $("#cases").addEventListener("click", e => {
     else if (swapRun === 4) toast("Just when I thought I was out…");
   }
   if (a === "ret") openReturn(it);
+});
+
+// ---------- custom posters ----------
+async function posterPicker(m) {
+  const sh = $("#posterSheet"), grid = $("#posterGrid");
+  $("#posterTitle").textContent = m.t; sh.hidden = false; document.body.classList.add("noscroll");
+  grid.innerHTML = `<p class="note">Rummaging for alternative covers…</p>`;
+  let list = [];
+  try { list = await tmdb.posters(apiKey, m.id); } catch { }
+  const cur = customPosters[m.id] || m.p;
+  list = [m.p, ...list.filter(p => p !== m.p)].filter(Boolean).slice(0, 30);
+  if (list.length <= 1) { grid.innerHTML = `<p class="note">No other covers for this one. The original it is.</p>`; return; }
+  grid.innerHTML = list.map((p, i) => `<button class="pchoice ${p === cur ? "on" : ""}" data-p="${esc(p)}" aria-label="Cover ${i + 1}" style="background-image:url('${poster(p, "w185")}')">${i === 0 ? "<span>Original</span>" : ""}</button>`).join("");
+  grid.querySelectorAll("[data-p]").forEach(b => b.onclick = () => {
+    const p = b.dataset.p; if (p === m.p) delete customPosters[m.id]; else customPosters[m.id] = p;
+    store.prefs.set("posters", customPosters); snd.click(); closePosters();
+    renderPicks(); const i = picks.findIndex(x => x.m.id === m.id); if (i === active) playOnTV(picks[i]); toast("New cover on the box.");
+  });
+}
+function closePosters() { $("#posterSheet").hidden = true; document.body.classList.remove("noscroll"); }
+$("#posterClose").onclick = closePosters;
+$("#posterSheet").addEventListener("click", e => { if (e.target.id === "posterSheet") closePosters(); });
+
+// ---------- walk the aisles ----------
+function openAisles() {
+  if (!S || rolling) return;
+  const items = S.house ? S.watchlist : S.watchlist;
+  const by = new Map(); items.forEach(x => { const g = x.m.g[0] || "Other"; if (!by.has(g)) by.set(g, []); by.get(g).push(x); });
+  const shelves = [...by].sort((a, b) => b[1].length - a[1].length);
+  const colors = ["red", "blue", "purple", "green", "orange", "teal", "yellow"];
+  $("#aisleBody").innerHTML = shelves.map(([g, l], i) => `<section class="aisle"><span class="secsign ${colors[i % colors.length]}">${esc(g)} <b>${l.length}</b></span>
+    <div class="ashelf"><div class="astrip">${l.map(x => spineHTML(x.m)).join("")}</div></div></section>`).join("");
+  aisleItems = new Map(items.map(x => [String(x.m.id), x]));
+  $("#aisleCase").hidden = true;
+  $("#aisles").hidden = false; document.body.classList.add("noscroll"); snd.click();
+}
+let aisleItems = new Map();
+function closeAisles() { $("#aisles").hidden = true; document.body.classList.remove("noscroll"); }
+$("#aisleClose").onclick = closeAisles;
+$(".rack").addEventListener("click", e => { if (e.target.closest(".spine.pulled")) return; openAisles(); });
+$("#aisleBody").addEventListener("click", e => {
+  const sp = e.target.closest(".spine"); if (!sp) return;
+  $$("#aisleBody .spine.pulled").forEach(s => s.classList.remove("pulled")); sp.classList.add("pulled"); snd.tick();
+  const it = aisleItems.get(sp.dataset.id); if (!it) return;
+  const m = it.m, p = posterOf(m, "w185");
+  const c = $("#aisleCase"); c.hidden = false;
+  c.innerHTML = `<div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="info"><h3 class="titlecard">${esc(m.t)}</h3>
+    ${m.tag ? `<p class="tagline">“${esc(m.tag)}”</p>` : ""}<div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div><div class="gen">${esc(m.g.slice(0, 3).join(" / "))}${m.dir[0] ? " · " + esc(m.dir[0]) : ""}</div>
+    <div class="acts"><button class="tag hot" id="aislePlay">Put it on</button><button class="tag" id="aisleMore">More like this</button></div></div>`;
+  $("#aislePlay").onclick = async () => { closeAisles(); tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ ...it, src: "wl" }]); };
+  $("#aisleMore").onclick = () => { closeAisles(); tab("arcade"); arcade.moreLike(m); };
 });
 
 // ---------- returning a tape ----------
@@ -600,7 +657,7 @@ async function handBack(rating) {
 // ---------- For you ----------
 let fitsN = 10, freshN = 10;
 function pickHTML(it) {
-  const m = it.m, p = poster(m.p, "w154");
+  const m = it.m, p = posterOf(m, "w154");
   return `<article class="pick"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="info" style="min-width:0">
     <h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}${m.l !== "en" ? " · " + esc(lang(m.l).toUpperCase()) : ""}</div>
     <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}${m.dir[0] ? " · " + esc(m.dir[0]) : ""}</div>
@@ -614,6 +671,7 @@ function renderForYou() {
   $("#picksNote").textContent = S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : "Rasher's shelf. He's been through your history and pulled these for you. No scores, just his reasons.";
   $("#bestFits").innerHTML = S.bestFits.slice(0, fitsN).map(pickHTML).join("");
   renderDeepDive();
+  coming.render();
   $("#moreFits").hidden = fitsN >= S.bestFits.length;
   $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(pickHTML).join("");
   $("#moreFresh").hidden = freshN >= S.fresh.length;
@@ -630,7 +688,7 @@ function renderDeepDive() {
     .sort((a, b) => b.seen - a.seen || a.left.length - b.left.length)
     .filter((r, i, arr) => arr.findIndex(o => o.next.m.id === r.next.m.id) === i).slice(0, 6);
   head.hidden = !rows.length;
-  box.innerHTML = rows.map((r, i) => { const m = r.next.m, p = poster(m.p, "w154");
+  box.innerHTML = rows.map((r, i) => { const m = r.next.m, p = posterOf(m, "w154");
     return `<article class="deep"><div class="dname">${esc(r.d)}<small>Seen ${r.seen} · ${r.left.length} still on your list</small></div>
       <div class="dnext"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div><span class="kicker">Next up</span><h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div>
       <button class="tag hot" data-deep="${i}">Put it on</button></div></div></article>`; }).join("");

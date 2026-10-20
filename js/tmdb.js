@@ -1,5 +1,5 @@
 // TMDB lookups. The key is the viewer's own, saved on their device in Settings.
-import { TMDB_PROXY } from "./config.js?v=2c3";
+import { TMDB_PROXY } from "./config.js?v=2d2";
 const API = "https://api.themoviedb.org/3";
 export const hasProxy = !!TMDB_PROXY;
 export const IMG = "https://image.tmdb.org/t/p/";
@@ -57,8 +57,8 @@ export async function match(key, name, year) {
   return best && bs >= 11 ? best.id : null;
 }
 
-export async function details(key, id) {
-  const d = await call(key, `/movie/${id}`, { append_to_response: "credits,keywords,recommendations" });
+export async function details(key, id, extra = "") {
+  const d = await call(key, `/movie/${id}`, { append_to_response: "credits,keywords,recommendations" + (extra ? "," + extra : "") });
   if (!d) return null;
   const crew = d.credits?.crew || [];
   return {
@@ -72,6 +72,8 @@ export async function details(key, id) {
     kw: (d.keywords?.keywords || []).slice(0, 20).map(x => x.name),
     recs: (d.recommendations?.results || []).slice(0, 20).map(x => x.id),
     col: d.belongs_to_collection?.id || null, ov: d.overview || "", imdb: d.imdb_id || "", tag: d.tagline || "",
+    pop: d.popularity || 0,
+    ie: (() => { const r = (d.release_dates?.results || []).find(x => x.iso_3166_1 === "IE" || x.iso_3166_1 === "GB"); const t = (r?.release_dates || []).find(x => x.type === 3) || (r?.release_dates || [])[0]; return t ? t.release_date.slice(0, 10) : ""; })(),
   };
 }
 
@@ -86,4 +88,10 @@ export async function pool(items, n, fn, onTick) {
     }
   }
   await Promise.all(Array.from({ length: Math.min(n, items.length) }, worker));
+}
+
+export const list = (key, path, params) => call(key, path, params);
+export async function posters(key, id) {
+  const d = await call(key, `/movie/${id}`, { append_to_response: "images", include_image_language: "en,null,xx,fr,de,it,es,ja,ko,pt" });
+  return (d?.images?.posters || []).sort((a, b) => b.vote_count - a.vote_count || b.vote_average - a.vote_average).map(p => p.file_path);
 }
