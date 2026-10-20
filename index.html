@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=p9">
+<link rel="stylesheet" href="css/app.css?v=pa">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=p9"></script>
+<script type="module" src="js/app.js?v=pa"></script>
 </head>
 <body>
 
@@ -186,6 +186,8 @@
         <h3>Settings</h3>
         <label class="tog"><input type="checkbox" id="soundOn" checked> Sound</label>
         <label class="tog"><input type="checkbox" id="skipStreet"> Skip the street when I open the app</label>
+        <label class="field">Where you watch <select id="regionPick" aria-label="Your country for streaming info"></select></label>
+        <p class="small">Used only to show which services have a film. Nothing is tracked.</p>
         <label class="tog"><input type="checkbox" id="quietOn"> Quiet mode: Rasher keeps his thoughts to himself</label>
         <div class="row"><button class="ghost" id="tourAgain">Have Rasher show you round again</button></div>
         <div class="row"><button class="ghost" id="unwatch" hidden></button></div>
@@ -197,7 +199,7 @@
         <div class="confirm" id="wipeConfirm" hidden><span>Sure? This can't be undone.</span><button class="ghost danger" id="wipeYes">Yes, clear it</button><button class="ghost" id="wipeNo">Keep it</button></div>
       </div>
       <p class="rug">Please keep off the rug.</p>
-      <p class="credit">Film data and posters from TMDB.<br>This product uses the TMDB API but is not endorsed or certified by TMDB. Letterboxd is not involved with this app.</p>
+      <p class="credit">Film data and posters from TMDB. Streaming info from JustWatch.<br>This product uses the TMDB API but is not endorsed or certified by TMDB. Letterboxd is not involved with this app.</p>
     </div>
   </section>
 

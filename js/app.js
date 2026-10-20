@@ -1,14 +1,15 @@
-import * as store from "./store.js?v=p9";
-import * as tmdb from "./tmdb.js?v=p9";
-import * as importer from "./importer.js?v=p9";
-import * as lib from "./library.js?v=p9";
-import * as snd from "./sound.js?v=p9";
-import * as arcade from "./arcade.js?v=p9";
-import * as coming from "./coming.js?v=p9";
-import * as rasher from "./rasher.js?v=p9";
-import { LINES } from "./lines.js?v=p9";
-import * as friends from "./friends.js?v=p9";
-import * as builder from "./builder.js?v=p9";
+import * as store from "./store.js?v=pa";
+import * as tmdb from "./tmdb.js?v=pa";
+import * as importer from "./importer.js?v=pa";
+import * as lib from "./library.js?v=pa";
+import * as snd from "./sound.js?v=pa";
+import * as arcade from "./arcade.js?v=pa";
+import * as coming from "./coming.js?v=pa";
+import * as rasher from "./rasher.js?v=pa";
+import { LINES } from "./lines.js?v=pa";
+import * as friends from "./friends.js?v=pa";
+import * as builder from "./builder.js?v=pa";
+import * as where from "./where.js?v=pa";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -534,6 +535,7 @@ function caseHTML(it, i) {
       <div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()} · ${esc(langTxt.toUpperCase())}</div>
       <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}</div>
       ${fee}${bday(m)}
+      <div class="where" data-where="${m.id}"><span class="wl">Checking where to watch…</span></div>
       ${m.dir.length ? `<div class="who">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
       <p class="syn" hidden>${esc(m.ov)}</p>
     </div>
@@ -543,6 +545,7 @@ function caseHTML(it, i) {
         ${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
         <button class="tag" data-a="poster">Poster</button>
+        <a class="tag" href="${esc(where.jwLink(m))}" target="_blank" rel="noopener">JustWatch</a>
         <a class="tag" href="https://open.spotify.com/search/${encodeURIComponent(m.t + " " + m.y + " soundtrack")}" target="_blank" rel="noopener">Soundtrack</a>
         <a class="tag" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Letterboxd</a>
       </div>${locked}
@@ -562,6 +565,16 @@ function renderPicks() {
   if (!S) { box.innerHTML = ""; return; }
   if (!picks.length) { box.innerHTML = rolledEmpty ? `<div class="empty">Nothing on the shelf matches all that. Loosen a filter and try again.</div>` : ""; return; }
   box.innerHTML = picks.map(caseHTML).join("");
+  fillWhere();
+}
+// Streaming info lands a moment after the box: one lookup per film, remembered for the session.
+function fillWhere() {
+  $$("#cases [data-where]").forEach(async el => {
+    const it = picks.find(x => String(x.m.id) === el.dataset.where); if (!it) return;
+    const w = await where.lookup((path, params) => tmdb.call(apiKey, path, params), it.m);
+    if (!el.isConnected) return;
+    el.innerHTML = w ? `<span class="wl">${where.line(w)}</span>` : "";
+  });
 }
 function showOnTV(i) {
   const it = picks[i]; if (!it) return;
@@ -857,6 +870,9 @@ $("#houseGo").onclick = async () => {
 };
 $("#soundOn").onchange = e => { snd.setOn(e.target.checked); store.prefs.set("sound", e.target.checked); };
 $("#skipStreet").onchange = e => store.prefs.set("skipStreet", e.target.checked);
+where.COUNTRIES.forEach(c => { const o = document.createElement("option"); o.value = c; o.textContent = region(c); $("#regionPick").append(o); });
+$("#regionPick").value = where.country();
+$("#regionPick").onchange = e => { where.setCountry(e.target.value); renderPicks(); toast(`Where-to-watch now for ${region(e.target.value)}.`); };
 $("#quietOn").onchange = e => { rasher.setQuiet(e.target.checked); counterState(); renderChalk(); toast(e.target.checked ? "“Whatever happened to Gary Cooper? The strong, silent type.”" : "Rasher's back."); };
 $("#tourAgain").onclick = () => { if (rasher.quiet()) return toast("Turn quiet mode off first."); tour(); };
 $("#unwatch").onclick = async () => { log = {}; await store.set("log", log); rebuild(); toast("Marked-watched films are back on the shelf."); };
