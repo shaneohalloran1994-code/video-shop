@@ -145,6 +145,25 @@ export function build(profile, films, extra, log) {
   return { watchlist, seen: seenList, unmatched, predict, fit, reasons, bestFits, fresh: fresh.slice(0, 60), candidateIds, lift, recent, overall, recentN: recentL.length, cut, lastDate, dated, mu, profile, films };
 }
 
+// ---- the house shop: the owner's shelves for guests, with the owner's ratings left out ----
+export function buildHouse(house, log) {
+  const all = house.items.map(it => ({ m: it.m, wl: !!it.wl, pick: !!it.pick, fit: it.fit, why: it.why, uri: it.uri }));
+  const byId = new Map(all.map(x => [x.m.id, x]));
+  const seen = [];
+  for (const [id, e] of Object.entries(log || {})) {
+    const h = byId.get(+id); const m = h?.m || e.m; if (!m) continue;
+    seen.push({ m, rating: e.rating ?? null, last: e.date, count: 1, rewatched: false, uri: h?.uri, fit: h?.fit ?? 3 });
+  }
+  const seenIds = new Set(seen.map(s => s.m.id));
+  const shelves = all.filter(x => !seenIds.has(x.m.id));
+  const mu = all.reduce((a, x) => a + x.fit, 0) / (all.length || 1);
+  const predict = m => Math.max(0.5, Math.min(5, byId.get(m.id)?.fit ?? mu));
+  const bestFits = shelves.filter(x => x.pick).sort((a, b) => b.fit - a.fit);
+  const fresh = shelves.filter(x => x.wl).sort((a, b) => b.fit - a.fit).slice(0, 60);
+  const lift = {}, recent = {}, overall = {};
+  return { house: true, watchlist: shelves, seen, unmatched: 0, predict, fit: m => predict(m), reasons: () => [], bestFits, fresh, candidateIds: [], lift, recent, overall, recentN: 0, cut: "", lastDate: "", dated: [], mu, profile: null, films: {} };
+}
+
 // ---- stats for the rental receipt ----
 export function stats(S) {
   const seen = S.seen;
