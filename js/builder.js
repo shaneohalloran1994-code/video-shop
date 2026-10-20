@@ -1,6 +1,6 @@
 // Start your own shop without a Letterboxd export: read a username's public diary and/or swipe through films.
 // Produces the same profile + films shape as the zip importer, so the rest of the app can't tell the difference.
-import * as friends from "./friends.js?v=pd";
+import * as friends from "./friends.js?v=pe";
 
 let C = null;
 export function init(ctx) { C = ctx; }

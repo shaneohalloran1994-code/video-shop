@@ -861,3 +861,20 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 .cork > *::before{content:"";position:absolute;top:-6px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;z-index:5;
   background:radial-gradient(circle at 35% 35%,#ff8a80,#c62828 60%,#7f0000);box-shadow:1px 2px 2px rgba(0,0,0,.5)}
 .cork .chalk::after,.cork .notice::after{display:none}
+
+/* ===== Staff picks as shelves ===== */
+.pjump{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none;position:sticky;top:64px;z-index:4;background:linear-gradient(var(--night) 70%,transparent);margin:0 -4px}
+.pjump::-webkit-scrollbar{display:none}
+.pjump .secsign{flex:0 0 auto;font-size:12px;padding:8px 10px 6px}
+.pjump .secsign::before{display:none}
+.prow{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 14px;scroll-snap-type:x proximity;scrollbar-width:thin;border-bottom:10px solid #3b2214;box-shadow:0 6px 0 #1d0f07;margin-bottom:6px}
+.ptape{flex:0 0 124px;scroll-snap-align:start;display:flex;flex-direction:column;gap:5px;text-align:left;border:0;padding:0;background:none;color:var(--ink)}
+.ptape i{display:block;width:124px;aspect-ratio:2/3;background:#1b1b1f center/cover;box-shadow:3px 3px 0 #000;border:2px solid #0b0b0d;font:600 14px var(--cond);color:#aaa;padding:6px;font-style:normal}
+.ptape b{font:400 15px/1.15 var(--title);color:#ff4d3a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ptape small{font:400 13px/1.2 var(--marker);color:var(--amber);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ptape:active i{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+#pickBody .pick{background:transparent;border:0;box-shadow:none;padding:0}
+#pickBody .syn{margin:6px 0 0;color:var(--ink2);font-size:15px}
+#pickBody .where{margin:4px 0 2px}
+#coming .wall{padding-bottom:14px}
+.pjump{background:#0b0a12;box-shadow:0 8px 10px -4px rgba(0,0,0,.8);padding-top:6px}

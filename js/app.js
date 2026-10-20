@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pd";
-import * as tmdb from "./tmdb.js?v=pd";
-import * as importer from "./importer.js?v=pd";
-import * as lib from "./library.js?v=pd";
-import * as snd from "./sound.js?v=pd";
-import * as arcade from "./arcade.js?v=pd";
-import * as coming from "./coming.js?v=pd";
-import * as rasher from "./rasher.js?v=pd";
-import { LINES } from "./lines.js?v=pd";
-import * as friends from "./friends.js?v=pd";
-import * as builder from "./builder.js?v=pd";
-import * as where from "./where.js?v=pd";
+import * as store from "./store.js?v=pe";
+import * as tmdb from "./tmdb.js?v=pe";
+import * as importer from "./importer.js?v=pe";
+import * as lib from "./library.js?v=pe";
+import * as snd from "./sound.js?v=pe";
+import * as arcade from "./arcade.js?v=pe";
+import * as coming from "./coming.js?v=pe";
+import * as rasher from "./rasher.js?v=pe";
+import { LINES } from "./lines.js?v=pe";
+import * as friends from "./friends.js?v=pe";
+import * as builder from "./builder.js?v=pe";
+import * as where from "./where.js?v=pe";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -745,45 +745,72 @@ function fallbackReason(it) {
   if (m.y && +m.y < 1970) return `Older than most of the shop. Still holds up.`;
   return "Rasher's got a hunch about this one.";
 }
+// Staff picks as shelves you swipe along: a compact tape each, tap for the full card.
+let shelf = { fits: [], fresh: [], deep: [] };
+function tapeHTML(kind, i, m, sub) {
+  const p = posterOf(m, "w185");
+  return `<button class="ptape" data-pt="${kind}:${i}" aria-label="${esc(m.t)}"><i style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : esc(m.t)}</i><b>${esc(m.t)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</button>`;
+}
 function renderForYou() {
-  if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#moreFits").hidden = $("#moreFresh").hidden = true; return; }
+  if (!S) { $("#bestFits").innerHTML = `<div class="empty">Stock the shelves at the counter first.</div>`; $("#fresh").innerHTML = ""; $("#pjump").innerHTML = ""; return; }
   const who = S.owner;
   $("#fitsHead").textContent = who ? `${who}'s favourites` : S.house ? "Rasher's favourites" : "Rasher's picks for you";
   $("#freshHead").textContent = who ? `Still on ${who}'s list` : S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
   $("#picksNote").textContent = who ? `${who}'s shelf. The ones they swear by, and the ones they still mean to get to. No scores.` : S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
   renderTuneCard();
-  $("#bestFits").innerHTML = pageReasons(S.bestFits.slice(0, fitsN)).map((x, i) => pickHTML(x, i, true)).join("");
+  shelf.fits = pageReasons(S.bestFits.slice(0, 30));
+  $("#bestFits").innerHTML = shelf.fits.map((x, i) => tapeHTML("fits", i, x.m, (x.why || [])[0])).join("");
   renderDeepDive();
   coming.render();
-  $("#moreFits").hidden = fitsN >= S.bestFits.length;
-  $("#fresh").innerHTML = S.fresh.slice(0, freshN).map(x => pickHTML(x)).join("");
-  $("#moreFresh").hidden = freshN >= S.fresh.length;
+  shelf.fresh = S.fresh.slice(0, 30);
+  $("#fresh").innerHTML = shelf.fresh.map((x, i) => tapeHTML("fresh", i, x.m, (x.why || [])[0])).join("");
   $("#freshNote").textContent = who ? `${who} hasn't got to these yet.` : S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
+  renderJump();
 }
+// Section signs at the top that jump to each shelf.
+function renderJump() {
+  const sig = [["fitsHead", "Picks", "red"], ["cinemasHead", "In cinemas", "blue"], ["soonHead", "Coming soon", "teal"], ["deepHead", "Finish the job", "purple"], ["freshHead", "Not on your list", "orange"]];
+  $("#pjump").innerHTML = sig.filter(([id]) => { const e = document.getElementById(id); return e && !e.hidden; })
+    .map(([id, l, c]) => `<button class="secsign ${c}" data-jump="${id}">${id === "fitsHead" && S?.owner ? esc(S.owner) + "'s picks" : id === "freshHead" && S?.house ? "Still to see" : l}</button>`).join("");
+}
+new MutationObserver(() => renderJump()).observe($("#coming"), { childList: true });
+$("#pjump").addEventListener("click", e => { const b = e.target.closest("[data-jump]"); if (!b) return; snd.click(); const h = document.getElementById(b.dataset.jump); if (h) scrollTo({ top: scrollY + h.getBoundingClientRect().top - 80, behavior: RM ? "auto" : "smooth" }); });
 // Finish the job: directors you're partway through, and the next one on your list.
 function renderDeepDive() {
   const box = $("#deepDive"), head = $("#deepHead");
-  if (!S || S.house) { box.innerHTML = ""; head.hidden = true; return; }
+  if (!S || S.house) { box.innerHTML = ""; head.hidden = true; shelf.deep = []; return; }
   const seenBy = new Map(), wlBy = new Map();
   S.seen.forEach(s => s.m.dir.forEach(d => seenBy.set(d, (seenBy.get(d) || 0) + 1)));
   S.watchlist.forEach(x => x.m.dir.forEach(d => { if (!wlBy.has(d)) wlBy.set(d, []); wlBy.get(d).push(x); }));
-  const rows = [...wlBy].filter(([d]) => (seenBy.get(d) || 0) >= 2).map(([d, l]) => ({ d, seen: seenBy.get(d), left: l, next: l.slice().sort((a, b) => b.fit - a.fit)[0] }))
+  shelf.deep = [...wlBy].filter(([d]) => (seenBy.get(d) || 0) >= 2).map(([d, l]) => ({ d, seen: seenBy.get(d), left: l, next: l.slice().sort((a, b) => b.fit - a.fit)[0] }))
     .sort((a, b) => b.seen - a.seen || a.left.length - b.left.length)
-    .filter((r, i, arr) => arr.findIndex(o => o.next.m.id === r.next.m.id) === i).slice(0, 6);
-  head.hidden = !rows.length;
-  box.innerHTML = rows.map((r, i) => { const m = r.next.m, p = posterOf(m, "w154");
-    return `<article class="deep"><div class="dname">${esc(r.d)}<small>Seen ${r.seen} · ${r.left.length} still on your list</small></div>
-      <div class="dnext"><div class="cover" style="${p ? `background-image:url('${p}')` : ""}"></div><div><span class="kicker">Next up</span><h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div>
-      <button class="tag hot" data-deep="${i}">Put it on</button></div></div></article>`; }).join("");
-  box.querySelectorAll("[data-deep]").forEach(b => b.onclick = async () => { const it = rows[+b.dataset.deep].next; tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; await land([{ ...it, src: "wl" }], { direct: true }); });
+    .filter((r, i, arr) => arr.findIndex(o => o.next.m.id === r.next.m.id) === i).slice(0, 12);
+  head.hidden = !shelf.deep.length;
+  box.innerHTML = shelf.deep.map((r, i) => tapeHTML("deep", i, r.next.m, `${r.d} · seen ${r.seen}, ${r.left.length} to go`)).join("");
 }
-$("#bestFits").addEventListener("click", async e => {
-  const b = e.target.closest("[data-put]"); if (!b || rolling) return;
-  const it = S.bestFits[+b.dataset.put]; tab("roll"); rolling = true; $("#roll").disabled = true; $("#led").classList.add("on");
-  await land([{ ...it, src: "wl" }], { direct: true });
-});
-$("#moreFits").onclick = () => { fitsN += 10; renderForYou(); };
-$("#moreFresh").onclick = () => { freshN += 10; renderForYou(); };
+// A tape up close: the full card in a pull-up sheet.
+function openPick(kind, i) {
+  const sh = $("#pickSheet"), body = $("#pickBody");
+  let it, html;
+  if (kind === "deep") {
+    const r = shelf.deep[i]; it = r.next;
+    $("#pickKind").textContent = "Finish the job";
+    html = `<p class="note">${esc(r.d)}: you've seen ${r.seen}, ${r.left.length} still on your list. Next up:</p>` + pickHTML(it, i, false);
+  } else {
+    it = shelf[kind][i];
+    $("#pickKind").textContent = kind === "fits" ? $("#fitsHead").textContent : $("#freshHead").textContent;
+    html = pickHTML(it, i, kind === "fits");
+  }
+  body.innerHTML = html.replace('<div class="acts">', `<div class="where" data-where="${it.m.id}"><span class="wl">Checking where to watch…</span></div>${it.m.ov ? `<p class="syn">${esc(it.m.ov)}</p>` : ""}<div class="acts">${kind === "fits" ? "" : `<button class="tag hot" data-put="x">Put it on</button>`}`);
+  where.lookup((path, params) => tmdb.call(apiKey, path, params), it.m).then(w => { const el = body.querySelector(".where"); if (el) el.innerHTML = w ? `<span class="wl">${where.line(w)}</span>` : ""; });
+  body.querySelectorAll("[data-put]").forEach(b => b.onclick = async () => { closePick(); if (rolling) return; tab("roll"); rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land([{ ...it, src: "wl" }], { direct: true }); });
+  sh.hidden = false; document.body.classList.add("noscroll"); snd.click();
+}
+function closePick() { $("#pickSheet").hidden = true; document.body.classList.remove("noscroll"); }
+$("#pickClose").onclick = closePick;
+$("#pickSheet").addEventListener("click", e => { if (e.target.id === "pickSheet") closePick(); });
+$("#v-picks").addEventListener("click", e => { const b = e.target.closest("[data-pt]"); if (!b) return; const [k, i] = b.dataset.pt.split(":"); openPick(k, +i); });
+
 
 // ---------- receipt ----------
 let statsDirty = true;

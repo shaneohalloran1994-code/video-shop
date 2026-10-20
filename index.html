@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=pd">
+<link rel="stylesheet" href="css/app.css?v=pe">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=pd"></script>
+<script type="module" src="js/app.js?v=pe"></script>
 </head>
 <body>
 
@@ -115,16 +115,16 @@
     <div class="neonhead"><span class="neon blue">Staff picks</span><span class="byline">picked by Rasher</span><span class="rhead" id="rHead"></span></div>
     <p class="note" id="picksNote"></p>
     <button class="tunecard" id="tuneOpen" hidden></button>
+    <nav class="pjump" id="pjump" aria-label="Jump to a shelf"></nav>
     <h2 class="shelfname" id="fitsHead">Off your own shelf</h2>
-    <div class="list" id="bestFits"></div>
-    <button class="ghost more" id="moreFits">More</button>
+    <div class="prow" id="bestFits"></div>
     <div id="coming"></div>
     <h2 class="shelfname" id="deepHead" hidden>Finish the job</h2>
-    <div class="list" id="deepDive"></div>
+    <div class="prow" id="deepDive"></div>
     <h2 class="shelfname" id="freshHead">Not on your list yet</h2>
     <p class="note" id="freshNote"></p>
-    <div class="list" id="fresh"></div>
-    <button class="ghost more" id="moreFresh">More</button>
+    <div class="prow" id="fresh"></div>
+    <button class="ghost more" id="moreFits" hidden></button><button class="ghost more" id="moreFresh" hidden></button>
   </section>
 
   <!-- ARCADE -->
@@ -245,6 +245,10 @@
     <div class="fhead"><span class="marker">Ask Rasher</span><button class="tag" id="askClose">Never mind</button></div>
     <div id="askBody"></div>
   </div>
+</div>
+<!-- A staff pick, up close -->
+<div class="sheet" id="pickSheet" hidden role="dialog" aria-modal="true" aria-label="Staff pick">
+  <div class="sheet-card dark"><div class="fhead"><span class="marker" id="pickKind"></span><button class="tag hot" id="pickClose">Done</button></div><div id="pickBody"></div></div>
 </div>
 <!-- Compare taste -->
 <div class="sheet" id="cmpSheet" hidden role="dialog" aria-modal="true" aria-labelledby="cmpTitle">

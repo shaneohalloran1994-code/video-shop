@@ -79,8 +79,8 @@ export async function render() {
     const data = await load(), score = scorer();
     const rank = (list, n) => list.map(score).filter(Boolean).sort((a, b) => b.s - a.s).slice(0, n);
     const now = rank(data.now, 8), soon = rank(data.soon.filter(m => (m.ie || m.rd) > today()), 12).sort((a, b) => (a.m.ie || a.m.rd) < (b.m.ie || b.m.rd) ? -1 : 1);
-    box.innerHTML = `${now.length ? `<h2 class="shelfname">In cinemas now</h2><div class="wall">${now.map(r => tile(r, true)).join("")}</div>` : ""}
-      ${soon.length ? `<h2 class="shelfname">Coming soon</h2><p class="note">Irish release dates. Rasher's already excited.</p><div class="wall">${soon.map(r => tile(r, false)).join("")}</div>` : ""}`;
+    box.innerHTML = `${now.length ? `<h2 class="shelfname" id="cinemasHead">In cinemas now</h2><div class="wall">${now.map(r => tile(r, true)).join("")}</div>` : ""}
+      ${soon.length ? `<h2 class="shelfname" id="soonHead">Coming soon</h2><p class="note">Irish release dates. Rasher's already excited.</p><div class="wall">${soon.map(r => tile(r, false)).join("")}</div>` : ""}`;
   } catch {
     box.innerHTML = `<p class="note">Couldn't reach the cinema listings just now. They'll be back next time you open this page.</p>`;
   }
