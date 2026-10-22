@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pj";
-import * as tmdb from "./tmdb.js?v=pj";
-import * as importer from "./importer.js?v=pj";
-import * as lib from "./library.js?v=pj";
-import * as snd from "./sound.js?v=pj";
-import * as arcade from "./arcade.js?v=pj";
-import * as coming from "./coming.js?v=pj";
-import * as rasher from "./rasher.js?v=pj";
-import { LINES } from "./lines.js?v=pj";
-import * as friends from "./friends.js?v=pj";
-import * as builder from "./builder.js?v=pj";
-import * as where from "./where.js?v=pj";
+import * as store from "./store.js?v=pl";
+import * as tmdb from "./tmdb.js?v=pl";
+import * as importer from "./importer.js?v=pl";
+import * as lib from "./library.js?v=pl";
+import * as snd from "./sound.js?v=pl";
+import * as arcade from "./arcade.js?v=pl";
+import * as coming from "./coming.js?v=pl";
+import * as rasher from "./rasher.js?v=pl";
+import { LINES } from "./lines.js?v=pl";
+import * as friends from "./friends.js?v=pl";
+import * as builder from "./builder.js?v=pl";
+import * as where from "./where.js?v=pl";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -119,6 +119,8 @@ const daySeed = () => { const d = new Date(); return d.getFullYear() * 400 + d.g
 
 async function load() {
   profile = await store.get("profile");
+  if (!profile && !mode && !visit && store.prefs.get("mode", "") !== "out") { mode = "house"; store.prefs.set("mode", "house"); }
+  store.prefs.set("visits", store.prefs.get("visits", 0) + 1);
   films = (await store.get("films")) || {};
   extra = (await store.get("extra")) || {};
   log = (await store.get("log")) || {};
@@ -463,7 +465,7 @@ async function land(chosen, ctx = {}) {
   playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
   const first = picks[0], shame = poolMode === "shame" && !ctx.arcade && !ctx.direct && first.added;
-  dealBox();
+  dealBox(); afterFirstRoll();
   rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, mood: F.mood, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true, { poster: blind && !first.revealed ? "" : posterOf(first.m, "w185"), title: blind && !first.revealed ? "?" : first.m.t });
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
@@ -738,6 +740,7 @@ async function handBack(rating) {
   await store.set("log", log);
   const box = $("#retReveal");
   const verdict = rasher.verdict(rating, guess, prev, m);
+  store.prefs.set("returned", true); setTimeout(installTip, 4000);
   box.innerHTML = `${rating != null ? `<div class="reveal3"><div>YOU<b>${rating.toFixed(1)}★</b></div><div>CROWD<b>${crowd != null ? crowd.toFixed(1) + "★" : "–"}</b></div><div>${S.house ? "RASHER SAID" : "RASHER GUESSED"}<b>${guess.toFixed(1)}★</b></div></div>
     ${prev != null ? `<p class="kicker">Last time you gave it ${prev.toFixed(1)}★</p>` : ""}${verdict ? `<p class="verdict">${esc(verdict)}</p>` : ""}` : `<p class="verdict">Back on the shelf. Crowd gave it ${crowd != null ? crowd.toFixed(1) + "★" : "nothing yet"}.</p>`}
     <div class="row"><a class="btn" href="${esc(lbLink(it))}" target="_blank" rel="noopener">Log it on Letterboxd</a><button class="ghost" id="retDone">Done</button></div>`;
@@ -954,7 +957,7 @@ document.addEventListener("visibilitychange", () => {
 });
 $("#ownGo").onclick = () => { ownOpen = true; counterState(); $("#stepKey").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); };
 $("#houseGo").onclick = async () => {
-  if (mode === "house") { mode = ""; store.prefs.del("mode"); picks = []; rebuild(); return; }
+  if (mode === "house") { mode = ""; store.prefs.set("mode", "out"); picks = []; rebuild(); return; }
   mode = "house"; store.prefs.set("mode", "house"); await loadHouse(); picks = []; rebuild(); if (S) { tab("roll"); toast("Welcome in. Have a look around."); }
 };
 $("#soundOn").onchange = e => { snd.setOn(e.target.checked); store.prefs.set("sound", e.target.checked); };
@@ -990,16 +993,35 @@ $(".shopname").addEventListener("click", () => {
 
 // ---------- Rasher shows you round (first visit) ----------
 let touring = false, loaded = false;
+// The old full tour, kept for "show me round again" on the Counter.
 function tour() {
   if (touring) return; touring = true;
   const W = LINES.welcome;
-  const steps = [{ text: W[0], before: () => tab("roll") }, { text: W[1], at: "#roll" }, { text: W[2], at: "#sections" }, { text: W[3], at: "#openFilters" }, { text: W[4], at: ".deck" }];
-  if (!S) steps.push({ text: LINES.counter[3], at: "#stepHouse", before: () => tab("counter") });
-  rasher.welcome({ steps, done: () => { touring = false; scrollTo(0, 0); setTimeout(installTip, 1500); } });
+  const steps = [{ text: W[0], before: () => tab("roll") }, { text: W[1], at: "#roll" }, { text: "The signs under the shelf are special shelves. Some only open late. Some only in October.", at: "#sections" }, { text: W[3], at: "#openFilters" }, { text: W[4], at: ".deck" }];
+  rasher.welcome({ steps, done: () => { touring = false; scrollTo(0, 0); } });
 }
+// First visit: Rasher says one line and the button does the rest.
+function greet() {
+  if (store.prefs.get("welcomed", false) || store.prefs.get("greeted", false) || rasher.quiet() || !S) return;
+  store.prefs.set("greeted", true); tab("roll");
+  rasher.slip("Alright, welcome in. I'm Rasher. Hit Take One and I'll find you a film.");
+  $("#roll").classList.add("beckon");
+}
+// After their first film lands: two quick cards, then they're on their own.
+function afterFirstRoll() {
+  if (store.prefs.get("welcomed", false) || touring || rasher.quiet()) return;
+  touring = true; $("#roll").classList.remove("beckon");
+  const steps = [
+    { text: "Tonight I want sets the mood: length, vibe, one or three tapes. The signs under the shelf are special shelves. Arcade's for messing about.", at: "#openFilters" },
+    S?.house && !S.visit ? { text: "These are my shelves. Want ones that know your taste? Bring your Letterboxd, or rate a few films.", action: { label: "Stock my own shelves", later: "Later", fn: () => tab("counter") } }
+                          : { text: W4(), at: ".deck" },
+  ];
+  setTimeout(() => rasher.welcome({ steps, done: () => { touring = false; } }), RM ? 300 : 3200);
+}
+const W4 = () => LINES.welcome[4];
 function maybeTour() {
   if (!loaded || $("#shop").hidden) return;
-  if (!store.prefs.get("welcomed", false) && !rasher.quiet()) setTimeout(tour, RM ? 0 : 700);
+  if (!store.prefs.get("welcomed", false)) setTimeout(greet, RM ? 0 : 500);
   else setTimeout(installTip, 2500);
 }
 // ---------- one-off tip: put the shop on your home screen ----------
@@ -1008,6 +1030,7 @@ addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = 
 function installTip() {
   const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
   if (standalone || touring || store.prefs.get("a2hs", false) || !$("#a2hs").hidden) return;
+  if (store.prefs.get("visits", 0) < 2 && !store.prefs.get("returned", false)) return;
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   $("#a2hsTxt").textContent = ios ? "Put the shop on your home screen. In Safari, tap Share (the square with the arrow), then Add to Home Screen." : installEvt ? "Put the shop on your home screen. One tap and it opens like a proper app." : "Put the shop on your home screen. In your browser menu, tap Add to Home screen or Install app.";
   $("#a2hsGo").hidden = !installEvt;
@@ -1219,6 +1242,6 @@ $("#buildMore").onclick = () => builder.open({ profile, films });
 // ---------- start ----------
 snd.setOn(store.prefs.get("sound", true));
 street();
-load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
+load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
   if (profile?.username && navigator.onLine && (!profile.toppedAt || Date.now() - new Date(profile.toppedAt) > 12 * 36e5)) setTimeout(() => topUp(true), 4000); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

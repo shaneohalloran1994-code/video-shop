@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=pj";
-import { prefs } from "./store.js?v=pj";
-import { QUOTES } from "./quotes.js?v=pj";
+import { LINES } from "./lines.js?v=pl";
+import { prefs } from "./store.js?v=pl";
+import { QUOTES } from "./quotes.js?v=pl";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -133,10 +133,11 @@ export function welcome({ steps, done }) {
     clear();
     const st = steps[i]; st.before && st.before();
     const el = st.at ? $(st.at) : null;
-    if (el) { el.classList.add("rspot"); el.scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" }); }
+    if (el) { el.classList.add("rspot"); if (getComputedStyle(el).position !== "fixed") scrollTo({ top: scrollY + el.getBoundingClientRect().top - 110, behavior: RM ? "auto" : "smooth" }); }
     box.innerHTML = `<div class="rcard">${HEAD}<p class="said"><b>Rasher</b>${esc(st.text)}</p>
-      <div class="row"><button class="tag hot" id="rNext">${i < steps.length - 1 ? "Go on" : "Grand"}</button>${i < steps.length - 1 ? `<button class="tag" id="rSkip">Skip</button>` : ""}<span class="rcount">${i + 1}/${steps.length}</span></div></div>`;
+      <div class="row">${st.action ? `<button class="tag hot" id="rAct">${esc(st.action.label)}</button>` : ""}<button class="tag ${st.action ? "" : "hot"}" id="rNext">${st.action ? (st.action.later || "Later") : i < steps.length - 1 ? "Go on" : "Grand"}</button>${i < steps.length - 1 && !st.action ? `<button class="tag" id="rSkip">Skip</button>` : ""}<span class="rcount">${i + 1}/${steps.length}</span></div></div>`;
     box.querySelector("#rNext").onclick = () => { i++; if (i >= steps.length) end(); else show(); };
+    const act = box.querySelector("#rAct"); if (act) act.onclick = () => { end(); st.action.fn(); };
     const sk = box.querySelector("#rSkip"); if (sk) sk.onclick = end;
     box.querySelector("#rNext").focus();
   }

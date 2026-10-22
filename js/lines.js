@@ -193,7 +193,7 @@ export const LINES = {
 "Stock the shelves, man. I'll wait. I'm good at waiting.",
 "Fresh export? Lovely. Smells like new tapes.",
 "Shelves are a month old, man. Bring in a fresh export.",
-"Two ways in. The house shop, or your own shelves. Both are cool."
+"Pick a way in, man. Browse my shelves, or bring your own. Both are cool."
 ],
 "tv_late": [
 "THEY LIVE. WE SLEEP.",

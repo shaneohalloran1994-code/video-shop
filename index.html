@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=pj">
+<link rel="stylesheet" href="css/app.css?v=pl">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=pj"></script>
+<script type="module" src="js/app.js?v=pl"></script>
 </head>
 <body>
 
@@ -26,6 +26,7 @@
     <div class="window" aria-hidden="true"><div class="shelves"></div><div class="poster-strip"></div><span class="open">OPEN LATE</span></div>
   </div>
   <div class="puddle" aria-hidden="true"><span class="neon pink">TAKE ONE</span></div>
+  <p class="streetline">Stop scrolling. Start watching.</p>
   <button class="walkin" id="walkIn">Walk in</button>
 </section>
 
@@ -55,16 +56,17 @@
     <div class="rasher" id="rasher" hidden aria-live="polite"></div>
     <div class="cases" id="cases" aria-live="polite"></div>
 
-    <div class="rack" title="Browse the shelves"><div class="strip" id="strip"></div><span class="browse">Walk the aisles ▸</span></div>
-
-    <div class="sechead">Special shelves <small>tap one to roll from it</small></div>
-    <div class="sections" id="sections" role="group" aria-label="Special shelves"></div>
+    <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
+    <div class="underplay"><span class="inrun" id="inRun"></span><button class="askr" id="askRasher">Or ask Rasher ▸</button></div>
 
     <div class="controls">
       <button class="wantbtn" id="openFilters" aria-haspopup="dialog"><span class="marker">Tonight I want…</span><span class="ftag" id="ftag">No filters</span></button>
     </div>
-    <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
-    <div class="underplay"><span class="inrun" id="inRun"></span><button class="askr" id="askRasher">Or ask Rasher ▸</button></div>
+
+    <div class="rack" title="Browse the shelves"><div class="strip" id="strip"></div><span class="browse">Walk the aisles ▸</span></div>
+
+    <div class="sechead">Special shelves <small>tap one to roll from it</small></div>
+    <div class="sections" id="sections" role="group" aria-label="Special shelves"></div>
 
     <div class="cork" id="cork">
       <button class="chalk" id="chalk" hidden></button>

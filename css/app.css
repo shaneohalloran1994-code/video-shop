@@ -950,3 +950,11 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 @keyframes zipPulse{50%{transform:scale(1.06)}}
 @media (prefers-reduced-motion:reduce){#zipPick.ready{animation:none}}
 #zipOpen{text-decoration:none}
+/* First minute: the button sits right under the telly; the shelf and specials come after */
+.view.roll > .play{margin-top:2px}
+.view.roll > .controls{margin-top:-4px}
+#roll.beckon{animation:beckon 1.6s ease-in-out 1.5s 3}
+@keyframes beckon{50%{transform:scale(1.03);box-shadow:0 0 0 4px rgba(255,181,71,.6),0 0 30px rgba(227,38,29,.6)}}
+@media (prefers-reduced-motion:reduce){#roll.beckon{animation:none}}
+@media (max-height:700px){.tv-screen{aspect-ratio:16/10}}
+.streetline{position:relative;margin:18px 0 0;font:400 20px var(--marker);color:#fff4d8;text-shadow:0 0 12px rgba(255,62,165,.6);transform:rotate(-2deg);text-align:center}
