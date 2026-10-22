@@ -1,6 +1,6 @@
 // Friends: sharing your shop by code, visiting a mate's, comparing taste, group night, guest tuning and the Letterboxd top-up.
-import * as store from "./store.js?v=q1";
-import { TMDB_PROXY } from "./config.js?v=q1";
+import * as store from "./store.js?v=q2";
+import { TMDB_PROXY } from "./config.js?v=q2";
 
 const BASE = (TMDB_PROXY || "").replace(/\/$/, "");
 let C = null;
@@ -47,6 +47,12 @@ export async function stopSharing() {
   const cur = shareInfo(); if (!cur) return;
   try { await api("DELETE", "/shop/" + cur.code, null, cur.token); } catch (e) { if (!/Not your shop/.test(e.message)) throw e; }
   store.prefs.del("share");
+}
+
+// ---------- notes for the shop owner ----------
+export async function tell(text, from, where) {
+  const r = await fetch(BASE + "/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, from, where }) });
+  if (!r.ok) throw new Error("The shop's line is down. Try again in a minute.");
 }
 
 // ---------- friends on this phone ----------

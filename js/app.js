@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=q1";
-import * as tmdb from "./tmdb.js?v=q1";
-import * as importer from "./importer.js?v=q1";
-import * as lib from "./library.js?v=q1";
-import * as snd from "./sound.js?v=q1";
-import * as arcade from "./arcade.js?v=q1";
-import * as coming from "./coming.js?v=q1";
-import * as rasher from "./rasher.js?v=q1";
-import { LINES } from "./lines.js?v=q1";
-import * as friends from "./friends.js?v=q1";
-import * as builder from "./builder.js?v=q1";
-import * as where from "./where.js?v=q1";
+import * as store from "./store.js?v=q2";
+import * as tmdb from "./tmdb.js?v=q2";
+import * as importer from "./importer.js?v=q2";
+import * as lib from "./library.js?v=q2";
+import * as snd from "./sound.js?v=q2";
+import * as arcade from "./arcade.js?v=q2";
+import * as coming from "./coming.js?v=q2";
+import * as rasher from "./rasher.js?v=q2";
+import { LINES } from "./lines.js?v=q2";
+import * as friends from "./friends.js?v=q2";
+import * as builder from "./builder.js?v=q2";
+import * as where from "./where.js?v=q2";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -1026,7 +1026,7 @@ function tour() {
 function greet() {
   if (store.prefs.get("welcomed", false) || store.prefs.get("greeted", false) || rasher.quiet() || !S) return;
   store.prefs.set("greeted", true); tab("roll");
-  rasher.slip("Alright, welcome in. I'm Rasher. Hit Take One and I'll find you a film.");
+  rasher.slip(sentBy ? `${sentBy} sent you? Grand. These are ${sentBy}'s shelves. Hit Take One and I'll find you something off them.` : "Alright, welcome in. I'm Rasher. Hit Take One and I'll find you a film.");
   warmSafe();
   $("#roll").classList.add("beckon");
 }
@@ -1118,6 +1118,26 @@ $("#askClose").onclick = closeAsk;
 $("#askSheet").addEventListener("click", e => { if (e.target.id === "askSheet") closeAsk(); });
 $("#rHead").innerHTML = rasher.HEAD;
 
+// ---------- Tell the shop: feedback straight to Shane ----------
+function openTell() {
+  $("#tellHead").innerHTML = `${rasher.HEAD}<p class="said"><b>Rasher</b>Go on. The boss reads every one of these.</p>`;
+  $("#tellMsg").textContent = "Goes straight to the person who built the shop. Nothing else is sent.";
+  if (!$("#tellName").value) $("#tellName").value = friends.shareInfo()?.name || profile?.username || "";
+  $("#tellSheet").hidden = false; document.body.classList.add("noscroll"); setTimeout(() => $("#tellTxt").focus(), 50);
+}
+function closeTell() { $("#tellSheet").hidden = true; document.body.classList.remove("noscroll"); }
+$("#tellGo").onclick = openTell; $("#tellClose").onclick = closeTell;
+$("#tellSheet").addEventListener("click", e => { if (e.target.id === "tellSheet") closeTell(); });
+$("#tellSend").onclick = async () => {
+  const t = $("#tellTxt").value.trim(); if (!t) { $("#tellTxt").focus(); return; }
+  const shop = S?.visit ? `in ${S.owner}'s shop` : S?.house ? "house shop" : profile?.built ? "built shop" : "own shop";
+  const where = [shop, picks[0] ? `last tape: ${picks[0].m.t}` : "", `${innerWidth}px`, /iPhone|iPad/.test(navigator.userAgent) ? "iPhone" : /Android/.test(navigator.userAgent) ? "Android" : "other", matchMedia("(display-mode: standalone)").matches || navigator.standalone ? "installed" : "browser"].filter(Boolean).join(" · ");
+  $("#tellSend").disabled = true; $("#tellMsg").textContent = "Sending…";
+  try { await friends.tell(t, $("#tellName").value.trim(), where); $("#tellTxt").value = ""; closeTell(); snd.coin?.(); toast("Sent. Cheers for that."); }
+  catch (e) { $("#tellMsg").textContent = e.message; }
+  $("#tellSend").disabled = false;
+};
+
 // ---------- friends ----------
 function leaveVisit() { visit = ""; store.prefs.del("visit"); picks = []; rebuild(); tab("roll"); toast("Back in your own shop."); }
 async function walkInto(code) { visit = code; store.prefs.set("visit", code); picks = []; snd.buzz(); rebuild(); tab("roll"); toast(`Welcome to ${FR[code].name}'s shop.`); }
@@ -1152,8 +1172,9 @@ $("#shareGo").onclick = async () => {
 $("#shareUpd").onclick = async () => { fmsg("Updating your shared shop…"); try { await friends.share(mine, $("#myName").value.trim() || friends.shareInfo().name); fmsg("Updated. Mates get the new shelves next time they refresh."); } catch (e) { fmsg(e.message); } };
 $("#shareStop").onclick = async () => { try { await friends.stopSharing(); fmsg("Stopped sharing. That code won't work any more."); renderFriends(); } catch (e) { fmsg(e.message); } };
 $("#shareSend").onclick = async () => {
-  const sh = friends.shareInfo(); const text = `Come round to my video shop. Open ${location.origin + location.pathname} then go to the Counter and add my code: ${sh.code}`;
-  try { if (navigator.share) await navigator.share({ title: "Take One", text }); else { await navigator.clipboard.writeText(text); toast("Copied. Paste it to your mate."); } } catch { }
+  const sh = friends.shareInfo(), url = `${location.origin + location.pathname}?shop=${sh.code}`;
+  const text = `Come round to my video shop.`;
+  try { if (navigator.share) await navigator.share({ title: "Take One", text, url }); else { await navigator.clipboard.writeText(`${text} ${url}`); toast("Link copied. Paste it to your mate."); } } catch { }
 };
 $("#codeGo").onclick = async () => {
   const v = $("#codeIn").value.trim(); if (!v) return;
@@ -1274,8 +1295,21 @@ $("#buildSwipe").onclick = () => builder.open(null, true);
 $("#buildMore").onclick = () => builder.open({ profile, films });
 
 // ---------- start ----------
+// A link from a mate (…?shop=ABC234) walks you straight into their shop.
+const sharedCode = (new URLSearchParams(location.search).get("shop") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+if (location.search) history.replaceState(null, "", location.pathname + location.hash);
+let sentBy = "";
+async function arriveFromLink() {
+  if (sharedCode.length !== 6 || friends.shareInfo()?.code === sharedCode) return;
+  try {
+    const fr = FR[sharedCode] ? (await friends.refresh(sharedCode)) || FR[sharedCode] : await friends.add(sharedCode);
+    FR = await friends.all(); sentBy = fr.name;
+    if (store.prefs.get("welcomed", false) || store.prefs.get("greeted", false)) walkInto(sharedCode);
+    else { visit = sharedCode; store.prefs.set("visit", sharedCode); rebuild(); }
+  } catch (e) { toast(/No shop/.test(e.message) ? "That shop's closed. Your mate may have stopped sharing." : e.message); }
+}
 snd.setOn(store.prefs.get("sound", true));
 street();
-load().then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
+load().then(arriveFromLink).then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
   if (profile?.username && navigator.onLine && (!profile.toppedAt || Date.now() - new Date(profile.toppedAt) > 12 * 36e5)) setTimeout(() => topUp(true), 4000); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

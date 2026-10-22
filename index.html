@@ -4,16 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Take One</title>
-<meta name="description" content="A late-night video shop that picks your film for you.">
+<meta name="description" content="Stop scrolling. Start watching. A late-night video shop where Rasher picks your film.">
 <meta name="theme-color" content="#07080f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Take One">
+<meta property="og:title" content="Take One: a late-night video shop that picks your film">
+<meta property="og:description" content="Stop scrolling. Start watching. Walk in, press Take One, and Rasher hands you a tape.">
+<meta property="og:url" content="https://shaneohalloran1994-code.github.io/video-shop/">
+<meta property="og:image" content="https://shaneohalloran1994-code.github.io/video-shop/icons/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Take One video shop at night: neon sign, rain on the street, a lit window">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Take One: a late-night video shop that picks your film">
+<meta name="twitter:description" content="Stop scrolling. Start watching.">
+<meta name="twitter:image" content="https://shaneohalloran1994-code.github.io/video-shop/icons/preview.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q1">
+<link rel="stylesheet" href="css/app.css?v=q2">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q1"></script>
+<script type="module" src="js/app.js?v=q2"></script>
 </head>
 <body>
 
@@ -146,6 +159,7 @@
   <section id="v-counter" class="view" hidden>
     <div class="counter">
       <h2 class="marker big">The counter</h2>
+      <div class="tellrow"><span>Something broken, or brilliant?</span><button class="tag hot" id="tellGo">Tell the shop</button></div>
       <div class="rasher says" id="counterSays" hidden></div>
       <div class="step" id="stepHouse">
         <h3 id="houseH">Come in</h3>
@@ -255,6 +269,15 @@
   <div class="sheet-card dark ask">
     <div class="fhead"><span class="marker">Ask Rasher</span><button class="tag" id="askClose">Never mind</button></div>
     <div id="askBody"></div>
+  </div>
+</div>
+<div class="sheet" id="tellSheet" hidden role="dialog" aria-modal="true" aria-label="Tell the shop">
+  <div class="sheet-card dark">
+    <div class="fhead"><span class="marker">Tell the shop</span><button class="tag" id="tellClose">Never mind</button></div>
+    <div class="askq" id="tellHead"></div>
+    <textarea id="tellTxt" rows="5" maxlength="2000" placeholder="What's broken, confusing, or great? Anything goes."></textarea>
+    <div class="row"><input id="tellName" maxlength="40" autocomplete="off" placeholder="Your name (optional)"><button class="btn" id="tellSend">Send it</button></div>
+    <p class="small" id="tellMsg">Goes straight to the person who built the shop. Nothing else is sent.</p>
   </div>
 </div>
 <!-- The rolled box, opened up -->

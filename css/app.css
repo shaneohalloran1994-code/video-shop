@@ -962,3 +962,9 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 /* Runtime sticker sits on the poster corner, clear of the title */
 .sleeve .dot{top:-8px;right:-8px;left:auto}
 .bfoot.top{margin:0 0 10px}
+
+/* Tell the shop */
+.tellrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:8px 12px;border:1px dashed var(--line);border-radius:4px;color:var(--ink2);font-size:14px}
+.tellrow .tag{min-height:40px;white-space:nowrap}
+#tellSheet textarea{width:100%;box-sizing:border-box;margin:12px 0 10px;padding:10px;background:var(--paper);color:#2a1306;border:0;border-bottom:2px solid #2a1306;border-radius:2px;font:16px/1.4 var(--body, system-ui);resize:vertical}
+#tellSheet input{color-scheme:light}
