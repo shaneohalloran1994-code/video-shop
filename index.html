@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q3">
+<link rel="stylesheet" href="css/app.css?v=q4">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q3"></script>
+<script type="module" src="js/app.js?v=q4"></script>
 </head>
 <body>
 
@@ -91,7 +91,7 @@
   <!-- Tonight I want: pull-up filter panel -->
   <div class="fsheet" id="filters" hidden role="dialog" aria-modal="true" aria-label="Tonight I want">
     <div class="board fpanel">
-      <div class="fhead"><span class="marker">Tonight I want…</span><button class="tag hot" id="closeFilters">Done</button></div>
+      <div class="fhead"><span class="marker">Tonight I want…</span><button class="tag" id="closeFilters">Done</button></div>
       <div class="fgroup howroll"><h3>How it rolls</h3>
         <div class="howrow">
           <div class="seg keys count" role="group" aria-label="How many films"><button id="n1" aria-pressed="true">One</button><button id="n3" aria-pressed="false">Three</button></div>
@@ -151,14 +151,16 @@
 
   <!-- RECEIPT -->
   <section id="v-receipt" class="view" hidden>
+    <div class="neonhead"><span class="neon green">Receipt</span><span class="byline">your rentals, printed</span></div>
     <div class="receipt" id="receipt"></div>
-    <p class="note center">Screenshot it and send it on.</p>
+    <p class="note center" id="receiptNote">Screenshot it and send it on.</p>
+    <button class="btn" id="receiptGo" hidden>Take a tape ▸</button>
   </section>
 
   <!-- COUNTER (settings + setup) -->
   <section id="v-counter" class="view" hidden>
     <div class="counter">
-      <h2 class="marker big">The counter</h2>
+      <div class="neonhead"><span class="neon amber">The counter</span><span class="byline">set up, swap shops, settings</span></div>
       <div class="tellrow"><span>Something broken, or brilliant?</span><button class="tag hot" id="tellGo">Tell the shop</button></div>
       <div class="rasher says" id="counterSays" hidden></div>
       <div class="step" id="stepHouse">
@@ -256,13 +258,13 @@
 <!-- Custom covers -->
 <div class="sheet" id="posterSheet" hidden role="dialog" aria-modal="true" aria-labelledby="posterTitle">
   <div class="sheet-card dark">
-    <div class="fhead"><span class="marker">Pick a cover: <span id="posterTitle"></span></span><button class="tag hot" id="posterClose">Done</button></div>
+    <div class="fhead"><span class="marker">Pick a cover: <span id="posterTitle"></span></span><button class="tag" id="posterClose">Done</button></div>
     <div class="pgrid" id="posterGrid"></div>
   </div>
 </div>
 <!-- Walk the aisles -->
 <div class="aisles" id="aisles" hidden role="dialog" aria-modal="true" aria-label="Walk the aisles">
-  <div class="aisle-head"><span class="neon pink">Walk the aisles</span><button class="tag hot" id="aisleClose">Done</button></div>
+  <div class="aisle-head"><span class="neon pink">Walk the aisles</span><button class="tag" id="aisleClose">Done</button></div>
   <div class="aisle-body" id="aisleBody"></div>
   <div class="aisle-case" id="aisleCase" hidden></div>
 </div>
@@ -284,7 +286,7 @@
 </div>
 <!-- The rolled box, opened up -->
 <div class="sheet" id="caseSheet" hidden role="dialog" aria-modal="true" aria-label="The full box">
-  <div class="sheet-card dark casesheet"><div class="fhead"><span class="marker">The box</span><button class="tag hot" id="caseClose">Done</button></div><div id="caseBody"></div></div>
+  <div class="sheet-card dark casesheet"><div class="fhead"><span class="marker">The box</span><button class="tag" id="caseClose">Done</button></div><div id="caseBody"></div></div>
 </div>
 <!-- A staff pick, up close -->
 <div class="sheet" id="pickSheet" hidden role="dialog" aria-modal="true" aria-label="Staff pick">
@@ -292,11 +294,11 @@
 </div>
 <!-- Compare taste -->
 <div class="sheet" id="cmpSheet" hidden role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
-  <div class="sheet-card"><div class="fhead"><span class="marker dark" id="cmpTitle"></span><button class="tag hot" id="cmpClose">Done</button></div><div id="cmpBody"></div></div>
+  <div class="sheet-card"><div class="fhead"><span class="marker dark" id="cmpTitle"></span><button class="tag" id="cmpClose">Done</button></div><div id="cmpBody"></div></div>
 </div>
 <!-- Guest tuning -->
 <div class="sheet" id="tuneSheet" hidden role="dialog" aria-modal="true" aria-label="Tell Rasher what you like">
-  <div class="sheet-card dark"><div class="fhead"><span class="marker">Tell Rasher what you like</span><button class="tag hot" id="tuneDone">Done</button></div>
+  <div class="sheet-card dark"><div class="fhead"><span class="marker">Tell Rasher what you like</span><button class="tag" id="tuneDone">Done</button></div>
   <p class="small">Tap the ones you loved. Tap twice for ones you couldn't stand. Leave the rest.</p><div class="pgrid tgrid" id="tuneGrid"></div></div>
 </div>
 <!-- Start your own shop, no export -->

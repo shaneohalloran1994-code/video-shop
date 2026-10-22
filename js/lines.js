@@ -226,6 +226,9 @@ export const LINES = {
 "swapped": [
 "{names} swapped shops with you. {who} on your wall now."
 ],
+"not_streaming": [
+"Not on anything here, man. Swap it?"
+],
 "arc": [
 "Winner, man. Fair and square."
 ],

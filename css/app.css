@@ -973,3 +973,92 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 .nudge .nvbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .nudge .nvbtns .tag{min-height:40px}
 #swapBtns{flex-wrap:wrap}
+
+/* ===== UI review round 1 (22 Oct): tap sizes, one look per job ===== */
+/* Bottom bar: thumb-sized, amber means "you are here", red stays for actions */
+.deck{max-width:560px;margin:0 auto;left:0;right:0;gap:6px;padding-top:8px;box-shadow:0 -6px 16px rgba(0,0,0,.5),0 0 0 100vmax #1e130b;clip-path:inset(-20px -100vmax 0 -100vmax)}
+.deck button{min-height:48px;justify-content:center;font-size:13px;letter-spacing:.06em;padding:6px 2px}
+@media (max-width:400px){.deck button{font-size:12px;letter-spacing:.03em}}
+@media (max-width:350px){.deck button{font-size:11px;letter-spacing:.02em}}
+.deck button[aria-selected="true"]{background:linear-gradient(#ffc56a,#e89a2c);color:#1b0d04;text-shadow:0 1px 0 rgba(255,255,255,.35);box-shadow:0 0 14px rgba(255,181,71,.45),2px 2px 0 rgba(0,0,0,.7)}
+#shop{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+.view{padding-bottom:92px}
+.rtour{bottom:calc(84px + env(safe-area-inset-bottom))}.a2hs{bottom:calc(86px + env(safe-area-inset-bottom))}.toast{bottom:calc(100px + env(safe-area-inset-bottom))}
+
+/* Every tag button is a proper target */
+.tag{min-height:44px;padding:8px 14px 7px;font-size:13px}
+button.tag,a.tag{justify-content:center}
+.case.mini .acts .tag{min-height:44px;flex:1 1 auto}
+.case .acts.wide .tag,.case .ag.ext .tag{min-height:44px;padding:8px 12px 7px;font-size:12px}
+.case .ag.ext .tag{letter-spacing:.1em}
+.case .ag.act .tag{width:100%;font-size:15px}
+.cases.three .case.mini .tag{min-height:40px;font-size:11px;padding:6px 6px 5px}
+.ftile .tag{min-height:40px;padding:6px 10px;font-size:12px}
+.fhead .tag,.aisle-head .tag{min-height:40px}
+
+/* Arcade: black marquee with the name lit in the machine's colour; colour becomes the trim. Shorter cabinets. */
+.cab{--c:#ff5a4e;border:3px solid var(--c);border-top-width:6px;border-radius:10px 10px 0 0}
+.cab.red{--c:#ff5a4e}.cab.blue{--c:#6fa8ff}.cab.orange{--c:#ff9a3c}.cab.pink{--c:#ff3ea5}.cab.green{--c:#4ee36a}.cab.teal{--c:#2ee0e0}.cab.yellow{--c:#ffd23f}.cab.purple{--c:#d27bff}.cab.lime{--c:#b6f03a}
+.cab .cab-top,.cab.red .cab-top,.cab.blue .cab-top,.cab.orange .cab-top,.cab.pink .cab-top,.cab.green .cab-top,.cab.teal .cab-top,.cab.yellow .cab-top,.cab.purple .cab-top,.cab.lime .cab-top{background:#08080a;color:#fff;text-shadow:0 0 2px #fff,0 0 8px var(--c),0 0 18px var(--c);min-height:50px;margin:0 0 6px;border-bottom:2px solid var(--c)}
+.cab{min-height:0}
+.cab-screen{min-height:0;flex:0 0 auto;padding:8px;font-size:15px;line-height:1.15}
+.cab-coin{margin:8px auto 10px;font-size:14px}
+
+/* One neon sign per page */
+.neon.amber{color:#fff1d6;text-shadow:0 0 2px #fff,0 0 8px var(--amber),0 0 18px var(--amber),0 0 34px var(--amber)}
+.neon.green{color:#e6ffe5;text-shadow:0 0 2px #fff,0 0 8px var(--green),0 0 18px var(--green),0 0 34px #2fae2d}
+#v-counter .neonhead,#v-receipt .neonhead{margin-bottom:4px}
+#receiptGo{align-self:center;min-height:48px}
+
+/* Staff picks signs: proper buttons, held from the start */
+.pjump .secsign{min-height:44px;font-size:14px;padding:10px 12px 8px}
+.pjump .secsign[disabled]{opacity:.35;filter:grayscale(.6)}
+
+/* Mate's code: a cream form slip, same height as Add */
+#codeIn,#myName,#tellName{min-height:44px;box-sizing:border-box;background:#fffaf0;color:#2a1306;border:0;border-bottom:2px solid #2a1306;border-radius:0;padding:8px 10px;font:600 16px var(--cond);color-scheme:light}
+.step .row .btn,.sheet-card .row .btn{min-height:44px}
+
+/* Ask Rasher answers are sticky notes like the moods */
+.askopts .chip{border-radius:0;min-height:48px;padding:12px 14px;font:400 17px/1.1 var(--marker);color:#2a1306;background:#f5cf3a;box-shadow:3px 3px 0 #000;transform:rotate(-.6deg)}
+.askopts .chip:nth-child(2n){background:#ff8fc8;transform:rotate(.7deg)}
+.askopts .chip:nth-child(3n){background:#8fe3ff}
+.askopts .chip:nth-child(4n){background:#b6f28a}
+
+/* Long titles on the telly: shrink, then wrap to two lines, before cutting */
+.play-screen .bars.b{height:auto;min-height:12%;display:flex;align-items:flex-end}
+.play-screen .ttl{position:static;white-space:normal;overflow:visible;text-overflow:clip;font-size:clamp(13px,4.2vw,22px);line-height:1.05;padding:2px 8px 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Small phones: smaller poster on the result card so Take One stays above the bar */
+@media (max-width:380px){#cases:not(.three) .case.mini{grid-template-columns:84px 1fr}#cases:not(.three) .case.mini .sleeve{width:84px;box-sizing:border-box}#cases:not(.three) .case.mini .cover{width:100%;height:auto}#cases:not(.three) .case.mini .rental{display:none}}
+
+/* Three mode: same height, Open pinned to the bottom, outline only once tapped */
+.cases.three .case.mini{height:100%}
+.cases.three .case.mini .info{display:flex;flex-direction:column;flex:1}
+.cases.three .case.mini .acts{margin-top:auto}
+.cases.three:not(.touched) .case.mini.active{outline:0}
+
+/* The box: synopsis and cast run full width under the poster; sticker inside the poster edge */
+.casesheet .case{grid-template-areas:none}
+.casesheet .case .syn,.casesheet .case .who{grid-column:1/-1}
+.casesheet .rental{left:4px}
+.rental{left:0}
+
+/* Counter: orange for the two ways in, outlined for everything else */
+#houseGo.door,#ownGo{background:transparent;border:2px solid #8e7660;box-shadow:none;color:#2a1306}
+#houseGo.door b{color:#2a1306}
+
+/* Settings: cream dropdown, tickboxes aligned to the first line */
+.step select{min-height:44px;background:#fffaf0;border:0;border-bottom:2px solid #2a1306}
+.tog{align-items:flex-start;line-height:1.3}
+.tog input{margin-top:1px;flex:0 0 auto}
+
+/* Stickers that mean something are readable */
+.spine .stk{font-size:9px;padding:3px 0 2px}
+
+/* Tell Rasher what you like: a real button */
+.tunecard{position:relative;padding-right:96px}
+.tunecard .tunego{position:absolute;right:12px;top:50%;transform:translateY(-50%) rotate(-1deg);font-style:normal;pointer-events:none}
+
+/* Visiting: back and swap buttons */
+.nudge .nvbtns .tag{min-height:44px}
+.case .wide{grid-column:1/-1;margin:0}

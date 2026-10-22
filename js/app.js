@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=q3";
-import * as tmdb from "./tmdb.js?v=q3";
-import * as importer from "./importer.js?v=q3";
-import * as lib from "./library.js?v=q3";
-import * as snd from "./sound.js?v=q3";
-import * as arcade from "./arcade.js?v=q3";
-import * as coming from "./coming.js?v=q3";
-import * as rasher from "./rasher.js?v=q3";
-import { LINES } from "./lines.js?v=q3";
-import * as friends from "./friends.js?v=q3";
-import * as builder from "./builder.js?v=q3";
-import * as where from "./where.js?v=q3";
+import * as store from "./store.js?v=q4";
+import * as tmdb from "./tmdb.js?v=q4";
+import * as importer from "./importer.js?v=q4";
+import * as lib from "./library.js?v=q4";
+import * as snd from "./sound.js?v=q4";
+import * as arcade from "./arcade.js?v=q4";
+import * as coming from "./coming.js?v=q4";
+import * as rasher from "./rasher.js?v=q4";
+import { LINES } from "./lines.js?v=q4";
+import * as friends from "./friends.js?v=q4";
+import * as builder from "./builder.js?v=q4";
+import * as where from "./where.js?v=q4";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -482,7 +482,7 @@ async function roll() {
   await land(chosen);
 }
 async function land(chosen, ctx = {}) {
-  snd.clunk(); rasher.slip(""); store.prefs.set("rolled", true);
+  snd.clunk(); rasher.slip(""); store.prefs.set("rolled", true); $("#cases").classList.remove("touched");
   picks = chosen; active = 0; vetoes = F.last ? 1 : Infinity; swapRun = 0;
   if (!RM) await staticBurst();
   playOnTV(picks[0]); snd.sting(picks[0].m);
@@ -574,13 +574,12 @@ function caseHTML(it, i) {
       <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}</div>
       ${fee}${bday(m)}
       <div class="where" data-where="${m.id}"><span class="wl">Checking where to watch…</span></div>
-      ${m.dir.length ? `<div class="who">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
-      <p class="syn" hidden>${esc(m.ov)}</p>
     </div>
+      ${m.dir.length ? `<div class="who wide">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
+      <p class="syn wide" hidden>${esc(m.ov)}</p>
       <div class="acts wide">
-        <span class="ag act"><button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button>
-        ${swapBtn}</span>
-        <span class="ag look">${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
+        <span class="ag act"><button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button></span>
+        <span class="ag look">${swapBtn}${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
         <button class="tag" data-a="poster">Poster</button></span>
         <span class="ag ext"><a class="tag" href="${esc(where.jwLink(m))}" target="_blank" rel="noopener">JustWatch</a>
@@ -642,11 +641,17 @@ function fillWhere(root = document) {
     const w = await where.lookup((path, params) => tmdb.call(apiKey, path, params), it.m);
     if (!el.isConnected) return;
     el.innerHTML = w ? `<span class="wl">${where.line(w)}</span>` : "";
+    const none = w && !w.stream.length && !w.rent.length && !w.buy.length, card = el.closest(".case");
+    if (none && card && picks.length === 1 && card.closest("#cases")) {
+      card.querySelector('[data-a="swap"]')?.classList.add("hot");
+      card.querySelectorAll('[data-a="open"]').forEach(b => b.classList.remove("hot"));
+      const say = rasher.line("not_streaming"); if (say) rasher.slip(say);
+    }
   });
 }
 function showOnTV(i) {
   const it = picks[i]; if (!it) return;
-  active = i; playOnTV(it); snd.clunk();
+  active = i; playOnTV(it); snd.clunk(); $("#cases").classList.add("touched");
   $$(".case").forEach(c => c.classList.toggle("active", +c.dataset.i === i && picks.length > 1));
   const tv = $("#tv"), r = tv.getBoundingClientRect();
   if (r.top < 60 || r.bottom > innerHeight) scrollTo({ top: scrollY + r.top - 70, behavior: RM ? "auto" : "smooth" });
@@ -834,12 +839,16 @@ function renderForYou() {
   renderJump();
 }
 // Section signs at the top that jump to each shelf.
+const jumpT0 = Date.now();
 function renderJump() {
   const sig = [["fitsHead", "Picks", "red"], ["cinemasHead", "In cinemas", "blue"], ["soonHead", "Coming soon", "teal"], ["deepHead", "Finish the job", "purple"], ["freshHead", "Not on your list", "orange"]];
-  $("#pjump").innerHTML = sig.filter(([id]) => { const e = document.getElementById(id); return e && !e.hidden; })
-    .map(([id, l, c]) => `<button class="secsign ${c}" data-jump="${id}">${id === "fitsHead" && S?.owner ? esc(S.owner) + "'s picks" : id === "freshHead" && S?.house ? "Still to see" : l}</button>`).join("");
+  // Cinema shelves arrive a moment later: hold their signs (greyed) so the row doesn't jump, for up to 8 seconds.
+  const waiting = !$("#coming").childElementCount && Date.now() - jumpT0 < 8000 && navigator.onLine;
+  $("#pjump").innerHTML = sig.filter(([id]) => { const e = document.getElementById(id); return (e && !e.hidden) || (waiting && (id === "cinemasHead" || id === "soonHead")); })
+    .map(([id, l, c]) => `<button class="secsign ${c}" data-jump="${id}"${document.getElementById(id) ? "" : " disabled"}>${id === "fitsHead" && S?.owner ? esc(S.owner) + "'s picks" : id === "freshHead" && S?.house ? "Still to see" : l}</button>`).join("");
 }
 new MutationObserver(() => renderJump()).observe($("#coming"), { childList: true });
+setTimeout(renderJump, 8200);
 $("#pjump").addEventListener("click", e => { const b = e.target.closest("[data-jump]"); if (!b) return; snd.click(); const h = document.getElementById(b.dataset.jump); if (h) scrollTo({ top: scrollY + h.getBoundingClientRect().top - 80, behavior: RM ? "auto" : "smooth" }); });
 // Finish the job: directors you're partway through, and the next one on your list.
 function renderDeepDive() {
@@ -880,11 +889,14 @@ $("#v-picks").addEventListener("click", e => { const b = e.target.closest("[data
 
 // ---------- receipt ----------
 let statsDirty = true;
+$("#receiptGo").onclick = () => tab("roll");
 function renderReceipt() {
   const r = $("#receipt");
-  if (!S) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">No rentals on file yet.</p>`; return; }
+  if (!S) { $("#receiptNote").hidden = true; $("#receiptGo").hidden = true; r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">No rentals on file yet.</p>`; return; }
   if (!statsDirty) return; statsDirty = false;
-  if (S.house && S.seen.filter(s => s.rating != null).length < 3) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">HOUSE SHOP MEMBER</p><hr><p class="c">Return three tapes with a rating and your receipt starts printing.</p><p class="c">Or bring your own Letterboxd export to the counter.</p><hr>${barcode("house")}`; return; }
+  const empty = !S || (S.house && S.seen.filter(s => s.rating != null).length < 3);
+  $("#receiptNote").hidden = empty; $("#receiptGo").hidden = !empty || !S;
+  if (S.house && S.seen.filter(s => s.rating != null).length < 3) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">HOUSE SHOP MEMBER</p><hr><p class="c">Return three tapes with a rating and your receipt starts printing. Take a tape, watch it, then hit Watched it.</p><p class="c">Or bring your own Letterboxd export to the counter.</p><hr>${barcode("house")}`; return; }
   const t = lib.stats(S);
   const ln = (a, b) => `<div class="ln"><span>${esc(a)}</span><span class="dots"></span><span>${esc(b)}</span></div>`;
   const bar = (n, max, w = 12) => "#".repeat(Math.max(1, Math.round(n / max * w)));
@@ -925,7 +937,7 @@ function counterState() {
   $("#zipH").textContent = $("#stepKey").hidden ? "Your Letterboxd export" : "2 · Your Letterboxd export";
   $("#ownGo").hidden = showOwn;
   $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Start your own any time." : "Pick a way in.";
-  $("#houseGo").innerHTML = mode === "house" ? "<b>Leave the house shop</b><span>Back to the counter.</span>" : "<b>Just browsing</b><span>Walk round Rasher's own shelves. Nothing to set up.</span>";
+  $("#houseGo").innerHTML = mode === "house" ? "<b>Close the house shop</b><span>Start fresh here at the counter. You can walk back in any time.</span>" : "<b>Just browsing</b><span>Walk round Rasher's own shelves. Nothing to set up.</span>";
   $("#buildMore").hidden = !profile?.built; $("#buildGo").hidden = $("#buildSwipe").hidden = !!profile;
   $("#zipMsg").textContent = profile?.built ? `Built by hand: ${Object.keys(profile.ratings).length} films rated${profile.username ? `, plus your Letterboxd diary` : ""}. ${S.watchlist.length.toLocaleString()} tapes on your shelves. Bring a full export any time for the whole picture.` : profile ? `Last export: ${new Date(profile.importedAt).toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf, ${S.seen.length.toLocaleString()} seen.${S.unmatched ? ` ${S.unmatched} watchlist entries couldn't be matched (usually TV series).` : ""}` : "";
   const n = Object.keys(log).length;
@@ -1266,7 +1278,7 @@ function renderTuneCard() {
   const b = $("#tuneOpen"), show = !!S?.house && !S.visit;
   b.hidden = !show; if (!show) return;
   const t = friends.tuning(), n = t.like.length + t.nope.length;
-  b.innerHTML = `<b>${n ? "Rasher's had a think" : "Tell Rasher what you like"}</b><span>${n ? `Tuned off ${n} film${n > 1 ? "s" : ""} you told him about. Tap to change.` : "Swipe through twenty well-known films and his picks will lean your way."}</span>`;
+  b.innerHTML = `<b>${n ? "Rasher's had a think" : "Tell Rasher what you like"}</b><span>${n ? `Tuned off ${n} film${n > 1 ? "s" : ""} you told him about. Tap to change.` : "Swipe through twenty well-known films and his picks will lean your way."}</span><i class="tag hot tunego">${n ? "Change ▸" : "Start ▸"}</i>`;
 }
 $("#tuneOpen").onclick = () => {
   const deck = friends.tuneDeck(lib.buildHouse(house, {})), t = friends.tuning();
