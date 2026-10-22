@@ -1,7 +1,7 @@
 // Friends: sharing your shop by code, visiting a mate's, comparing taste, group night, guest tuning and the Letterboxd top-up.
-import * as store from "./store.js?v=r1";
-import { TMDB_PROXY } from "./config.js?v=r1";
-import * as shelf from "./shelf.js?v=r1";
+import * as store from "./store.js?v=r2";
+import { TMDB_PROXY } from "./config.js?v=r2";
+import * as shelf from "./shelf.js?v=r2";
 
 const BASE = (TMDB_PROXY || "").replace(/\/$/, "");
 let C = null;

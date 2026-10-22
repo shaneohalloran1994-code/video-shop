@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=r1";
-import { prefs } from "./store.js?v=r1";
-import { QUOTES } from "./quotes.js?v=r1";
+import { LINES } from "./lines.js?v=r2";
+import { prefs } from "./store.js?v=r2";
+import { QUOTES } from "./quotes.js?v=r2";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

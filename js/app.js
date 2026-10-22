@@ -1,17 +1,17 @@
-import * as store from "./store.js?v=r1";
-import * as tmdb from "./tmdb.js?v=r1";
-import * as importer from "./importer.js?v=r1";
-import * as lib from "./library.js?v=r1";
-import * as snd from "./sound.js?v=r1";
-import * as arcade from "./arcade.js?v=r1";
-import * as coming from "./coming.js?v=r1";
-import * as rasher from "./rasher.js?v=r1";
-import { LINES } from "./lines.js?v=r1";
-import * as friends from "./friends.js?v=r1";
-import * as card from "./card.js?v=r1";
-import * as myshelf from "./shelf.js?v=r1";
-import * as builder from "./builder.js?v=r1";
-import * as where from "./where.js?v=r1";
+import * as store from "./store.js?v=r2";
+import * as tmdb from "./tmdb.js?v=r2";
+import * as importer from "./importer.js?v=r2";
+import * as lib from "./library.js?v=r2";
+import * as snd from "./sound.js?v=r2";
+import * as arcade from "./arcade.js?v=r2";
+import * as coming from "./coming.js?v=r2";
+import * as rasher from "./rasher.js?v=r2";
+import { LINES } from "./lines.js?v=r2";
+import * as friends from "./friends.js?v=r2";
+import * as card from "./card.js?v=r2";
+import * as myshelf from "./shelf.js?v=r2";
+import * as builder from "./builder.js?v=r2";
+import * as where from "./where.js?v=r2";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -67,6 +67,7 @@ let poolMode = store.prefs.get("pool", "wl");
 let N = store.prefs.get("n", 1);
 let picks = [], active = 0, rolling = false, rolledEmpty = false;
 let ownOpen = false;
+let tipsDue = false, tipsT = null; // first-visit tips, held until they've looked at their film
 let visit = store.prefs.get("visit", ""), FR = {}, mine = null;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
@@ -191,6 +192,7 @@ function tab(n) {
   if (n === "picks") renderForYou();
   if (n === "arcade") arcade.open();
   scrollTo(0, 0);
+  if (n === "roll" && tipsDue === "armed") tipsNow(1500);   // tips waited while they were elsewhere
 }
 $$("[data-tab]").forEach(b => b.onclick = () => tab(b.dataset.tab));
 
@@ -1111,7 +1113,6 @@ function greet() {
 }
 // After their first film lands, Rasher keeps quiet and lets them look at it. The two quick cards come
 // once they've had a proper look: they close the box, swap, or roll again. Never on top of the box.
-let tipsDue = false, tipsT = null;
 function afterFirstRoll() {
   if (store.prefs.get("welcomed", false) || touring || rasher.quiet()) return;
   $("#roll").classList.remove("beckon");
@@ -1121,7 +1122,7 @@ function tipsNow(delay) {
   if (tipsDue !== "armed" || touring || store.prefs.get("welcomed", false) || rasher.quiet()) return;
   clearTimeout(tipsT);
   tipsT = setTimeout(() => {
-    if (!$("#caseSheet").hidden || !$("#filters").hidden || touring || rolling) return;   // wait for the next chance
+    if (!$("#caseSheet").hidden || !$("#filters").hidden || touring || rolling || $("#v-roll").hidden) return;   // wait for the next chance
     tipsDue = "shown"; touring = true;
     const steps = [
       { text: rasher.line("tip_mood", {}, { always: true }), at: "#openFilters" },
