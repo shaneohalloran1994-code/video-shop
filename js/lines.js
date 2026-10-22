@@ -5,7 +5,6 @@ export const LINES = {
 "Good tape. Rewind it after, I'm not your ould lady.",
 "This is the one, man. I felt it in the rack.",
 "Solid choice. The universe picked it, I just handed it over.",
-"You know what this is? It's a vibe, man. That's what it is.",
 "Fuckin' A. Good pull.",
 "I'd watch this. I have watched this. Twice, actually.",
 "Some films you watch. This one kind of watches you back.",
@@ -23,7 +22,7 @@ export const LINES = {
 "Pick one, put the others back. Not on the floor this time."
 ],
 "land_late": [
-"It's 1am, man. Perfect time for something you'll only half remember.",
+"Small hours, man. Perfect time for something you'll only half remember.",
 "Late shift. Best time for a film. Worst time for a long one.",
 "Everyone good is asleep. We're the other lot.",
 "This hour, the films hit different. Weirder. Better.",
@@ -59,14 +58,14 @@ export const LINES = {
 ],
 "g_animation": [
 "Cartoons are for everyone, man. Especially at 2am.",
-"Drawn by hand. Respect the hands."
+"Somebody spent years on this a frame at a time. Respect."
 ],
 "g_crime": [
 "Crime doesn't pay. Sure is cool though.",
 "Somebody's getting double-crossed. Bet on it."
 ],
 "d_John Carpenter": [
-"Carpenter scored his own films 'cause nobody else was weird enough. Respect."
+"Carpenter did most of his own music. Cheaper than hiring someone, and better."
 ],
 "d_Richard Linklater": [
 "Linklater, man. He named Dazed after a Zeppelin song. The man has taste."
@@ -93,7 +92,7 @@ export const LINES = {
 "Tarantino worked in a video shop before all this. One of us, man. Especially the feet."
 ],
 "d_Paul Thomas Anderson": [
-"PTA. Started Boogie Nights as a short when he was a teenager. Some lads peak early."
+"PTA. Made the first Dirk Diggler film as a teenager, on video. One of us."
 ],
 "d_Martin McDonagh": [
 "McDonagh. Playwright first. That's why everyone talks so well and swears so much."
@@ -160,10 +159,8 @@ export const LINES = {
 "chalk": [
 "Watched this at 4am once and saw God. Or the ceiling. Either way.",
 "Rasher's special. Don't ask questions.",
-"If you only watch one thing this week, make it this. Then watch more.",
 "Trust me on this one. You always do eventually.",
-"On the board 'cause it deserves to be.",
-"Tonight's special. Comes with no side, just greatness."
+"On the board 'cause it deserves to be."
 ],
 "shame": [
 "This has been on your list since {year}. It's not angry. It's just disappointed.",
@@ -181,11 +178,10 @@ export const LINES = {
 "The back room is for members. You're a member.",
 "Late fees are a state of mind.",
 "Be kind. Rewind.",
-"Don't ask Rasher about the moon landing.",
 "Staff picks are not up for debate. Rasher will debate them anyway."
 ],
 "picks_intro": [
-"Rasher's shelf. He's been through your history and pulled these for you. No scores, just his reasons.",
+"Rasher's shelf. He's been through your history. He knows what you like better than you do.",
 "Pulled these myself, man. Each one's a good time.",
 "These are the ones. I'd stake my job on it. Which isn't much of a job."
 ],
@@ -205,6 +201,30 @@ export const LINES = {
 "Signs up top are sections. Some only open late. Some only in October.",
 "Tonight I want lets you set the mood. Arcade's for messing about. Staff picks are mine.",
 "Rate what you watch and I get to know you. Don't make it weird."
+],
+"greet": [
+"Alright, welcome in. I'm Rasher. Hit Take One and I'll find you a film."
+],
+"greet_sent": [
+"{name} sent you? Grand. These are {name}'s shelves. Hit Take One and I'll find you something off them."
+],
+"tip_mood": [
+"Tonight I want sets the mood. The signs under the shelf are the special sections."
+],
+"tip_stock": [
+"These are my shelves. Bring your Letterboxd or rate a few, and I'll stock yours."
+],
+"build_ask": [
+"Give me your Letterboxd username and I'll read what you've logged lately."
+],
+"build_stock": [
+"Right. Stocking your shelves…"
+],
+"tell": [
+"Go on. The boss reads every one of these."
+],
+"swapped": [
+"{names} swapped shops with you. {who} on your wall now."
 ],
 "arc": [
 "Winner, man. Fair and square."

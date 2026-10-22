@@ -1,6 +1,7 @@
 // Start your own shop without a Letterboxd export: read a username's public diary and/or swipe through films.
 // Produces the same profile + films shape as the zip importer, so the rest of the app can't tell the difference.
 import * as friends from "./friends.js?v=q3";
+import { LINES } from "./lines.js?v=q3";
 
 let C = null;
 export function init(ctx) { C = ctx; }
@@ -44,7 +45,7 @@ export async function open(existing, swipeFirst = false) {
 function close() { $("#buildSheet").hidden = true; document.body.classList.remove("noscroll"); }
 
 function startView() {
-  $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>Give me your Letterboxd username and I'll read what you've logged lately.</p></div>
+  $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>${C.esc(LINES.build_ask[0])}</p></div>
     <div class="row"><input id="bUser" autocomplete="off" autocapitalize="none" placeholder="Letterboxd username"><button class="btn" id="bRead">Read it</button></div>
     <p class="small" id="bMsg"></p>
     <div class="row"><button class="ghost" id="bNoLb">No Letterboxd, just ask me some films</button></div>`;
@@ -100,7 +101,7 @@ function answer(m, b) {
 
 // Stock the shelves: the films you said you want, plus the shop's films that sit closest to what you loved.
 async function finish() {
-  $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>Right. Stocking your shelves…</p></div>`;
+  $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>${C.esc(LINES.build_stock[0])}</p></div>`;
   const house = await C.house();
   const rated = Object.entries(st.profile.ratings).map(([k, r]) => [st.films[k], r]).filter(([m]) => m);
   let loved = rated.filter(([, r]) => r >= 3.5).map(([m]) => m);

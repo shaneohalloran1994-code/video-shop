@@ -1041,7 +1041,7 @@ function tour() {
 function greet() {
   if (store.prefs.get("welcomed", false) || store.prefs.get("greeted", false) || rasher.quiet() || !S) return;
   store.prefs.set("greeted", true); tab("roll");
-  rasher.slip(sentBy ? `${sentBy} sent you? Grand. These are ${sentBy}'s shelves. Hit Take One and I'll find you something off them.` : "Alright, welcome in. I'm Rasher. Hit Take One and I'll find you a film.");
+  rasher.slip(sentBy ? rasher.line("greet_sent", { name: sentBy }) : rasher.line("greet"));
   warmSafe();
   $("#roll").classList.add("beckon");
 }
@@ -1060,8 +1060,8 @@ function tipsNow(delay) {
     if (!$("#caseSheet").hidden || !$("#filters").hidden || touring || rolling) return;   // wait for the next chance
     tipsDue = "shown"; touring = true;
     const steps = [
-      { text: "Tonight I want sets the mood. The signs under the shelf are the special sections.", at: "#openFilters" },
-      S?.house && !S.visit ? { text: "These are my shelves. Bring your Letterboxd or rate a few, and I'll stock yours.", action: { label: "Stock my own shelves", later: "Later", fn: () => tab("counter") } }
+      { text: rasher.line("tip_mood", {}, { always: true }), at: "#openFilters" },
+      S?.house && !S.visit ? { text: rasher.line("tip_stock", {}, { always: true }), action: { label: "Stock my own shelves", later: "Later", fn: () => tab("counter") } }
                            : { text: W4(), at: ".deck" },
     ];
     rasher.welcome({ steps, back: true, done: () => { touring = false; } });
@@ -1142,7 +1142,7 @@ async function pollInbox() {
   if (!added.length) return;
   FR = await friends.all(); renderFriends();
   const names = added.map(f => f.name), list = names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names.at(-1) : names[0];
-  $("#swapTxt").textContent = `${list} swapped shops with you. ${names.length > 1 ? "They're" : (names[0] + "'s")} on your wall now.`;
+  $("#swapTxt").textContent = rasher.line("swapped", { names: list, who: names.length > 1 ? "They're" : names[0] + "'s" }, { always: true });
   $("#swapBtns").innerHTML = added.map(f => `<button class="tag" data-unswap="${f.code}">✕ Remove ${esc(f.name)}</button>`).join("") + `<button class="tag hot" id="swapOk">Grand</button>`;
   $("#swapNote").hidden = false;
 }
@@ -1157,7 +1157,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 
 // ---------- Tell the shop: feedback straight to Shane ----------
 function openTell() {
-  $("#tellHead").innerHTML = `${rasher.HEAD}<p class="said"><b>Rasher</b>Go on. The boss reads every one of these.</p>`;
+  $("#tellHead").innerHTML = `${rasher.HEAD}<p class="said"><b>Rasher</b>${esc(rasher.line("tell", {}, { always: true }))}</p>`;
   $("#tellMsg").textContent = "Goes straight to the person who built the shop. Nothing else is sent.";
   if (!$("#tellName").value) $("#tellName").value = friends.shareInfo()?.name || profile?.username || "";
   $("#tellSheet").hidden = false; document.body.classList.add("noscroll"); setTimeout(() => $("#tellTxt").focus(), 50);

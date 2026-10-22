@@ -3,7 +3,7 @@ export const QUOTES = [
 {
 "film": "The Big Lebowski",
 "who": "The Dude",
-"q": "Well, sir, it's this rug I had. It really tied the room together.",
+"q": "Well, sir, it's this rug I have. It really tied the room together.",
 "tag": "coen"
 },
 {
@@ -34,12 +34,6 @@ export const QUOTES = [
 "film": "They Live",
 "who": "Nada",
 "q": "I have come here to chew bubblegum and kick ass, and I'm all out of bubblegum.",
-"tag": "carpenter"
-},
-{
-"film": "They Live",
-"who": "Nada",
-"q": "Well, they ain't from Cleveland.",
 "tag": "carpenter"
 },
 {
@@ -95,12 +89,6 @@ export const QUOTES = [
 "who": "Dante",
 "q": "I'm not even supposed to be here today.",
 "tag": "counter"
-},
-{
-"film": "Clerks",
-"who": "Dante",
-"q": "Did you ever notice how all the prices end in nine? Damn, that's eerie.",
-"tag": "any"
 },
 {
 "film": "Dazed and Confused",
@@ -167,11 +155,5 @@ export const QUOTES = [
 "who": "Tony",
 "q": "Every day is a gift. It's just, does it have to be a pair of socks?",
 "tag": "any"
-},
-{
-"film": "The Sopranos",
-"who": "Tony",
-"q": "When you're married, you'll understand the importance of fresh produce.",
-"tag": "date"
 }
 ];
