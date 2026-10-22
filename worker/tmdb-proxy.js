@@ -1,8 +1,11 @@
-// Take One: the shop's little helper on Cloudflare Workers. Version 3.1 (adds shared shops and Letterboxd top-up).
+// Take One: the shop's little helper on Cloudflare Workers. Version 3.2 (adds feedback notes and a friends inbox).
 // 1. TMDB proxy: lets people use the app without their own TMDB key. The key stays here as a secret (TMDB_KEY).
 // 2. Shared shops: when someone taps Share, their shelves are stored here under a short code until they stop sharing.
 //    Needs a KV namespace bound to this Worker with the variable name SHOPS.
 // 3. Letterboxd top-up: reads a member's public diary feed so new watches appear without a fresh export.
+// 4. Feedback: notes from the "Tell the shop" button, kept in SHOPS for 180 days. Read them at
+//    /feedback?key=YOUR_KEY, where YOUR_KEY is the secret FEEDBACK_KEY set on this Worker.
+// 5. Friends inbox: when someone adds your shop, they leave their code here so your app can offer to add them back.
 
 const ALLOWED_ORIGINS = ["https://shaneohalloran1994-code.github.io", "http://localhost:8765"];
 const ALLOWED_PATHS = [
@@ -57,6 +60,52 @@ export default {
         await env.SHOPS.put("meta:" + code, JSON.stringify({ ...meta, at: Date.now() }));
         return json({ ok: true });
       }
+      return json({ error: "Not found" }, 404);
+    }
+
+    // ---- feedback notes ----
+    if (url.pathname === "/feedback") {
+      if (!env.SHOPS) return json({ error: "No storage" }, 503);
+      if (request.method === "POST") {
+        let b; try { b = await request.json(); } catch { return json({ error: "Bad note" }, 400); }
+        const text = String(b.text || "").trim().slice(0, 2000);
+        if (!text) return json({ error: "Empty note" }, 400);
+        const note = { text, from: String(b.from || "").slice(0, 60), where: String(b.where || "").slice(0, 200), at: Date.now() };
+        await env.SHOPS.put(`fb:${9e15 - Date.now()}:${randomCode(4)}`, JSON.stringify(note), { expirationTtl: 180 * 86400 });
+        return json({ ok: true });
+      }
+      if (request.method === "GET") {
+        if (!env.FEEDBACK_KEY || url.searchParams.get("key") !== env.FEEDBACK_KEY) return new Response("Not found", { status: 404 });
+        const del = url.searchParams.get("del"); if (del && del.startsWith("fb:")) await env.SHOPS.delete(del);
+        const list = await env.SHOPS.list({ prefix: "fb:", limit: 200 });
+        const notes = (await Promise.all(list.keys.map(async k => [k.name, JSON.parse((await env.SHOPS.get(k.name)) || "null")]))).filter(x => x[1]);
+        const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+        const k = encodeURIComponent(env.FEEDBACK_KEY);
+        const rows = notes.map(([id, n]) => `<div class="n"><p>${esc(n.text).replace(/\n/g, "<br>")}</p><small>${new Date(n.at).toLocaleString("en-IE", { timeZone: "Europe/Dublin" })}${n.from ? " · " + esc(n.from) : ""}${n.where ? " · " + esc(n.where) : ""} · <a href="?key=${k}&del=${encodeURIComponent(id)}">delete</a></small></div>`).join("");
+        return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Take One feedback</title><style>body{font:16px/1.45 system-ui;background:#100b16;color:#f1e7d6;margin:0;padding:16px;max-width:640px}h1{font-size:20px}.n{background:#f3ecdc;color:#2a1306;padding:12px;margin:0 0 12px;border-radius:4px}.n p{margin:0 0 6px}small{color:#6b5a48}a{color:#b3150e}</style><h1>Take One feedback (${notes.length})</h1>${rows || "<p>Nothing yet.</p>"}`, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+      }
+      return json({ error: "Not found" }, 404);
+    }
+
+    // ---- friends inbox: "someone added your shop" ----
+    const ib = url.pathname.match(/^\/inbox\/([A-Z0-9]{6})$/);
+    if (ib) {
+      if (!env.SHOPS) return json({ error: "No storage" }, 503);
+      const key = "inbox:" + ib[1];
+      if (request.method === "POST") {
+        if (!(await env.SHOPS.get("meta:" + ib[1]))) return json({ error: "No shop with that code." }, 404);
+        let b; try { b = await request.json(); } catch { return json({ error: "Bad request" }, 400); }
+        const from = String(b.from || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+        if (from.length !== 6 || from === ib[1]) return json({ error: "Bad code" }, 400);
+        const box = JSON.parse((await env.SHOPS.get(key)) || "[]").filter(x => x.from !== from);
+        box.push({ from, name: String(b.name || "A mate").slice(0, 40), at: Date.now() });
+        await env.SHOPS.put(key, JSON.stringify(box.slice(-50)), { expirationTtl: 90 * 86400 });
+        return json({ ok: true });
+      }
+      const meta = JSON.parse((await env.SHOPS.get("meta:" + ib[1])) || "null");
+      if (!meta || meta.token !== (await sha(request.headers.get("X-Token") || ""))) return json({ error: "Not your shop." }, 403);
+      if (request.method === "GET") return json({ items: JSON.parse((await env.SHOPS.get(key)) || "[]") });
+      if (request.method === "DELETE") { await env.SHOPS.delete(key); return json({ ok: true }); }
       return json({ error: "Not found" }, 404);
     }
 
