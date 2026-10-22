@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=q2";
-import * as tmdb from "./tmdb.js?v=q2";
-import * as importer from "./importer.js?v=q2";
-import * as lib from "./library.js?v=q2";
-import * as snd from "./sound.js?v=q2";
-import * as arcade from "./arcade.js?v=q2";
-import * as coming from "./coming.js?v=q2";
-import * as rasher from "./rasher.js?v=q2";
-import { LINES } from "./lines.js?v=q2";
-import * as friends from "./friends.js?v=q2";
-import * as builder from "./builder.js?v=q2";
-import * as where from "./where.js?v=q2";
+import * as store from "./store.js?v=q3";
+import * as tmdb from "./tmdb.js?v=q3";
+import * as importer from "./importer.js?v=q3";
+import * as lib from "./library.js?v=q3";
+import * as snd from "./sound.js?v=q3";
+import * as arcade from "./arcade.js?v=q3";
+import * as coming from "./coming.js?v=q3";
+import * as rasher from "./rasher.js?v=q3";
+import { LINES } from "./lines.js?v=q3";
+import * as friends from "./friends.js?v=q3";
+import * as builder from "./builder.js?v=q3";
+import * as where from "./where.js?v=q3";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -999,7 +999,22 @@ function nudge() {
   const nt = $("#notice"); nt.hidden = !S; nt.textContent = NOTICES[Math.floor(Math.random() * NOTICES.length)];
   const notice = () => { n.hidden = true; };
   if (!S) { n.hidden = false; n.textContent = "No tapes yet. Bring your Letterboxd export to the counter, or browse the house shop →"; n.onclick = () => tab("counter"); n.style.cursor = "pointer"; return; }
-  if (S.visit) { n.hidden = false; n.textContent = `You're in ${S.owner}'s shop. Tap here to go back to your own.`; n.style.cursor = "pointer"; n.onclick = () => leaveVisit(); return; }
+  if (S.visit) {
+    const canSwap = mine && !friends.swapped().has(S.visit) && friends.shareInfo()?.code !== S.visit;
+    n.hidden = false; n.style.cursor = "";
+    n.innerHTML = `You're in ${esc(S.owner)}'s shop.<span class="nvbtns"><button class="tag" data-nv="home">Back to mine</button>${canSwap ? `<button class="tag hot" data-nv="swap">Swap shops with ${esc(S.owner)}</button>` : ""}</span>`;
+    n.onclick = async e => {
+      const b = e.target.closest("[data-nv]"); if (!b) return;
+      if (b.dataset.nv === "home") return leaveVisit();
+      const name = friends.shareInfo()?.name || $("#myName").value.trim() || profile?.username || "";
+      if (!name) { tab("counter"); $("#myName").focus(); fmsg(`Put your name on your shop, then go back to ${S.owner}'s and swap.`); return; }
+      b.disabled = true; b.textContent = "Swapping…";
+      try { await friends.swapWith(mine, name, S.visit); snd.coin(); toast(`Swapped. You're on ${S.owner}'s wall now.`); nudge(); }
+      catch (err) { toast(err.message); b.disabled = false; b.textContent = `Swap shops with ${S.owner}`; }
+    };
+    return;
+  }
+  n.innerHTML = "";
   if (!profile) return notice();
   const age = (Date.now() - new Date(profile.importedAt)) / 864e5;
   if (age > 30) { n.hidden = false; n.textContent = "These shelves are a month old. Bring in a fresh export →"; n.onclick = () => tab("counter"); n.style.cursor = "pointer"; }
@@ -1118,6 +1133,28 @@ $("#askClose").onclick = closeAsk;
 $("#askSheet").addEventListener("click", e => { if (e.target.id === "askSheet") closeAsk(); });
 $("#rHead").innerHTML = rasher.HEAD;
 
+// ---------- mates who swapped shops with you ----------
+let inboxAt = 0;
+async function pollInbox() {
+  if (!friends.shareInfo() || Date.now() - inboxAt < 60000 || !navigator.onLine) return;
+  inboxAt = Date.now();
+  let added = []; try { added = await friends.checkInbox(); } catch { }
+  if (!added.length) return;
+  FR = await friends.all(); renderFriends();
+  const names = added.map(f => f.name), list = names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names.at(-1) : names[0];
+  $("#swapTxt").textContent = `${list} swapped shops with you. ${names.length > 1 ? "They're" : (names[0] + "'s")} on your wall now.`;
+  $("#swapBtns").innerHTML = added.map(f => `<button class="tag" data-unswap="${f.code}">✕ Remove ${esc(f.name)}</button>`).join("") + `<button class="tag hot" id="swapOk">Grand</button>`;
+  $("#swapNote").hidden = false;
+}
+$("#swapBtns").addEventListener("click", async e => {
+  if (e.target.id === "swapOk") { $("#swapNote").hidden = true; return; }
+  const b = e.target.closest("[data-unswap]"); if (!b) return;
+  const code = b.dataset.unswap; if (S?.visit === code) leaveVisit();
+  await friends.remove(code); FR = await friends.all(); renderFriends(); b.remove(); toast("Gone from your wall.");
+  if (!$("#swapBtns [data-unswap]")) $("#swapNote").hidden = true;
+});
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pollInbox(); });
+
 // ---------- Tell the shop: feedback straight to Shane ----------
 function openTell() {
   $("#tellHead").innerHTML = `${rasher.HEAD}<p class="said"><b>Rasher</b>Go on. The boss reads every one of these.</p>`;
@@ -1170,6 +1207,7 @@ $("#shareGo").onclick = async () => {
   try { const code = await friends.share(mine, name); fmsg(`Shared. Your code is ${code}.`); renderFriends(); } catch (e) { fmsg(e.message); }
 };
 $("#shareUpd").onclick = async () => { fmsg("Updating your shared shop…"); try { await friends.share(mine, $("#myName").value.trim() || friends.shareInfo().name); fmsg("Updated. Mates get the new shelves next time they refresh."); } catch (e) { fmsg(e.message); } };
+$("#shareNew").onclick = async () => { fmsg("Cutting a new key…"); try { const c = await friends.newCode(mine, $("#myName").value.trim()); fmsg(`New code: ${c}. The old one's dead, and your mates have the new one.`); renderFriends(); } catch (e) { fmsg(e.message); } };
 $("#shareStop").onclick = async () => { try { await friends.stopSharing(); fmsg("Stopped sharing. That code won't work any more."); renderFriends(); } catch (e) { fmsg(e.message); } };
 $("#shareSend").onclick = async () => {
   const sh = friends.shareInfo(), url = `${location.origin + location.pathname}?shop=${sh.code}`;
@@ -1178,9 +1216,15 @@ $("#shareSend").onclick = async () => {
 };
 $("#codeGo").onclick = async () => {
   const v = $("#codeIn").value.trim(); if (!v) return;
+  const name = friends.shareInfo()?.name || $("#myName").value.trim();
+  if (mine && !name) { fmsg("Put your name on your shop first, so your mate knows it's you. Then press Add."); $("#myName").focus(); return; }
   fmsg("Looking for that shop…");
-  try { const fr = await friends.add(v); FR = await friends.all(); $("#codeIn").value = ""; fmsg(`${fr.name}'s shop is on your wall.`); snd.coin(); renderFriends(); }
-  catch (e) { fmsg(e.message); }
+  try {
+    const fr = await friends.add(v); FR = await friends.all(); $("#codeIn").value = "";
+    if (mine) { fmsg("Swapping shops…"); await friends.swapWith(mine, name, fr.code); fmsg(`Swapped shops with ${fr.name}. Your shelves went to ${fr.name} too. Your ratings are never shown.`); }
+    else fmsg(`${fr.name}'s shop is on your wall. Set up your own shelves and you can swap.`);
+    snd.coin(); renderFriends();
+  } catch (e) { fmsg(e.message); }
 };
 $("#fwall").addEventListener("click", async e => {
   const b = e.target.closest("[data-fr]"); if (!b) return;
@@ -1310,6 +1354,6 @@ async function arriveFromLink() {
 }
 snd.setOn(store.prefs.get("sound", true));
 street();
-load().then(arriveFromLink).then(() => { const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
+load().then(arriveFromLink).then(() => { setTimeout(pollInbox, 1500); const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
   if (profile?.username && navigator.onLine && (!profile.toppedAt || Date.now() - new Date(profile.toppedAt) > 12 * 36e5)) setTimeout(() => topUp(true), 4000); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

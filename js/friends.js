@@ -1,6 +1,6 @@
 // Friends: sharing your shop by code, visiting a mate's, comparing taste, group night, guest tuning and the Letterboxd top-up.
-import * as store from "./store.js?v=q2";
-import { TMDB_PROXY } from "./config.js?v=q2";
+import * as store from "./store.js?v=q3";
+import { TMDB_PROXY } from "./config.js?v=q3";
 
 const BASE = (TMDB_PROXY || "").replace(/\/$/, "");
 let C = null;
@@ -53,6 +53,47 @@ export async function stopSharing() {
 export async function tell(text, from, where) {
   const r = await fetch(BASE + "/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, from, where }) });
   if (!r.ok) throw new Error("The shop's line is down. Try again in a minute.");
+}
+
+// ---------- swapping shops: both of you on each other's wall ----------
+// Your code drops into their inbox; their app adds you next time it opens.
+export const swapped = () => new Set(store.prefs.get("swapped", []));
+const markSwapped = code => { const s = swapped(); s.add(code); store.prefs.set("swapped", [...s]); };
+export async function swapWith(S, name, code) {
+  if (!shareInfo()) await share(S, name);
+  const me = shareInfo();
+  await api("POST", "/inbox/" + code, JSON.stringify({ from: me.code, name: me.name }));
+  markSwapped(code);
+}
+// Mates who swapped with you since you last looked. Each gets added to your wall.
+export async function checkInbox() {
+  const me = shareInfo(); if (!me) return [];
+  const r = await fetch(BASE + "/inbox/" + me.code, { headers: { "X-Token": me.token } });
+  if (!r.ok) return [];
+  const { items = [] } = await r.json();
+  if (!items.length) return [];
+  await fetch(BASE + "/inbox/" + me.code, { method: "DELETE", headers: { "X-Token": me.token } }).catch(() => {});
+  const f = await all(), added = [];
+  for (const it of items) {
+    try {
+      const fr = await add(it.from); markSwapped(it.from); added.push(fr);
+      // Same mate, new code: drop the old one if it's gone dead.
+      for (const old of Object.values(f)) if (old.code !== it.from && old.name.toLowerCase() === fr.name.toLowerCase()) {
+        try { await refresh(old.code); } catch (e) { if (/No shop/.test(e.message)) await remove(old.code); }
+      }
+    } catch { }
+  }
+  return added;
+}
+// A new code: the old one stops working, and every mate on your wall gets the new one.
+export async function newCode(S, name) {
+  const old = shareInfo(); if (!old) return share(S, name);
+  try { await api("DELETE", "/shop/" + old.code, null, old.token); } catch { }
+  store.prefs.del("share");
+  const code = await share(S, name || old.name);
+  const me = shareInfo();
+  for (const c of Object.keys(await all())) await api("POST", "/inbox/" + c, JSON.stringify({ from: me.code, name: me.name })).catch(() => {});
+  return code;
 }
 
 // ---------- friends on this phone ----------

@@ -968,3 +968,8 @@ body.visiting .topbar .shopname small::after{content:" · visiting"}
 .tellrow .tag{min-height:40px;white-space:nowrap}
 #tellSheet textarea{width:100%;box-sizing:border-box;margin:12px 0 10px;padding:10px;background:var(--paper);color:#2a1306;border:0;border-bottom:2px solid #2a1306;border-radius:2px;font:16px/1.4 var(--body, system-ui);resize:vertical}
 #tellSheet input{color-scheme:light}
+
+/* Visiting a mate's shop: back and swap buttons */
+.nudge .nvbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.nudge .nvbtns .tag{min-height:40px}
+#swapBtns{flex-wrap:wrap}

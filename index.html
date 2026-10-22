@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q2">
+<link rel="stylesheet" href="css/app.css?v=q3">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q2"></script>
+<script type="module" src="js/app.js?v=q3"></script>
 </head>
 <body>
 
@@ -196,9 +196,11 @@
           <p id="shareTxt">Share your shop and a mate can walk round it on their phone. Your ratings go with it so Rasher can compare your taste, but they're never shown.</p>
           <div class="row" id="shareStart"><input id="myName" maxlength="20" placeholder="Your name on the shop"><button class="btn" id="shareGo">Share my shop</button></div>
           <div class="sharecode" id="shareOn" hidden><span class="kicker">Your code</span><b id="myCode"></b>
-            <div class="row"><button class="ghost" id="shareSend">Send it</button><button class="ghost" id="shareUpd">Update</button><button class="ghost danger" id="shareStop">Stop sharing</button></div></div>
+            <div class="row"><button class="ghost" id="shareSend">Send it</button><button class="ghost" id="shareUpd">Update</button><button class="ghost danger" id="shareStop">Stop sharing</button></div>
+            <div class="row"><button class="ghost" id="shareNew">Get a new code</button></div>
+            <p class="small">A new code stops the old one working. Mates on your wall get the new one automatically.</p></div>
         </div>
-        <div class="row"><input id="codeIn" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="A mate's code"><button class="btn" id="codeGo">Add</button></div>
+        <div class="row"><input id="codeIn" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="A mate's code (you'll swap shops)"><button class="btn" id="codeGo">Add</button></div>
         <p class="small" id="friendMsg"></p>
         <div class="fwall" id="fwall"></div>
       </div>
@@ -305,6 +307,10 @@
 <div class="a2hs" id="a2hs" hidden role="dialog" aria-label="Put the shop on your home screen">
   <div class="a2hs-card"><p class="said"><b>Rasher</b><span id="a2hsTxt"></span></p>
   <div class="row"><button class="tag hot" id="a2hsGo" hidden>Install</button><button class="tag" id="a2hsNo">Got it</button></div></div>
+</div>
+<div class="a2hs" id="swapNote" hidden role="dialog" aria-label="Mates who swapped shops with you">
+  <div class="a2hs-card"><p class="said"><b>Rasher</b><span id="swapTxt"></span></p>
+  <div class="row" id="swapBtns"></div></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>
