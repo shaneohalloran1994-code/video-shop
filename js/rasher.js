@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=pl";
-import { prefs } from "./store.js?v=pl";
-import { QUOTES } from "./quotes.js?v=pl";
+import { LINES } from "./lines.js?v=q1";
+import { prefs } from "./store.js?v=q1";
+import { QUOTES } from "./quotes.js?v=q1";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -123,9 +123,9 @@ export function slip(text, hand = false, film = null) {
 }
 
 // ---------- first visit: Rasher shows you round ----------
-export function welcome({ steps, done }) {
+export function welcome({ steps, done, back }) {
   if (quiet()) { done && done(); return; }
-  let i = 0;
+  let i = 0; const y0 = scrollY;
   const box = document.createElement("div"); box.className = "rtour"; box.setAttribute("role", "dialog"); box.setAttribute("aria-label", "Rasher shows you round");
   document.body.append(box);
   const clear = () => document.querySelectorAll(".rspot").forEach(e => e.classList.remove("rspot"));
@@ -141,6 +141,6 @@ export function welcome({ steps, done }) {
     const sk = box.querySelector("#rSkip"); if (sk) sk.onclick = end;
     box.querySelector("#rNext").focus();
   }
-  function end() { clear(); box.remove(); prefs.set("welcomed", true); done && done(); }
+  function end() { clear(); box.remove(); prefs.set("welcomed", true); if (back) scrollTo({ top: y0, behavior: RM ? "auto" : "smooth" }); done && done(); }
   show();
 }

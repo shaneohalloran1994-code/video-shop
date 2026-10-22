@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=pl">
+<link rel="stylesheet" href="css/app.css?v=q1">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=pl"></script>
+<script type="module" src="js/app.js?v=q1"></script>
 </head>
 <body>
 
@@ -56,7 +56,7 @@
     <div class="rasher" id="rasher" hidden aria-live="polite"></div>
     <div class="cases" id="cases" aria-live="polite"></div>
 
-    <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take one</span></button>
+    <button class="play" id="roll"><span class="tri" aria-hidden="true"></span><span id="rollLabel">Take One</span></button>
     <div class="underplay"><span class="inrun" id="inRun"></span><button class="askr" id="askRasher">Or ask Rasher ▸</button></div>
 
     <div class="controls">
@@ -110,7 +110,7 @@
       </div>
       <div class="fgroup"><h3>Extras</h3>
         <label class="tog"><input type="checkbox" id="taste"> Lean towards my taste</label>
-        <label class="tog"><input type="checkbox" id="lastChance"> Last chance: one veto, then it's locked in</label>
+        <label class="tog"><input type="checkbox" id="lastChance"> One veto, then it's locked in</label>
         <div class="row"><button class="ghost" id="clearF">Clear filters</button></div>
       </div>
     </div>
@@ -158,8 +158,8 @@
         <button class="ghost" id="ownGo">Got the full Letterboxd export zip?</button>
       </div>
       <div class="step" id="stepKey">
-        <h3>1 · Your TMDB key</h3>
-        <p>The shop looks films up on TMDB using your own free key. It's saved on this phone only.</p>
+        <h3>1 · Your own TMDB key (optional)</h3>
+        <p>The shop has its own key, so you can skip this. If you have a free TMDB key, it's saved on this phone only.</p>
         <div class="row"><input id="keyIn" type="password" autocomplete="off" placeholder="Paste your API key"><button class="btn" id="keySave">Save</button></div>
         <p class="small" id="keyMsg"></p>
       </div>

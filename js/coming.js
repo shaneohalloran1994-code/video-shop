@@ -55,7 +55,7 @@ function scorer() {
     const d = m.dir.find(favDir); if (d) { s += 1.4; why.push(`New one from ${d}`); }
     const c = m.cast.slice(0, 4).find(favCast); if (c) { s += 0.6; why.push(`${c}'s in it`); }
     if (!why.length && !S.house) { const r = S.reasons(m); if (r[0]) why.push(r[0]); }
-    if (!why.length) why.push(S.house ? "Rasher's got a feeling about this one" : "Fits your taste");
+    if (!why.length) why.push(S.house ? "Rasher's got a hunch about this one." : "Fits your taste");
     if (m.g.includes("Documentary") && !why.length) s -= .5;
     return { m, s, why };
   };

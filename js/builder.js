@@ -1,6 +1,6 @@
 // Start your own shop without a Letterboxd export: read a username's public diary and/or swipe through films.
 // Produces the same profile + films shape as the zip importer, so the rest of the app can't tell the difference.
-import * as friends from "./friends.js?v=pl";
+import * as friends from "./friends.js?v=q1";
 
 let C = null;
 export function init(ctx) { C = ctx; }
@@ -44,7 +44,7 @@ export async function open(existing, swipeFirst = false) {
 function close() { $("#buildSheet").hidden = true; document.body.classList.remove("noscroll"); }
 
 function startView() {
-  $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>No export? No bother. Got a Letterboxd account? Give me your username and I'll read what you've logged lately.</p></div>
+  $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>Give me your Letterboxd username and I'll read what you've logged lately.</p></div>
     <div class="row"><input id="bUser" autocomplete="off" autocapitalize="none" placeholder="Letterboxd username"><button class="btn" id="bRead">Read it</button></div>
     <p class="small" id="bMsg"></p>
     <div class="row"><button class="ghost" id="bNoLb">No Letterboxd, just ask me some films</button></div>`;
@@ -55,9 +55,11 @@ function startView() {
     try {
       st.profile.username = u;
       const n = await friends.topUp(st.profile, st.films, id => C.details(id));
-      $("#bMsg").textContent = n ? `Got ${n} films from your diary.` : "Your diary's empty or private. We'll do it the other way.";
       st.deck = st.deck.filter(m => !st.profile.watched.some(w => w.key === keyOf(m)));
-      setTimeout(swipeView, 900);
+      // Enough to go on: straight to the shelves. Thin or private diary: rate a few to top it up.
+      if (n >= 10) { $("#bMsg").textContent = `Got ${n} films. Stocking your shelves…`; return setTimeout(finish, 900); }
+      $("#bMsg").textContent = n ? `Got ${n} films from your diary. Rate a few more and I'll have enough.` : "Your diary's empty or private. Rate a few films instead.";
+      setTimeout(swipeView, 1400);
     } catch (e) { st.profile.username = ""; $("#bMsg").textContent = e.message; }
   };
   $("#bNoLb").onclick = swipeView;
@@ -68,10 +70,10 @@ function swipeView() {
   const enough = answered + st.profile.watched.length >= 10;
   if (!m) return finish();
   const p = C.posterOf(m, "w342");
-  $("#buildBody").innerHTML = `<div class="bsearch"><input id="bQ" autocomplete="off" placeholder="Add a film you love…"><div id="bRes"></div></div>
+  $("#buildBody").innerHTML = `<div class="row bfoot top"><span class="rcount">${answered} rated · ${st.deck.length - st.i} to go</span>${enough ? `<button class="tag hot" id="bDone">That'll do, stock my shelves</button>` : `<span class="small">${10 - answered - st.profile.watched.length} more and Rasher has enough to go on</span>`}</div>
+    <div class="bsearch"><input id="bQ" autocomplete="off" placeholder="Add a film you love…"><div id="bRes"></div></div>
     <div class="bcard"><div class="bposter" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="btitle">${C.esc(m.t)} <small>${C.esc(m.y)}</small></div></div>
-    <div class="bbtns">${BUCKETS.map(([k, l]) => `<button class="chip b-${k.replace(".", "")}" data-b="${k}">${l}</button>`).join("")}</div>
-    <div class="row bfoot"><span class="rcount">${answered} rated · ${st.deck.length - st.i} to go</span>${enough ? `<button class="tag hot" id="bDone">That'll do, stock my shelves</button>` : `<span class="small">${10 - answered - st.profile.watched.length} more and Rasher has enough to go on</span>`}</div>`;
+    <div class="bbtns">${BUCKETS.map(([k, l]) => `<button class="chip b-${k.replace(".", "")}" data-b="${k}">${l}</button>`).join("")}</div>`;
   $("#buildBody").querySelectorAll("[data-b]").forEach(b => b.onclick = () => { answer(m, b.dataset.b); st.i++; C.snd.tick?.(); swipeView(); });
   const d = $("#bDone"); if (d) d.onclick = finish;
   let t = null;
@@ -101,7 +103,10 @@ async function finish() {
   $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>Right. Stocking your shelves…</p></div>`;
   const house = await C.house();
   const rated = Object.entries(st.profile.ratings).map(([k, r]) => [st.films[k], r]).filter(([m]) => m);
-  const loved = rated.filter(([, r]) => r >= 3.5).map(([m]) => m), hated = rated.filter(([, r]) => r < 2.5).map(([m]) => m);
+  let loved = rated.filter(([, r]) => r >= 3.5).map(([m]) => m);
+  // A diary with few star ratings: treat what they chose to watch as a fair guide.
+  if (loved.length < 3) loved = loved.concat(st.profile.watched.filter(w => st.profile.ratings[w.key] == null).map(w => st.films[w.key]).filter(Boolean)).slice(0, 60);
+  const hated = rated.filter(([, r]) => r < 2.5).map(([m]) => m);
   st.profile.watchlist = st.profile.watchlist.filter(w => !w.stock);
   const have = new Set([...st.profile.watched, ...st.profile.watchlist].map(w => w.key));
   const stock = house.items.filter(x => !have.has(keyOf(x.m))).map(x => {

@@ -1,6 +1,6 @@
 // Friends: sharing your shop by code, visiting a mate's, comparing taste, group night, guest tuning and the Letterboxd top-up.
-import * as store from "./store.js?v=pl";
-import { TMDB_PROXY } from "./config.js?v=pl";
+import * as store from "./store.js?v=q1";
+import { TMDB_PROXY } from "./config.js?v=q1";
 
 const BASE = (TMDB_PROXY || "").replace(/\/$/, "");
 let C = null;
@@ -30,8 +30,8 @@ export function payload(S, name) {
 async function api(method, path, body, token) {
   const r = await fetch(BASE + path, { method, body, headers: { ...(body ? { "Content-Type": "application/octet-stream" } : {}), ...(token ? { "X-Token": token } : {}) } });
   if (r.status === 404 && method === "GET") throw new Error("No shop with that code. Check it and try again.");
-  if (r.status === 503) throw new Error("Sharing isn't switched on yet. The Worker needs its SHOPS storage.");
-  if (!r.ok) { let e = ""; try { e = (await r.json()).error; } catch { } throw new Error(e || "The shop's helper didn't answer. Try again in a minute."); }
+  if (r.status === 503) throw new Error("Sharing's not working right now. Try again later.");
+  if (!r.ok) { let e = ""; try { e = (await r.json()).error; } catch { } throw new Error(e || "The shop's line is down. Try again in a minute."); }
   return r;
 }
 export const shareInfo = () => store.prefs.get("share", null);
@@ -152,7 +152,7 @@ export function tuneDeck(S) {
 export async function topUp(profile, films, details) {
   if (!profile?.username) throw new Error("No Letterboxd username in your export.");
   const r = await fetch(BASE + "/lb/" + encodeURIComponent(profile.username));
-  if (!r.ok) throw new Error(r.status === 404 ? "Couldn't find your Letterboxd feed. Is the Worker updated?" : "Letterboxd didn't answer. Try again later.");
+  if (!r.ok) throw new Error(r.status === 404 ? "Couldn't find your Letterboxd diary. Check the username, or try again in a minute." : "Letterboxd didn't answer. Try again later.");
   const xml = new DOMParser().parseFromString(await r.text(), "application/xml");
   const tag = (el, n) => el.getElementsByTagName(n)[0]?.textContent?.trim() || "";
   const watchedKeys = new Set(profile.watched.map(w => w.key)), diaryKeys = new Set(profile.diary.map(d => d.key + "|" + d.date));

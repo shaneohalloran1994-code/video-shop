@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=pl";
-import * as tmdb from "./tmdb.js?v=pl";
-import * as importer from "./importer.js?v=pl";
-import * as lib from "./library.js?v=pl";
-import * as snd from "./sound.js?v=pl";
-import * as arcade from "./arcade.js?v=pl";
-import * as coming from "./coming.js?v=pl";
-import * as rasher from "./rasher.js?v=pl";
-import { LINES } from "./lines.js?v=pl";
-import * as friends from "./friends.js?v=pl";
-import * as builder from "./builder.js?v=pl";
-import * as where from "./where.js?v=pl";
+import * as store from "./store.js?v=q1";
+import * as tmdb from "./tmdb.js?v=q1";
+import * as importer from "./importer.js?v=q1";
+import * as lib from "./library.js?v=q1";
+import * as snd from "./sound.js?v=q1";
+import * as arcade from "./arcade.js?v=q1";
+import * as coming from "./coming.js?v=q1";
+import * as rasher from "./rasher.js?v=q1";
+import { LINES } from "./lines.js?v=q1";
+import * as friends from "./friends.js?v=q1";
+import * as builder from "./builder.js?v=q1";
+import * as where from "./where.js?v=q1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -68,8 +68,8 @@ let ownOpen = false;
 let visit = store.prefs.get("visit", ""), FR = {}, mine = null;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
-  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"], ["picks", "Staff picks"]],
-  house: [["all", "The shelves"], ["picks", "Staff picks"], ["untested", "Untested"]],
+  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"], ["picks", "Rasher's picks"]],
+  house: [["all", "The shelves"], ["picks", "Rasher's picks"], ["untested", "Deep cuts"]],
 };
 // Sections hang above the shelves like shop signs. Some only open at certain times.
 const isLate = () => { const h = new Date().getHours(); return h >= 23 || h < 5; };
@@ -269,7 +269,7 @@ function syncFilters(full = true) {
   $(".seenonly").hidden = !!S?.house || !SEEN_POOLS.includes(poolMode);
   $("#blindKey").setAttribute("aria-pressed", blind); $("#lastChance").checked = !!F.last;
   $("#n1").setAttribute("aria-pressed", N === 1); $("#n3").setAttribute("aria-pressed", N === 3);
-  $("#rollLabel").textContent = N === 3 ? "Take three" : "Take one";
+  $("#rollLabel").textContent = N === 3 ? "Take Three" : "Take One";
   const n = pool().length;
   $("#inRun").textContent = S ? `${n.toLocaleString()} tape${n === 1 ? "" : "s"} in the running` : "";
   $("#roll").disabled = !S; $("#askRasher").hidden = !S;
@@ -329,6 +329,28 @@ function pool() {
   });
 }
 
+// A stranger's very first roll should be an easy yes: well known, under 2h15, not a documentary,
+// and streaming where they live. Candidates are picked (and looked up) as soon as they walk in.
+let safeC = null;
+const firstTimer = () => S?.house && !S.visit && !store.prefs.get("rolled", false) && N === 1 && !blind && poolMode !== "shock";
+function safeCands(p) {
+  const ok = p.filter(x => { const m = x.m; return m.p && m.rt >= 80 && m.rt <= 135 && m.vc >= 3000 && !m.g.includes("Documentary") && !m.g.includes("Horror"); });
+  return ok.sort(() => Math.random() - .5).slice(0, 6);
+}
+function warmSafe() {
+  if (!firstTimer()) return;
+  safeC = safeCands(pool());
+  safeC.forEach(x => where.lookup((path, params) => tmdb.call(apiKey, path, params), x.m));
+}
+async function safeFirst(p) {
+  const ids = new Set(p.map(x => x.m.id));
+  let c = (safeC || []).filter(x => ids.has(x.m.id)); if (!c.length) c = safeCands(p);
+  if (!c.length) return null;
+  const look = x => where.lookup((path, params) => tmdb.call(apiKey, path, params), x.m).then(w => w?.stream?.length ? x : null);
+  const timeout = new Promise(res => setTimeout(() => res(null), 1200));
+  const found = await Promise.race([Promise.all(c.map(look)).then(r => r.find(Boolean) || null), timeout]);
+  return found || c[0];
+}
 function draw(arr, n) {
   const a = arr.slice(), out = [];
   while (out.length < n && a.length) {
@@ -432,7 +454,8 @@ async function roll() {
   if (!p.length) { rolledEmpty = true; picks = []; renderPicks(); return; }
   rolledEmpty = false;
   rolling = true; $("#roll").disabled = true;
-  const chosen = draw(p, N);
+  const first = firstTimer() ? await safeFirst(p) : null;
+  const chosen = first ? [first] : draw(p, N);
   const fillers = draw(S.watchlist.concat(S.seen).filter(x => !chosen.includes(x)), 34);
   const at = 28;
   const strip = fillers.slice(0, at).map(x => x.m).concat(chosen.map(x => x.m), fillers.slice(at, at + 6).map(x => x.m));
@@ -459,13 +482,13 @@ async function roll() {
   await land(chosen);
 }
 async function land(chosen, ctx = {}) {
-  snd.clunk(); rasher.slip("");
+  snd.clunk(); rasher.slip(""); store.prefs.set("rolled", true);
   picks = chosen; active = 0; vetoes = F.last ? 1 : Infinity; swapRun = 0;
   if (!RM) await staticBurst();
   playOnTV(picks[0]); snd.sting(picks[0].m);
   renderPicks();
   const first = picks[0], shame = poolMode === "shame" && !ctx.arcade && !ctx.direct && first.added;
-  dealBox(); afterFirstRoll();
+  dealBox(); const armedBefore = tipsDue === "armed"; afterFirstRoll(); if (armedBefore) tipsNow(4500);
   rasher.slip(ctx.say || rasher.landLine(first.m, { ...ctx, mood: F.mood, shame, year: shame ? first.added.slice(0, 4) : null, blind: blind && !first.revealed, three: picks.length > 1, late: isLate(), rewatch: first.src === "seen" }), true, { poster: blind && !first.revealed ? "" : posterOf(first.m, "w185"), title: blind && !first.revealed ? "?" : first.m.t });
   if (F.last) toast("One veto. Use it wisely.");
   rolling = false; $("#roll").disabled = false; $("#led").classList.remove("on");
@@ -516,7 +539,7 @@ function renderClipping() {
   const when = new Date(m.rd).toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" });
   const yrs = y - +m.rd.slice(0, 4);
   el.hidden = false;
-  el.innerHTML = `<span class="clip-h">This week in film history</span><span class="clip-t">${esc(m.t)}</span><span class="clip-s">Came out ${esc(when)}. ${yrs} years ago this week. ${wl.has(m.id) ? "Still on your watchlist." : S.house ? "On the shelves." : "You've seen it."}</span>`;
+  el.innerHTML = `<span class="clip-h">This week in film history</span><span class="clip-t">${esc(m.t)}</span><span class="clip-s">Came out ${esc(when)}. ${yrs} years ago this week. ${S.visit ? `On ${esc(S.owner)}'s shelves.` : S.house ? "On the shelves." : wl.has(m.id) ? "Still on your watchlist." : "You've seen it."}</span>`;
   el.onclick = async () => { if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); const r = $("#tv").getBoundingClientRect(); if (r.top < 60) scrollTo({ top: scrollY + r.top - 70, behavior: RM ? "auto" : "smooth" }); await land([{ ...it, src: wl.has(m.id) ? "wl" : "seen" }], { direct: true }); };
 }
 $("#roll").onclick = roll;
@@ -543,8 +566,7 @@ function caseHTML(it, i) {
   const langTxt = m.l === "en" ? "English" : `${lang(m.l)} · subs`;
   const again = it.src === "seen" || S.seen.some(s => s.m.id === m.id);
   return `<article class="case ${i === active && picks.length > 1 ? "active" : ""}" data-i="${i}">
-    ${m.rt ? `<span class="dot">${Math.floor(m.rt / 60)}H${String(m.rt % 60).padStart(2, "0")}</span>` : ""}
-    <div class="sleeve"><button class="cover ${p ? "" : "none"}" data-a="tv" aria-label="Play ${esc(m.t)} on the telly" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : esc(m.t)}</button>${sticker}</div>
+    <div class="sleeve"><button class="cover ${p ? "" : "none"}" data-a="tv" aria-label="Play ${esc(m.t)} on the telly" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : esc(m.t)}</button>${sticker}${m.rt ? `<span class="dot">${Math.floor(m.rt / 60)}H${String(m.rt % 60).padStart(2, "0")}</span>` : ""}</div>
     <div class="info">
       <h3 class="titlecard">${esc(m.t)}</h3>
       ${m.tag ? `<p class="tagline">“${esc(m.tag)}”</p>` : ""}
@@ -610,7 +632,7 @@ function openCase(i, refresh = false) {
   fillWhere(body);
   if (!refresh) { $("#caseSheet").hidden = false; document.body.classList.add("noscroll"); snd.click(); }
 }
-function closeCase() { $("#caseSheet").hidden = true; document.body.classList.remove("noscroll"); }
+function closeCase() { $("#caseSheet").hidden = true; document.body.classList.remove("noscroll"); tipsNow(700); }
 $("#caseClose").onclick = closeCase;
 $("#caseSheet").addEventListener("click", e => { if (e.target.id === "caseSheet") closeCase(); });
 // Streaming info lands a moment after the box: one lookup per film, remembered for the session.
@@ -652,7 +674,7 @@ function caseClick(e) {
     const nx = draw(p, 1)[0];
     if (!nx) return toast("Nothing else on the shelf matches.");
     vetoes--; swapRun++;
-    picks[i] = nx; active = i; snd.clunk(); playOnTV(nx); renderPicks();
+    picks[i] = nx; active = i; snd.clunk(); playOnTV(nx); renderPicks(); tipsNow(4500);
     if (F.last && vetoes <= 0) { rasher.slip(""); toast(rasher.line("locked") || "That's your veto. This one's locked in."); }
     else if (swapRun === 4) { rasher.slip(""); toast("Just when I thought I was out…"); }
     else rasher.slip(swapRun === 2 && Math.random() < .4 ? rasher.quote("swap") : rasher.line("swap"));
@@ -1005,18 +1027,30 @@ function greet() {
   if (store.prefs.get("welcomed", false) || store.prefs.get("greeted", false) || rasher.quiet() || !S) return;
   store.prefs.set("greeted", true); tab("roll");
   rasher.slip("Alright, welcome in. I'm Rasher. Hit Take One and I'll find you a film.");
+  warmSafe();
   $("#roll").classList.add("beckon");
 }
-// After their first film lands: two quick cards, then they're on their own.
+// After their first film lands, Rasher keeps quiet and lets them look at it. The two quick cards come
+// once they've had a proper look: they close the box, swap, or roll again. Never on top of the box.
+let tipsDue = false, tipsT = null;
 function afterFirstRoll() {
   if (store.prefs.get("welcomed", false) || touring || rasher.quiet()) return;
-  touring = true; $("#roll").classList.remove("beckon");
-  const steps = [
-    { text: "Tonight I want sets the mood: length, vibe, one or three tapes. The signs under the shelf are special shelves. Arcade's for messing about.", at: "#openFilters" },
-    S?.house && !S.visit ? { text: "These are my shelves. Want ones that know your taste? Bring your Letterboxd, or rate a few films.", action: { label: "Stock my own shelves", later: "Later", fn: () => tab("counter") } }
-                          : { text: W4(), at: ".deck" },
-  ];
-  setTimeout(() => rasher.welcome({ steps, done: () => { touring = false; } }), RM ? 300 : 3200);
+  $("#roll").classList.remove("beckon");
+  if (!tipsDue) { tipsDue = "armed"; return; }   // the first landing just arms them
+}
+function tipsNow(delay) {
+  if (tipsDue !== "armed" || touring || store.prefs.get("welcomed", false) || rasher.quiet()) return;
+  clearTimeout(tipsT);
+  tipsT = setTimeout(() => {
+    if (!$("#caseSheet").hidden || !$("#filters").hidden || touring || rolling) return;   // wait for the next chance
+    tipsDue = "shown"; touring = true;
+    const steps = [
+      { text: "Tonight I want sets the mood. The signs under the shelf are the special sections.", at: "#openFilters" },
+      S?.house && !S.visit ? { text: "These are my shelves. Bring your Letterboxd or rate a few, and I'll stock yours.", action: { label: "Stock my own shelves", later: "Later", fn: () => tab("counter") } }
+                           : { text: W4(), at: ".deck" },
+    ];
+    rasher.welcome({ steps, back: true, done: () => { touring = false; } });
+  }, RM ? 0 : delay);
 }
 const W4 = () => LINES.welcome[4];
 function maybeTour() {
