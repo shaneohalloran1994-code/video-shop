@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q7">
+<link rel="stylesheet" href="css/app.css?v=q8">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q7"></script>
+<script type="module" src="js/app.js?v=q8"></script>
 </head>
 <body>
 
@@ -132,6 +132,7 @@
   <!-- FOR YOU -->
   <section id="v-picks" class="view" hidden>
     <div class="neonhead"><span class="neon blue">Staff picks</span><span class="byline">picked by Rasher</span><span class="rhead" id="rHead"></span></div>
+    <section class="myshelf" id="myShelf" hidden></section>
     <p class="note" id="picksNote"></p>
     <button class="tunecard" id="tuneOpen" hidden></button>
     <nav class="pjump" id="pjump" aria-label="Jump to a shelf"></nav>
@@ -319,6 +320,18 @@
 <div class="a2hs" id="checkNote" hidden role="dialog" aria-label="Check a tape back in">
   <div class="a2hs-card"><p class="said"><b>Rasher</b><span id="checkTxt"></span></p>
   <div class="row" id="checkBtns"></div></div>
+</div>
+<div class="sheet" id="shelfSheet" hidden role="dialog" aria-modal="true" aria-label="Your shelf">
+  <div class="sheet-card dark">
+    <div class="fhead"><span class="marker">Your shelf</span><button class="tag" id="shelfClose">Done</button></div>
+    <p class="small" id="shelfCount"></p>
+    <div class="bsearch"><input id="shelfQ" autocomplete="off" placeholder="Search any film…"><div id="shelfRes"></div></div>
+    <div id="shelfSugWrap"><h4>From your favourites</h4><div class="shelfsug" id="shelfSug"></div></div>
+    <h4>On your shelf</h4><div id="shelfList"></div>
+  </div>
+</div>
+<div class="sheet" id="shelfView" hidden role="dialog" aria-modal="true" aria-label="A film off the shelf">
+  <div class="sheet-card dark"><div class="fhead"><span class="marker" id="svWho">Off the shelf</span><button class="tag" id="svClose">Done</button></div><div id="svBody"></div></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>

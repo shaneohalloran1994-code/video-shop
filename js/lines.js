@@ -309,6 +309,12 @@ export const LINES = {
 "checkin_skip": [
 "Back on the shelf. No late fee. I'm not a monster."
 ],
+"shelf_add": [
+"Good shout. That's a shelf film.",
+"Respect. Face-out, where it belongs.",
+"Ah, one of those. Nice.",
+"That one's earned its spot."
+],
 "arc": [
 "Winner, man. Fair and square."
 ],

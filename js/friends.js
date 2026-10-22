@@ -1,6 +1,7 @@
 // Friends: sharing your shop by code, visiting a mate's, comparing taste, group night, guest tuning and the Letterboxd top-up.
-import * as store from "./store.js?v=q7";
-import { TMDB_PROXY } from "./config.js?v=q7";
+import * as store from "./store.js?v=q8";
+import { TMDB_PROXY } from "./config.js?v=q8";
+import * as shelf from "./shelf.js?v=q8";
 
 const BASE = (TMDB_PROXY || "").replace(/\/$/, "");
 let C = null;
@@ -24,7 +25,7 @@ export function payload(S, name) {
   for (const x of S.watchlist) items.push({ m: slim(x.m), wl: 1, fit: +x.fit.toFixed(2), uri: x.uri || "" });
   const wl = new Set(S.watchlist.map(x => x.m.id));
   for (const s of S.seen) if (!wl.has(s.m.id)) items.push({ m: slim(s.m), wl: 0, pick: s.rating != null && s.rating >= 4.5 ? 1 : 0, r: s.rating ?? null, fit: +(s.rating ?? S.fit(s.m)).toFixed(2), uri: s.uri || "" });
-  return { v: 1, name, at: new Date().toISOString(), items };
+  return { v: 1, name, at: new Date().toISOString(), items, shelf: shelf.forShare() };
 }
 
 async function api(method, path, body, token) {
@@ -104,7 +105,7 @@ export async function add(code) {
   if (code.length !== 6) throw new Error("Codes are six letters and numbers.");
   if (shareInfo()?.code === code) throw new Error("That's your own shop.");
   const data = JSON.parse(await gunzip(await (await api("GET", "/shop/" + code)).arrayBuffer()));
-  const f = await all(); f[code] = { code, name: data.name || "A mate", at: data.at, items: data.items, fetched: Date.now() };
+  const f = await all(); f[code] = { code, name: data.name || "A mate", at: data.at, items: data.items, shelf: data.shelf || [], fetched: Date.now() };
   await store.set("friends", f); return f[code];
 }
 export async function refresh(code) { const f = await all(); if (f[code]) return add(code); }

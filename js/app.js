@@ -1,16 +1,17 @@
-import * as store from "./store.js?v=q7";
-import * as tmdb from "./tmdb.js?v=q7";
-import * as importer from "./importer.js?v=q7";
-import * as lib from "./library.js?v=q7";
-import * as snd from "./sound.js?v=q7";
-import * as arcade from "./arcade.js?v=q7";
-import * as coming from "./coming.js?v=q7";
-import * as rasher from "./rasher.js?v=q7";
-import { LINES } from "./lines.js?v=q7";
-import * as friends from "./friends.js?v=q7";
-import * as card from "./card.js?v=q7";
-import * as builder from "./builder.js?v=q7";
-import * as where from "./where.js?v=q7";
+import * as store from "./store.js?v=q8";
+import * as tmdb from "./tmdb.js?v=q8";
+import * as importer from "./importer.js?v=q8";
+import * as lib from "./library.js?v=q8";
+import * as snd from "./sound.js?v=q8";
+import * as arcade from "./arcade.js?v=q8";
+import * as coming from "./coming.js?v=q8";
+import * as rasher from "./rasher.js?v=q8";
+import { LINES } from "./lines.js?v=q8";
+import * as friends from "./friends.js?v=q8";
+import * as card from "./card.js?v=q8";
+import * as myshelf from "./shelf.js?v=q8";
+import * as builder from "./builder.js?v=q8";
+import * as where from "./where.js?v=q8";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -125,7 +126,7 @@ async function load() {
   films = (await store.get("films")) || {};
   extra = (await store.get("extra")) || {};
   log = (await store.get("log")) || {};
-  await card.load();
+  await card.load(); await myshelf.load();
   if (!profile && mode === "house") await loadHouse();
   FR = await friends.all(); if (visit && !FR[visit]) { visit = ""; store.prefs.del("visit"); }
   rebuild();
@@ -835,7 +836,7 @@ function renderForYou() {
   $("#fitsHead").textContent = who ? `${who}'s favourites` : S.house ? "Rasher's favourites" : "Rasher's picks for you";
   $("#freshHead").textContent = who ? `Still on ${who}'s list` : S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
   $("#picksNote").textContent = who ? `${who}'s shelf. The ones they swear by, and the ones they still mean to get to. No scores.` : S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
-  renderTuneCard();
+  renderTuneCard(); renderShelf();
   shelf.fits = pageReasons(S.bestFits.slice(0, 30));
   $("#bestFits").innerHTML = shelf.fits.map((x, i) => tapeHTML("fits", i, x.m, (x.why || [])[0])).join("");
   renderDeepDive();
@@ -1152,6 +1153,95 @@ $("#askRasher").onclick = openAsk;
 $("#askClose").onclick = closeAsk;
 $("#askSheet").addEventListener("click", e => { if (e.target.id === "askSheet") closeAsk(); });
 $("#rHead").innerHTML = rasher.HEAD;
+
+// ---------- My Shelf: favourites face-out, like closet picks ----------
+function shelfOwner() { return S?.visit ? { own: false, name: S.owner, list: FR[S.visit]?.shelf || [] } : { own: true, name: "", list: myshelf.items() }; }
+function vboxHTML(x, i) {
+  const p = posterOf(x.m, "w185");
+  return `<button class="vbox" data-sh="${i}" aria-label="${esc(x.m.t)}${x.note ? ": " + esc(x.note) : ""}" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : `<span>${esc(x.m.t)}</span>`}${x.note ? `<i class="vnote" aria-hidden="true">✎</i>` : ""}</button>`;
+}
+function renderShelf() {
+  const el = $("#myShelf"), o = shelfOwner();
+  if (!S || (!o.own && !o.list.length)) { el.hidden = true; return; }
+  el.hidden = false;
+  const head = `<div class="shelfhead"><span class="marker">${o.own ? "Your shelf" : esc(o.name) + "'s shelf"}</span>${o.own && o.list.length ? `<button class="tag" id="shelfEdit">Edit</button>` : ""}</div>`;
+  if (!o.list.length) { el.innerHTML = head + `<div class="shelfempty"><p>Ten films that made you, face-out for your mates to see. One line on each, if you like.</p><button class="btn" id="shelfEdit">Stock your shelf</button></div>`; }
+  else {
+    const rows = []; for (let i = 0; i < o.list.length; i += 5) rows.push(o.list.slice(i, i + 5).map((x, j) => vboxHTML(x, i + j)).join(""));
+    el.innerHTML = head + rows.map(r => `<div class="vrow">${r}</div>`).join("");
+  }
+  const ed = $("#shelfEdit"); if (ed) ed.onclick = openShelfEditor;
+}
+$("#myShelf").addEventListener("click", e => {
+  const b = e.target.closest("[data-sh]"); if (!b) return;
+  const o = shelfOwner(), x = o.list[+b.dataset.sh]; if (!x) return;
+  const p = posterOf(x.m, "w342");
+  $("#svWho").textContent = o.own ? "Off your shelf" : `Off ${o.name}'s shelf`;
+  $("#svBody").innerHTML = `<div class="svbox">${p ? `<img src="${p}" alt="Poster for ${esc(x.m.t)}">` : ""}<div><h3 class="titlecard">${esc(x.m.t)}</h3><div class="meta">${esc(x.m.y || "")}${x.m.rt ? " · " + fmtRt(x.m.rt).toUpperCase() : ""}</div>
+    ${x.note ? `<p class="svnote">${esc(x.note)}</p>` : ""}</div></div>
+    <div class="row"><button class="btn" id="svPlay">Put it on the telly</button>${o.own ? `<button class="tag" id="svEdit">Edit shelf</button>` : ""}</div>`;
+  $("#shelfView").hidden = false; document.body.classList.add("noscroll");
+  $("#svPlay").onclick = async () => { closeShelfView(); tab("roll"); if (rolling) return; rolling = true; $("#roll").disabled = true; $("#led").classList.add("on"); await land([{ m: x.m, src: "wl" }], { direct: true }); };
+  const se = $("#svEdit"); if (se) se.onclick = () => { closeShelfView(); openShelfEditor(); };
+});
+function closeShelfView() { $("#shelfView").hidden = true; document.body.classList.remove("noscroll"); }
+$("#svClose").onclick = closeShelfView;
+$("#shelfView").addEventListener("click", e => { if (e.target.id === "shelfView") closeShelfView(); });
+function shelfSuggestions() {
+  const loved = [];
+  if (mine) loved.push(...mine.seen.filter(s => s.rating >= 4.5).sort((a, b) => b.rating - a.rating || b.m.vc - a.m.vc).map(s => s.m));
+  card.all().filter(s => s.verdict === "loved").forEach(s => loved.push(s.m));
+  if (!mine && S?.seen) loved.push(...S.seen.filter(s => s.rating >= 4).map(s => s.m));
+  const seen = new Set(); return loved.filter(m => !myshelf.has(m.id) && !seen.has(m.id) && seen.add(m.id)).slice(0, 15);
+}
+function paintShelfEditor() {
+  const n = myshelf.items().length;
+  $("#shelfCount").textContent = n >= myshelf.MAX ? "Shelf's full. Take one off to add another." : `${n} of ${myshelf.MAX}. Search for a film or pick from your favourites.`;
+  const sug = shelfSuggestions(); $("#shelfSugWrap").hidden = !sug.length || n >= myshelf.MAX;
+  $("#shelfSug").innerHTML = sug.map(m => `<button class="sugbox" data-add="${m.id}" style="${m.p ? `background-image:url('${poster(m.p, "w154")}')` : ""}" aria-label="Add ${esc(m.t)}">${m.p ? "" : esc(m.t)}</button>`).join("");
+  $("#shelfSug").onclick = async e => { const b = e.target.closest("[data-add]"); if (!b) return; const m = sug.find(x => x.id === +b.dataset.add); if (m) addToShelf(m); };
+  $("#shelfList").innerHTML = myshelf.items().map((x, i) => `<div class="srow" data-id="${x.m.id}">
+    <i class="sthumb" style="${x.m.p ? `background-image:url('${poster(x.m.p, "w92")}')` : ""}"></i>
+    <div class="smain"><b>${i + 1}. ${esc(x.m.t)}</b><input class="snote" maxlength="80" placeholder="One line about it (optional)" value="${esc(x.note || "")}"></div>
+    <div class="sbtns"><button class="tag" data-mv="-1" aria-label="Move up"${i ? "" : " disabled"}>▲</button><button class="tag" data-mv="1" aria-label="Move down"${i < n - 1 ? "" : " disabled"}>▼</button><button class="tag" data-rm aria-label="Take off the shelf">✕</button></div></div>`).join("") || `<p class="small">Nothing yet.</p>`;
+}
+async function addToShelf(m) {
+  if (!(await myshelf.add(m))) return toast(myshelf.has(m.id) ? "Already on your shelf." : "Shelf's full.");
+  snd.clunk?.(); const say = rasher.line("shelf_add"); toast(say || "On the shelf."); paintShelfEditor(); shelfChanged();
+}
+function openShelfEditor() { $("#shelfQ").value = ""; $("#shelfRes").innerHTML = ""; paintShelfEditor(); $("#shelfSheet").hidden = false; document.body.classList.add("noscroll"); }
+$("#shelfClose").onclick = () => { $("#shelfSheet").hidden = true; document.body.classList.remove("noscroll"); renderShelf(); };
+let shelfQT = null;
+$("#shelfQ").oninput = e => {
+  clearTimeout(shelfQT); const q = e.target.value.trim(); if (q.length < 2) { $("#shelfRes").innerHTML = ""; return; }
+  shelfQT = setTimeout(async () => {
+    const r = await tmdb.call(apiKey, "/search/movie", { query: q }).catch(() => null);
+    const list = (r?.results || []).filter(x => x.release_date).slice(0, 6);
+    $("#shelfRes").innerHTML = list.map(x => `<button class="bhit" data-id="${x.id}">${esc(x.title)} <small>${(x.release_date || "").slice(0, 4)}</small></button>`).join("") || `<p class="small">Nothing by that name.</p>`;
+  }, 350);
+};
+$("#shelfRes").addEventListener("click", async e => {
+  const b = e.target.closest("[data-id]"); if (!b) return;
+  b.disabled = true; b.textContent = "Fetching…";
+  const m = await tmdb.details(apiKey, +b.dataset.id).catch(() => null);
+  if (!m) { b.textContent = "Couldn't fetch that one."; return; }
+  $("#shelfQ").value = ""; $("#shelfRes").innerHTML = ""; addToShelf(m);
+});
+$("#shelfList").addEventListener("click", async e => {
+  const row = e.target.closest(".srow"); if (!row) return; const id = +row.dataset.id;
+  const mv = e.target.closest("[data-mv]"); if (mv) { await myshelf.move(id, +mv.dataset.mv); paintShelfEditor(); shelfChanged(); }
+  if (e.target.closest("[data-rm]")) { await myshelf.remove(id); paintShelfEditor(); shelfChanged(); }
+});
+$("#shelfList").addEventListener("change", async e => {
+  if (!e.target.classList.contains("snote")) return;
+  await myshelf.note(+e.target.closest(".srow").dataset.id, e.target.value); shelfChanged();
+});
+// A shared shop carries the shelf, so mates see changes next time they refresh.
+let shelfShareT = null;
+function shelfChanged() {
+  const sh = friends.shareInfo(); if (!sh || !mine) return;
+  clearTimeout(shelfShareT); shelfShareT = setTimeout(() => friends.share(mine, sh.name).catch(() => {}), 3000);
+}
 
 // ---------- the membership card ----------
 async function takeHome(it) {

@@ -1116,3 +1116,29 @@ button.tag,a.tag{justify-content:center}
 #checkBtns{flex-wrap:wrap;gap:8px}
 #checkBtns .tag{flex:1 1 40%}
 @media (max-width:360px){.mgrid{grid-template-columns:repeat(4,1fr)}}
+
+/* ===== My Shelf: VHS boxes face-out ===== */
+.myshelf{display:flex;flex-direction:column;gap:0;margin:2px 0 6px}
+.shelfhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.shelfhead .marker{font-size:24px;color:var(--ink)}
+.vrow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px 8px 0;background:linear-gradient(transparent calc(100% - 12px),#55301b calc(100% - 12px),#3b2214);box-shadow:0 6px 8px -4px rgba(0,0,0,.8);margin-bottom:10px}
+.vbox{position:relative;aspect-ratio:2/3;border:0;padding:0;margin-bottom:12px;background:#111 center/cover;border-radius:2px;box-shadow:inset 3px 0 0 rgba(255,255,255,.18),inset -2px 0 0 rgba(0,0,0,.5),2px 3px 0 rgba(0,0,0,.7);cursor:pointer}
+.vbox::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.18),transparent 40%);pointer-events:none}
+.vbox span{display:flex;align-items:center;justify-content:center;height:100%;padding:4px;font:400 11px var(--title);color:#ff2a1f;text-align:center}
+.vnote{position:absolute;right:-4px;bottom:-6px;width:22px;height:22px;background:#f5cf3a;color:#2a1306;font:400 13px/22px var(--marker);font-style:normal;text-align:center;transform:rotate(6deg);box-shadow:1px 1px 0 #000}
+.shelfempty{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border:2px dashed #55301b;background:rgba(85,48,27,.15)}
+.shelfempty p{margin:0;font:400 17px/1.25 var(--marker);color:var(--ink)}
+.svbox{display:grid;grid-template-columns:130px 1fr;gap:14px;align-items:start}
+.svbox img{width:100%;box-shadow:3px 3px 0 #000}
+.svnote{margin:10px 0 0;padding:10px 12px;background:#f5cf3a;color:#2a1306;font:400 18px/1.25 var(--marker);transform:rotate(-1deg);box-shadow:2px 2px 0 #000}
+.shelfsug{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sugbox{aspect-ratio:2/3;border:0;padding:0;background:#222 center/cover;font:400 10px var(--title);color:#ff2a1f;cursor:pointer;box-shadow:2px 2px 0 #000}
+#shelfList{display:flex;flex-direction:column;gap:8px}
+.srow{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:6px;background:rgba(255,255,255,.04)}
+.sthumb{width:44px;aspect-ratio:2/3;background:#222 center/cover}
+.smain{display:flex;flex-direction:column;gap:4px;min-width:0}
+.smain b{font:700 14px var(--cond);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snote{min-height:40px;background:var(--paper);color:#2a1306;border:0;border-bottom:2px solid #2a1306;padding:6px 8px;font:400 15px var(--marker);color-scheme:light}
+.sbtns{display:flex;flex-direction:column;gap:4px}.sbtns .tag{min-height:36px;padding:4px 10px;transform:none}
+#shelfQ{width:100%;box-sizing:border-box;min-height:44px;background:var(--paper);color:#2a1306;border:0;border-bottom:2px solid #2a1306;padding:8px 10px;font:600 16px var(--cond);color-scheme:light}
+@media (max-width:360px){.vrow,.shelfsug{gap:5px;padding-left:4px;padding-right:4px}}
