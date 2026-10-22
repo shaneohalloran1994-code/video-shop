@@ -327,6 +327,9 @@ export const LINES = {
 "swap_offer": [
 "Your own shelves now. Want to swap shops with {names}?"
 ],
+"setup_done": [
+"Your shelves now. Hit Take One."
+],
 "arc": [
 "Winner, man. Fair and square."
 ],

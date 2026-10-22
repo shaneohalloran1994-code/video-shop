@@ -1,6 +1,6 @@
 // My Shelf: your all-time favourites, face-out like closet picks. Up to ten, in your order, each with one short note.
 // Lives on this phone, and travels with your shop when you share it.
-import * as store from "./store.js?v=q9";
+import * as store from "./store.js?v=r1";
 
 export const MAX = 10;
 let list = null;

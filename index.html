@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q9">
+<link rel="stylesheet" href="css/app.css?v=r1">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q9"></script>
+<script type="module" src="js/app.js?v=r1"></script>
 </head>
 <body>
 
@@ -124,6 +124,8 @@
       <div class="fgroup"><h3>Extras</h3>
         <label class="tog"><input type="checkbox" id="taste"> Lean towards my taste</label>
         <label class="tog"><input type="checkbox" id="lastChance"> One veto, then it's locked in</label>
+        <label class="tog"><input type="checkbox" id="mineOnly"> <span id="mineLbl">Only what I've got</span></label>
+        <p class="small" id="mineHint"></p>
         <div class="row"><button class="ghost" id="clearF">Clear filters</button></div>
       </div>
     </div>
@@ -170,10 +172,10 @@
         <p id="houseTxt"></p>
         <div class="doors">
           <button class="door" id="buildGo"><b>I use Letterboxd</b><span>Give Rasher your username. He reads your diary and stocks your shelves.</span></button>
-          <button class="door" id="buildSwipe"><b>No Letterboxd</b><span>Rate a few films you know. Takes a couple of minutes.</span></button>
+          <button class="door" id="ownGo"><b>Bring my whole Letterboxd</b><span>Your export zip: every film you've logged and your whole watchlist. Three taps.</span></button>
+          <button class="door" id="buildSwipe"><b>No Letterboxd</b><span>Rate 10 films you've seen. Skip the ones you haven't.</span></button>
           <button class="door" id="houseGo"><b>Just browsing</b><span>Walk round Rasher's own shelves. Nothing to set up.</span></button>
         </div>
-        <button class="ghost" id="ownGo">Got the full Letterboxd export zip?</button>
       </div>
       <div class="step" id="stepKey">
         <h3>1 · Your own TMDB key (optional)</h3>
@@ -226,6 +228,8 @@
         <label class="tog"><input type="checkbox" id="skipStreet"> Skip the street when I open the app</label>
         <label class="field">Where you watch <select id="regionPick" aria-label="Your country for streaming info"></select></label>
         <p class="small">Used only to show which services have a film. Nothing is tracked.</p>
+        <div class="field svcfield"><span>What you've got</span><div class="chips" id="svcPick"></div></div>
+        <p class="small">Tick the services you pay for. Then "Only what I've got" in Tonight I want skips films you'd have to rent.</p>
         <label class="tog"><input type="checkbox" id="quietOn"> Quiet mode: Rasher keeps his thoughts to himself</label>
         <div class="row"><button class="ghost" id="tourAgain">Have Rasher show you round again</button></div>
         <div class="row"><button class="ghost" id="unwatch" hidden></button></div>

@@ -320,7 +320,7 @@ function globe() {
   $("#spin").onclick = () => {
     if (busy) return;
     const U = unseen(), by = new Map();
-    U.forEach(x => x.m.c.slice(0, 2).forEach(c => { if (!globeAll && (c === "US" || c === "GB")) return; if (!by.has(c)) by.set(c, []); by.get(c).push(x); }));
+    U.forEach(x => [...new Set(x.m.c.slice(0, 2).map(c => c === "XI" ? "GB" : c))].forEach(c => { if (!globeAll && (c === "US" || c === "GB")) return; if (!by.has(c)) by.set(c, []); by.get(c).push(x); }));
     const cs = [...by.keys()]; if (!cs.length) { $("#globeOut").innerHTML = empty("Nothing from abroad on your shelves."); return; }
     const c = rnd(cs), x = rnd(by.get(c)), spot = SPOT[c] || [Math.random() * 360 - 180, 20];
     busy = true; $("#globeOut").innerHTML = ""; $("#country").textContent = "…"; setGlobe(gx, null);

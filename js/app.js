@@ -1,17 +1,17 @@
-import * as store from "./store.js?v=q9";
-import * as tmdb from "./tmdb.js?v=q9";
-import * as importer from "./importer.js?v=q9";
-import * as lib from "./library.js?v=q9";
-import * as snd from "./sound.js?v=q9";
-import * as arcade from "./arcade.js?v=q9";
-import * as coming from "./coming.js?v=q9";
-import * as rasher from "./rasher.js?v=q9";
-import { LINES } from "./lines.js?v=q9";
-import * as friends from "./friends.js?v=q9";
-import * as card from "./card.js?v=q9";
-import * as myshelf from "./shelf.js?v=q9";
-import * as builder from "./builder.js?v=q9";
-import * as where from "./where.js?v=q9";
+import * as store from "./store.js?v=r1";
+import * as tmdb from "./tmdb.js?v=r1";
+import * as importer from "./importer.js?v=r1";
+import * as lib from "./library.js?v=r1";
+import * as snd from "./sound.js?v=r1";
+import * as arcade from "./arcade.js?v=r1";
+import * as coming from "./coming.js?v=r1";
+import * as rasher from "./rasher.js?v=r1";
+import { LINES } from "./lines.js?v=r1";
+import * as friends from "./friends.js?v=r1";
+import * as card from "./card.js?v=r1";
+import * as myshelf from "./shelf.js?v=r1";
+import * as builder from "./builder.js?v=r1";
+import * as where from "./where.js?v=r1";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -20,7 +20,7 @@ const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const LN = (() => { try { return new Intl.DisplayNames(["en"], { type: "language" }); } catch { return null; } })();
 const RN = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch { return null; } })();
 const lang = c => c === "xx" ? "No dialogue" : c === "cn" ? "Cantonese" : (() => { try { return LN ? LN.of(c) : c; } catch { return c; } })();
-const region = c => { try { return RN ? RN.of(c) : c; } catch { return c; } };
+const region = c => { if (c === "XI") return "Northern Ireland"; try { return RN ? RN.of(c) : c; } catch { return c; } };
 const fmtRt = m => m ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m` : "runtime n/a";
 const poster = (p, size = "w342") => p ? tmdb.IMG + size + p : "";
 let customPosters = store.prefs.get("posters", {});
@@ -61,7 +61,7 @@ const VIBES = [
   ["true", "True story", ["based on true story", "biography", "true crime", "based on real events", "historical figure", "based on a true story"]],
 ];
 const VIBE_KW = Object.fromEntries(VIBES.map(([k, , w]) => [k, w]));
-const DEFAULT_F = { vibes: [], inc: [], exc: [], len: [], slot: "", lang: "any", lp: "", y0: "", y1: "", crowdOn: false, c0: "3", c1: "5", myMin: "", since: "", neverRe: false, taste: false };
+const DEFAULT_F = { vibes: [], inc: [], exc: [], len: [], slot: "", lang: "any", lp: "", y0: "", y1: "", crowdOn: false, c0: "3", c1: "5", myMin: "", since: "", neverRe: false, taste: false, mine: false };
 let F = Object.assign({}, DEFAULT_F, store.prefs.get("f", {}));
 let poolMode = store.prefs.get("pool", "wl");
 let N = store.prefs.get("n", 1);
@@ -70,7 +70,7 @@ let ownOpen = false;
 let visit = store.prefs.get("visit", ""), FR = {}, mine = null;
 let mode = store.prefs.get("mode", ""), house = null, blind = store.prefs.get("blind", false), vetoes = Infinity, swapRun = 0;
 const POOLS = {
-  own: [["wl", "Watchlist"], ["seen", "Seen it"], ["both", "Both"], ["picks", "Rasher's picks"]],
+  own: [["wl", "Watchlist"], ["seen", "Rewatch"], ["both", "Everything"], ["picks", "Rasher's picks"]],
   house: [["all", "The shelves"], ["picks", "Rasher's picks"], ["untested", "Deep cuts"]],
 };
 // Sections hang above the shelves like shop signs. Some only open at certain times.
@@ -220,7 +220,7 @@ VIBES.forEach(([k, l]) => { const b = document.createElement("button"); b.classN
 PRESETS.forEach(([k, l, f]) => {
   const b = document.createElement("button"); b.className = "mood"; b.dataset.mood = k; b.textContent = l;
   b.onclick = () => {
-    F = Object.assign({}, DEFAULT_F, { vibes: [], inc: [], exc: [], len: [] }, f, { mood: k, last: F.last }); changed(true);
+    F = Object.assign({}, DEFAULT_F, { vibes: [], inc: [], exc: [], len: [] }, f, { mood: k, last: F.last, mine: F.mine }); changed(true);
     openFilters(false); snd.click(); roll();
   };
   $("#moods").append(b);
@@ -240,6 +240,7 @@ function renderPoolKeys() {
 }
 $("#blindKey").onclick = () => { blind = !blind; store.prefs.set("blind", blind); syncFilters(); renderPicks(); };
 $("#lastChance").onchange = e => { F.last = e.target.checked; changed(); };
+$("#mineOnly").onchange = e => { if (!where.mine().length) { e.target.checked = false; openFilters(false); tab("counter"); setTimeout(() => $("#svcPick").scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" }), 200); toast("Tick what you've got first."); return; } F.mine = e.target.checked; changed(); };
 $("#n1").onclick = () => { N = 1; store.prefs.set("n", 1); changed(); };
 $("#n3").onclick = () => { N = 3; store.prefs.set("n", 3); changed(); };
 function changed(full = true) { store.prefs.set("f", F); syncFilters(full); }
@@ -271,6 +272,8 @@ function syncFilters(full = true) {
   $$("[data-pool]").forEach(b => b.setAttribute("aria-pressed", b.dataset.pool === poolMode));
   $(".seenonly").hidden = !!S?.house || !SEEN_POOLS.includes(poolMode);
   $("#blindKey").setAttribute("aria-pressed", blind); $("#lastChance").checked = !!F.last;
+  const subs = where.mine(); $("#mineOnly").checked = !!F.mine && subs.length > 0;
+  $("#mineHint").textContent = subs.length ? `Rolls only from ${subs.slice(0, 3).join(", ")}${subs.length > 3 ? ` +${subs.length - 3}` : ""}. Checking takes a second.` : "Tick the services you pay for at the Counter, under Settings.";
   $("#n1").setAttribute("aria-pressed", N === 1); $("#n3").setAttribute("aria-pressed", N === 3);
   $("#rollLabel").textContent = N === 3 ? "Take Three" : "Take One";
   const n = pool().length;
@@ -310,6 +313,7 @@ function pool() {
   const now = new Date();
   return items.filter(x => {
     const m = x.m;
+    if (m.rt > 0 && m.rt < 40) return false; // shorts aren't a night in
     if (F.inc.length && !F.inc.some(g => m.g.includes(g))) return false;
     if (F.exc.some(g => m.g.includes(g))) return false;
     if (F.vibes?.length && !F.vibes.some(v => (VIBE_KW[v] || []).some(k => (m.kw || []).includes(k)))) return false;
@@ -353,6 +357,24 @@ async function safeFirst(p) {
   const timeout = new Promise(res => setTimeout(() => res(null), 1200));
   const found = await Promise.race([Promise.all(c.map(look)).then(r => r.find(Boolean) || null), timeout]);
   return found || c[0];
+}
+// Your own shelves now: Rasher says so, and doesn't greet you like you've just walked in.
+function setupDone() {
+  store.prefs.set("greeted", true); $("#roll").classList.remove("beckon");
+  const say = rasher.line("setup_done"); if (say) rasher.slip(say);
+}
+// Only what I've got: draw a handful, check where each streams, keep the ones on your services.
+async function mineDraw(p, n, exclude = []) {
+  osd("CHECKING YOUR SERVICES");
+  const look = x => where.lookup((path, params) => tmdb.call(apiKey, path, params), x.m).then(w => where.onMine(w) ? x : null);
+  let pool = p.filter(x => !exclude.some(e => e.m.id === x.m.id)), got = [];
+  for (let round = 0; round < 4 && got.length < n && pool.length; round++) {
+    const batch = draw(pool, Math.min(pool.length, 10)); pool = pool.filter(x => !batch.includes(x));
+    const res = await Promise.race([Promise.all(batch.map(look)), new Promise(r => setTimeout(() => r([]), 4000))]);
+    got.push(...res.filter(Boolean).slice(0, n - got.length));
+  }
+  if (got.length < n) { toast(got.length ? "Only found a few on your services. Filled in the rest." : "Nothing on your services in that lot. Rolling anyway."); return got.length ? got.concat(draw(p.filter(x => !got.includes(x)), n - got.length)) : null; }
+  return got;
 }
 function draw(arr, n) {
   const a = arr.slice(), out = [];
@@ -458,7 +480,8 @@ async function roll() {
   rolledEmpty = false;
   rolling = true; $("#roll").disabled = true;
   const first = firstTimer() ? await safeFirst(p) : null;
-  const chosen = first ? [first] : draw(p, N);
+  const onMine = !first && F.mine && where.mine().length ? await mineDraw(p, N) : null;
+  const chosen = first ? [first] : onMine || draw(p, N);
   const fillers = draw(S.watchlist.concat(S.seen).filter(x => !chosen.includes(x)), 34);
   const at = 28;
   const strip = fillers.slice(0, at).map(x => x.m).concat(chosen.map(x => x.m), fillers.slice(at, at + 6).map(x => x.m));
@@ -583,7 +606,7 @@ function caseHTML(it, i) {
       <p class="syn wide" hidden>${esc(m.ov)}</p>
       <div class="acts wide">
         <span class="ag act">${card.isOut(m.id) ? `<button class="tag hot" data-a="checkin">Check it back in</button>` : `<button class="tag hot" data-a="take">Take it home</button>`}<button class="tag" data-a="ret">${again ? "Watched it again" : "Watched it"}</button></span>
-        <span class="ag look"><button class="tag" data-a="seen">Seen it</button>${swapBtn}${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
+        <span class="ag look">${swapBtn}${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
         <button class="tag" data-a="poster">Poster</button></span>
         <span class="ag ext"><a class="tag" href="${esc(where.jwLink(m))}" target="_blank" rel="noopener">JustWatch</a>
@@ -664,7 +687,7 @@ $("#strip").addEventListener("click", e => {
   const sp = e.target.closest(".spine.pulled"); if (!sp) return;
   const i = picks.findIndex(p => String(p.m.id) === sp.dataset.id); if (i >= 0) showOnTV(i);
 });
-function caseClick(e) {
+async function caseClick(e) {
   const inSheet = !!e.target.closest("#caseBody");
   const b = e.target.closest("[data-a]");
   if (!b) { const card = e.target.closest(".case"); if (card && !inSheet && !e.target.closest("a,button")) { const i = +card.dataset.i; if (picks.length > 1) showOnTV(i); if (card.classList.contains("mini")) openCase(i); } return; }
@@ -680,7 +703,7 @@ function caseClick(e) {
   if (a === "swap") {
     if (vetoes <= 0) return;
     const p = pool().filter(x => !picks.some(c => c.m.id === x.m.id));
-    const nx = draw(p, 1)[0];
+    const nx = (F.mine && where.mine().length ? (await mineDraw(p, 1))?.[0] : null) || draw(p, 1)[0];
     if (!nx) return toast("Nothing else on the shelf matches.");
     vetoes--; swapRun++;
     picks[i] = nx; active = i; snd.clunk(); playOnTV(nx); renderPicks(); tipsNow(4500);
@@ -824,7 +847,7 @@ function fallbackReason(it) {
   if (d) { const n = S.seen.filter(s => s.m.dir.includes(d)).length; return n > 1 ? `You've seen ${n} by ${d}. Here's another.` : `You've seen one by ${d}. Time for a second.`; }
   const a = m.g.includes("Documentary") ? null : m.cast.slice(0, 3).find(x => S.seen.some(s => s.m.cast.slice(0, 5).includes(x)));
   if (a) { const o = S.seen.find(s => s.m.cast.slice(0, 5).includes(a)); return `${a}, last seen in ${o.m.t}.`; }
-  if (it.added && +it.added.slice(0, 4) < new Date().getFullYear()) return `On your list since ${it.added.slice(0, 4)}. Its time has come.`;
+  if (it.added && +it.added.slice(0, 4) < new Date().getFullYear() && m.id % 3 === 0) return `On your list since ${it.added.slice(0, 4)}. It's time.`;
   if (m.y && +m.y < 1970) return `Older than most of the shop. Still holds up.`;
   if (m.vc && m.vc < 1500) return "Not many people have seen this one. Their loss.";
   if (m.g[0] && m.y) return `A ${String(m.y).slice(0, 3)}0s ${m.g[0].toLowerCase()}. Rasher's call.`;
@@ -911,7 +934,7 @@ function renderReceipt() {
   if (!statsDirty) return; statsDirty = false;
   const empty = !S || (S.house && S.seen.filter(s => s.rating != null).length < 3);
   $("#receiptNote").hidden = empty; $("#receiptGo").hidden = !empty || !S;
-  if (S.house && S.seen.filter(s => s.rating != null).length < 3) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">HOUSE SHOP MEMBER</p><hr><p class="c">Check three tapes back in and your receipt starts printing. Take one home from the box, then tell Rasher how it was.</p><p class="c">Or bring your own Letterboxd export to the counter.</p><hr>${barcode("house")}`; return; }
+  if (S.house && S.seen.filter(s => s.rating != null).length < 3) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">HOUSE SHOP MEMBER</p><hr><p class="c">Check three tapes back in and your receipt starts printing. Take one home from the box, then tell Rasher how it was.</p><hr>${barcode("house")}`; return; }
   const t = lib.stats(S);
   const ln = (a, b) => `<div class="ln"><span>${esc(a)}</span><span class="dots"></span><span>${esc(b)}</span></div>`;
   const bar = (n, max, w = 12) => "#".repeat(Math.max(1, Math.round(n / max * w)));
@@ -945,7 +968,18 @@ function barcode(seed) {
 }
 
 // ---------- counter ----------
+function renderSvc() {
+  const on = new Set(where.mine());
+  $("#svcPick").innerHTML = where.services().map(n => `<button class="chip" data-svc="${esc(n)}" aria-pressed="${on.has(n)}">${esc(n)}</button>`).join("");
+}
+$("#svcPick").addEventListener("click", e => {
+  const b = e.target.closest("[data-svc]"); if (!b) return;
+  const n = b.dataset.svc, cur = where.mine(), next = cur.includes(n) ? cur.filter(x => x !== n) : [...cur, n];
+  where.setMine(next); b.setAttribute("aria-pressed", next.includes(n)); snd.tick?.();
+  if (!next.length && F.mine) { F.mine = false; changed(); } else syncFilters();
+});
 function counterState() {
+  renderSvc();
   $("#keyIn").placeholder = apiKey ? "Key saved. Paste a new one to change it" : "Paste your API key";
   $("#keyMsg").textContent = apiKey ? "Key saved on this phone." : tmdb.hasProxy ? "Optional. The shop has its own key, so you can skip straight to step 2." : "Get one free at themoviedb.org → Settings → API.";
   $("#stepHouse").hidden = !!profile;
@@ -989,7 +1023,7 @@ $("#zipIn").onchange = async e => {
     rebuild();
     prog.hidden = true;
     toast(`Shelves stocked. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf.`);
-    setTimeout(offerSwaps, 1500);
+    setupDone(); setTimeout(offerSwaps, 1500);
   } catch (err) {
     prog.hidden = true;
     $("#zipMsg").textContent = err.code === "bad_key" ? "TMDB stopped accepting your key. Save it again and retry." : (err.message || "Something went wrong reading that zip.");
@@ -1016,7 +1050,7 @@ $("#soundOn").onchange = e => { snd.setOn(e.target.checked); store.prefs.set("so
 $("#skipStreet").onchange = e => store.prefs.set("skipStreet", e.target.checked);
 where.COUNTRIES.forEach(c => { const o = document.createElement("option"); o.value = c; o.textContent = region(c); $("#regionPick").append(o); });
 $("#regionPick").value = where.country();
-$("#regionPick").onchange = e => { where.setCountry(e.target.value); renderPicks(); toast(`Where-to-watch now for ${region(e.target.value)}.`); };
+$("#regionPick").onchange = e => { where.setCountry(e.target.value); renderPicks(); toast(`Where-to-watch now for ${region(e.target.value)}.`); renderSvc(); };
 $("#quietOn").onchange = e => { rasher.setQuiet(e.target.checked); counterState(); renderChalk(); toast(e.target.checked ? "“Whatever happened to Gary Cooper? The strong, silent type.”" : "Rasher's back."); };
 $("#tourAgain").onclick = () => { if (rasher.quiet()) return toast("Turn quiet mode off first."); tour(); };
 $("#unwatch").onclick = async () => { log = {}; await store.set("log", log); rebuild(); toast("Marked-watched films are back on the shelf."); };
@@ -1133,7 +1167,8 @@ function askScore(x, a) {
   if (a[0] === "sharp") s += g("Drama") || g("Mystery") || g("Science Fiction") ? .2 : 0;
   if (a[1] === "date") s += (g("Romance") ? .6 : 0) + (g("Comedy") ? .3 : 0) - (g("Horror") || g("War") ? 1.2 : 0);
   if (a[1] === "crew") s += (g("Action") || g("Comedy") || g("Crime") || g("Horror") ? .4 : 0) - (subs ? .6 : 0) - (g("Documentary") ? 1 : 0);
-  if (a[2] === "laugh") s += g("Comedy") ? 1.2 : -.6;
+  if (m.rt > 0 && m.rt < 40) return -99;
+  if (a[2] === "laugh") s += (m.g[0] === "Comedy" ? 1.6 : g("Comedy") ? .5 : -.8) - (g("Thriller") || g("Horror") || g("War") ? .7 : 0);
   if (a[2] === "fright") s += g("Horror") ? 1.2 : g("Thriller") ? .5 : -.8;
   if (a[2] === "chew") s += (g("Drama") || g("Mystery") || g("Science Fiction") || g("History") ? .5 : 0) - (m.g.length === 1 && g("Comedy") ? .3 : 0) + (m.va >= 7.3 ? .4 : 0);
   return s;
@@ -1151,7 +1186,9 @@ function openAsk() {
     closeAsk();
     const list = S.watchlist.length ? S.watchlist : S.seen;
     const best = list.map(x => [askScore(x, a), x]).sort((p, q) => q[0] - p[0])[0][1];
-    const why = (best.why && best.why[0]) || (S.reasons ? S.reasons(best.m)[0] : "");
+    const want = { laugh: /comed|laugh|funny/i, fright: /horror|scar|fright/i }[a[2]];
+    const cands = [...(best.why || []), ...(S.reasons ? S.reasons(best.m) : [])];
+    const why = want ? cands.find(t => want.test(t)) || "" : cands[0] || "";
     tab("roll"); rolling = true; $("#roll").disabled = true; $("#led").classList.add("on");
     await land([{ ...best, src: "wl" }], { direct: true, say: why ? `This one. ${why}.`.replace(/\.\.$/, ".") : "" });
   };
@@ -1174,6 +1211,11 @@ function renderShelf() {
   if (!S || (!o.own && !o.list.length)) { el.hidden = true; return; }
   el.hidden = false;
   const head = `<div class="shelfhead"><span class="marker">${o.own ? "Your shelf" : esc(o.name) + "'s shelf"}</span>${o.own && o.list.length ? `<button class="tag" id="shelfEdit">Edit</button>` : ""}</div>`;
+  const anchor = o.list.length ? $("#v-picks .neonhead") : $("#bestFits");
+  if (el.previousElementSibling !== anchor) anchor.insertAdjacentElement("afterend", el);
+  const tc = $("#tuneOpen");
+  if (tc && !o.list.length && tc.previousElementSibling !== el) el.insertAdjacentElement("afterend", tc);
+  if (tc && o.list.length && tc.nextElementSibling !== $("#pjump")) $("#pjump").insertAdjacentElement("beforebegin", tc);
   if (!o.list.length) { el.innerHTML = head + `<div class="shelfempty"><p>Ten films that made you, face-out for your mates to see. One line on each, if you like.</p><button class="btn" id="shelfEdit">Stock your shelf</button></div>`; }
   else {
     const rows = []; for (let i = 0; i < o.list.length; i += 5) rows.push(o.list.slice(i, i + 5).map((x, j) => vboxHTML(x, i + j)).join(""));
@@ -1569,13 +1611,14 @@ function groupNight(v, head, back) {
 builder.init({
   house: async () => { await loadHouse(); return house; }, proxy: tmdb.hasProxy || !!apiKey,
   details: id => tmdb.details(apiKey, id), search: q => tmdb.call(apiKey, "/search/movie", { query: q }),
-  posterOf, esc, head: rasher.HEAD, snd, toast,
+  posterOf, esc, head: rasher.HEAD, snd, toast, openExport: () => { tab("counter"); ownOpen = true; counterState(); setTimeout(() => $("#stepZip").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }), 200); },
   save: async (p, f) => {
     const first = !profile || !profile.built;
     profile = p; films = { ...films, ...f }; await store.set("profile", profile); await store.set("films", films);
     mode = ""; store.prefs.del("mode"); visit = ""; store.prefs.del("visit"); picks = []; poolMode = "wl"; store.prefs.set("pool", "wl");
     rebuild(); tab("roll"); toast(`Shelves stocked. ${S.watchlist.length.toLocaleString()} tapes picked for you.`);
-    if (first) setTimeout(() => openSeenGrid(true), 600);
+    setupDone();
+    if (first && p.username) setTimeout(() => openSeenGrid(true), 600); else if (first) setTimeout(offerSwaps, 2500);
     try { extra = await importer.enrichIds(apiKey, S.candidateIds); rebuild(); } catch { }
   },
 });

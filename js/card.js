@@ -1,6 +1,6 @@
 // The membership card: every tape you take home gets a date stamp; checking it back in records how it was.
 // Ten stamps fill a card; full cards stack up underneath as your rental history. Lives on this phone only.
-import * as store from "./store.js?v=q9";
+import * as store from "./store.js?v=r1";
 
 const SLOTS = 10, NIGHTS = 3, ASK_AFTER = 2 * 36e5;
 let card = null;
@@ -64,7 +64,7 @@ export function html(name) {
   const cardNo = card.old.length + 1, since = new Date(card.since).toLocaleDateString("en-IE", { month: "short", year: "numeric" }).toUpperCase();
   return `<div class="mcard">
     <div class="mhead"><b>TAKE ONE VIDEO</b><span>MEMBERSHIP CARD${cardNo > 1 ? ` · NO. ${cardNo}` : ""}</span></div>
-    <div class="mwho"><span>MEMBER <b>${ESC((name || "House member").toUpperCase())}</b></span><span>NO. <b>${card.no}</b></span><span>SINCE <b>${since}</b></span></div>
+    <div class="mwho"><span>MEMBER <b>${ESC((name || "Guest").toUpperCase())}</b></span><span>NO. <b>${card.no}</b></span><span>SINCE <b>${since}</b></span></div>
     <div class="mgrid">${slots.join("")}</div>
     <p class="mfoot">Tapes due back in three nights. Be kind, rewind.</p>
   </div>

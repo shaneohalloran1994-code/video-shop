@@ -1,7 +1,7 @@
 // Start your own shop without a Letterboxd export: read a username's public diary and/or swipe through films.
 // Produces the same profile + films shape as the zip importer, so the rest of the app can't tell the difference.
-import * as friends from "./friends.js?v=q9";
-import { LINES } from "./lines.js?v=q9";
+import * as friends from "./friends.js?v=r1";
+import { LINES } from "./lines.js?v=r1";
 
 let C = null;
 export function init(ctx) { C = ctx; }
@@ -55,7 +55,9 @@ function startView() {
   $("#buildBody").innerHTML = `<div class="askq">${C.head}<p class="said"><b>Rasher</b>${C.esc(LINES.build_ask[0])}</p></div>
     <div class="row"><input id="bUser" autocomplete="off" autocapitalize="none" placeholder="Letterboxd username"><button class="btn" id="bRead">Read it</button></div>
     <p class="small" id="bMsg"></p>
+    <div class="row"><button class="ghost" id="bZip">Got your export? Bring your whole Letterboxd</button></div>
     <div class="row"><button class="ghost" id="bNoLb">No Letterboxd, just ask me some films</button></div>`;
+  $("#bZip").onclick = () => { close(); C.openExport?.(); };
   $("#bRead").onclick = async () => {
     const u = $("#bUser").value.trim().replace(/^@/, "").replace(/.*letterboxd\.com\//, "").replace(/\/.*$/, "");
     if (!u) return;
@@ -75,10 +77,13 @@ function startView() {
 
 function swipeView() {
   const answered = st.answers.size, m = st.deck[st.i];
-  const enough = answered + st.profile.watched.length >= 10;
+  // Films you've seen count; "want to see" and "haven't seen" don't.
+  const fromDiary = st.profile.watched.filter(w => !st.answers.has(w.key)).length;
+  const rated = [...st.answers.values()].filter(v => v !== "wl").length + fromDiary;
+  const enough = rated >= 10;
   if (!m) return finish();
   const p = C.posterOf(m, "w342");
-  $("#buildBody").innerHTML = `<div class="row bfoot top"><span class="rcount">${answered} rated · keep going as long as you like</span>${enough ? `<button class="tag hot" id="bDone">That'll do, stock my shelves</button>` : `<span class="small">${10 - answered - st.profile.watched.length} more and Rasher has enough to go on</span>`}</div>
+  $("#buildBody").innerHTML = `<div class="row bfoot top"><span class="rcount">${enough ? `${rated} rated · keep going as long as you like` : `${rated} of 10 rated · skip ones you haven't seen`}</span>${enough ? `<button class="tag hot" id="bDone">That'll do, stock my shelves</button>` : ""}</div>
     <div class="bsearch"><input id="bQ" autocomplete="off" placeholder="Add a film you love…"><div id="bRes"></div></div>
     <div class="bcard"><div class="bposter" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="btitle">${C.esc(m.t)} <small>${C.esc(m.y)}</small></div></div>
     <div class="bbtns">${BUCKETS.map(([k, l]) => `<button class="chip b-${k.replace(".", "")}" data-b="${k}">${l}</button>`).join("")}</div>`;
