@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=q8";
-import { prefs } from "./store.js?v=q8";
-import { QUOTES } from "./quotes.js?v=q8";
+import { LINES } from "./lines.js?v=q9";
+import { prefs } from "./store.js?v=q9";
+import { QUOTES } from "./quotes.js?v=q9";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -60,7 +60,6 @@ export function landLine(m, c = {}) {
   if (dirs.includes("John Carpenter") && roll < .45) return quote("carpenter", m.t) || line("d_John Carpenter");
   if ((dirs.includes("Joel Coen") || dirs.includes("Ethan Coen")) && roll < .45) return quote("coen", m.t) || line("d_Joel Coen");
   if (dirs.includes("Richard Linklater") && roll < .3) return quote("linklater", m.t) || line("d_Richard Linklater");
-  if (roll > .92) { const q = quote("any", m.t); if (q) return q; }
   if (c.blind) return line("blind");
   const d = (m.dir || []).map(x => DIR_ALIAS[x] || x).find(x => LINES["d_" + x]);
   if (d && !recent.includes(LINES["d_" + d][0])) return line("d_" + d);

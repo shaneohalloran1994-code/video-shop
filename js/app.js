@@ -1,17 +1,17 @@
-import * as store from "./store.js?v=q8";
-import * as tmdb from "./tmdb.js?v=q8";
-import * as importer from "./importer.js?v=q8";
-import * as lib from "./library.js?v=q8";
-import * as snd from "./sound.js?v=q8";
-import * as arcade from "./arcade.js?v=q8";
-import * as coming from "./coming.js?v=q8";
-import * as rasher from "./rasher.js?v=q8";
-import { LINES } from "./lines.js?v=q8";
-import * as friends from "./friends.js?v=q8";
-import * as card from "./card.js?v=q8";
-import * as myshelf from "./shelf.js?v=q8";
-import * as builder from "./builder.js?v=q8";
-import * as where from "./where.js?v=q8";
+import * as store from "./store.js?v=q9";
+import * as tmdb from "./tmdb.js?v=q9";
+import * as importer from "./importer.js?v=q9";
+import * as lib from "./library.js?v=q9";
+import * as snd from "./sound.js?v=q9";
+import * as arcade from "./arcade.js?v=q9";
+import * as coming from "./coming.js?v=q9";
+import * as rasher from "./rasher.js?v=q9";
+import { LINES } from "./lines.js?v=q9";
+import * as friends from "./friends.js?v=q9";
+import * as card from "./card.js?v=q9";
+import * as myshelf from "./shelf.js?v=q9";
+import * as builder from "./builder.js?v=q9";
+import * as where from "./where.js?v=q9";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -575,6 +575,7 @@ function caseHTML(it, i) {
       ${m.tag ? `<p class="tagline">“${esc(m.tag)}”</p>` : ""}
       <div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()} · ${esc(langTxt.toUpperCase())}</div>
       <div class="gen">${esc(m.g.slice(0, 3).join(" / "))}</div>
+      ${it.via ? `<p class="whybox">On your shelf because you loved ${esc(it.via)}.</p>` : ""}
       ${fee}${bday(m)}
       <div class="where" data-where="${m.id}"><span class="wl">Checking where to watch…</span></div>
     </div>
@@ -582,7 +583,7 @@ function caseHTML(it, i) {
       <p class="syn wide" hidden>${esc(m.ov)}</p>
       <div class="acts wide">
         <span class="ag act">${card.isOut(m.id) ? `<button class="tag hot" data-a="checkin">Check it back in</button>` : `<button class="tag hot" data-a="take">Take it home</button>`}<button class="tag" data-a="ret">${again ? "Watched it again" : "Watched it"}</button></span>
-        <span class="ag look">${swapBtn}${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
+        <span class="ag look"><button class="tag" data-a="seen">Seen it</button>${swapBtn}${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
         <button class="tag" data-a="poster">Poster</button></span>
         <span class="ag ext"><a class="tag" href="${esc(where.jwLink(m))}" target="_blank" rel="noopener">JustWatch</a>
@@ -620,7 +621,7 @@ function renderPicks() {
 function miniHTML(it, i) {
   const m = it.m, p = posterOf(m, "w342"), three = picks.length > 1;
   return `<article class="case mini${i === active && three ? " active" : ""}" data-i="${i}">
-    <div class="sleeve"><button class="cover ${p ? "" : "none"}" data-a="open" aria-label="Open the box for ${esc(m.t)}" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : esc(m.t)}</button><span class="rental">TAKE ONE VIDEO<br>3 NIGHTS</span></div>
+    <div class="sleeve"><button class="cover ${p ? "" : "none"}" data-a="open" aria-label="Open the box for ${esc(m.t)}" style="${p ? `background-image:url('${p}')` : ""}">${p ? "" : esc(m.t)}</button><span class="rental">TAKE ONE VIDEO<br>3 NIGHTS</span><button class="tag seenit" data-a="seen" aria-label="Seen ${esc(m.t)} already">Seen it</button></div>
     <div class="info"><h3 class="titlecard">${esc(m.t)}</h3><div class="meta">${esc(m.y)} · ${fmtRt(m.rt).toUpperCase()}</div>
       ${three ? "" : `<div class="where" data-where="${m.id}"><span class="wl">Checking where to watch…</span></div>`}
       <div class="acts">${three ? "" : vetoes > 0 ? `<button class="tag" data-a="swap">${F.last ? "Use my veto" : "Swap"}</button>` : ""}<button class="tag hot" data-a="open">${three ? "Open ▸" : "Open the box ▸"}</button></div>
@@ -688,6 +689,7 @@ function caseClick(e) {
     else rasher.slip(swapRun === 2 && Math.random() < .4 ? rasher.quote("swap") : rasher.line("swap"));
   }
   if (a === "ret") openReturn(it);
+  if (a === "seen") seenIt(it, i);
   if (a === "take") takeHome(it);
   if (a === "checkin") { const s = card.out().find(x => x.m.id === it.m.id); if (s) { closeCase(); openCheckin(s, false); } }
 }
@@ -814,6 +816,8 @@ function pageReasons(list) {
     return { ...it, why };
   });
 }
+// One film per series on a shelf: the first Harry Potter, not all seven.
+function oneEach(list) { const seen = new Set(); return list.filter(x => { const c = x.m.col; if (!c) return true; if (seen.has(c)) return false; seen.add(c); return true; }); }
 function fallbackReason(it) {
   const m = it.m;
   const d = m.dir.find(x => S.seen.some(s => s.m.dir.includes(x)));
@@ -822,6 +826,8 @@ function fallbackReason(it) {
   if (a) { const o = S.seen.find(s => s.m.cast.slice(0, 5).includes(a)); return `${a}, last seen in ${o.m.t}.`; }
   if (it.added && +it.added.slice(0, 4) < new Date().getFullYear()) return `On your list since ${it.added.slice(0, 4)}. Its time has come.`;
   if (m.y && +m.y < 1970) return `Older than most of the shop. Still holds up.`;
+  if (m.vc && m.vc < 1500) return "Not many people have seen this one. Their loss.";
+  if (m.g[0] && m.y) return `A ${String(m.y).slice(0, 3)}0s ${m.g[0].toLowerCase()}. Rasher's call.`;
   return "Rasher's got a hunch about this one.";
 }
 // Staff picks as shelves you swipe along: a compact tape each, tap for the full card.
@@ -837,11 +843,11 @@ function renderForYou() {
   $("#freshHead").textContent = who ? `Still on ${who}'s list` : S.house ? "Rasher hasn't seen these either" : "Not on your list. Should be.";
   $("#picksNote").textContent = who ? `${who}'s shelf. The ones they swear by, and the ones they still mean to get to. No scores.` : S.house ? "Rasher's shelf. His own favourites, and the ones he still means to get to." : rasher.line("picks_intro", {}, { seed: daySeed(), always: true });
   renderTuneCard(); renderShelf();
-  shelf.fits = pageReasons(S.bestFits.slice(0, 30));
+  shelf.fits = pageReasons(oneEach(S.bestFits).slice(0, 30));
   $("#bestFits").innerHTML = shelf.fits.map((x, i) => tapeHTML("fits", i, x.m, (x.why || [])[0])).join("");
   renderDeepDive();
   coming.render();
-  shelf.fresh = S.fresh.slice(0, 30);
+  shelf.fresh = oneEach(S.fresh).slice(0, 30);
   $("#fresh").innerHTML = shelf.fresh.map((x, i) => tapeHTML("fresh", i, x.m, (x.why || [])[0])).join("");
   $("#freshNote").textContent = who ? `${who} hasn't got to these yet.` : S.house ? "Still on Rasher's list. He swears he'll get to them." : S.fresh.length ? "Off the back of the films you rated highest. Rasher reckons you've missed these." : "Still restocking these. Check back in a minute.";
   renderJump();
@@ -857,7 +863,7 @@ function renderJump() {
 }
 new MutationObserver(() => renderJump()).observe($("#coming"), { childList: true });
 setTimeout(renderJump, 10200);
-$("#pjump").addEventListener("click", e => { const b = e.target.closest("[data-jump]"); if (!b) return; snd.click(); const h = document.getElementById(b.dataset.jump); if (h) scrollTo({ top: scrollY + h.getBoundingClientRect().top - 80, behavior: RM ? "auto" : "smooth" }); });
+$("#pjump").addEventListener("click", e => { const b = e.target.closest("[data-jump]"); if (!b) return; snd.click(); const h = document.getElementById(b.dataset.jump); if (h) { const bar = $("#pjump").getBoundingClientRect(); scrollTo({ top: scrollY + h.getBoundingClientRect().top - bar.bottom - 12, behavior: RM ? "auto" : "smooth" }); } });
 // Finish the job: directors you're partway through, and the next one on your list.
 function renderDeepDive() {
   const box = $("#deepDive"), head = $("#deepHead");
@@ -912,19 +918,21 @@ function renderReceipt() {
   const dmax = Math.max(...t.decades.map(d => d.n));
   const d = new Date();
   const who = (profile?.username || "HOUSE MEMBER").toUpperCase();
+  const sec = (title, rows, extra = "") => rows.length ? `<div class="sec"${extra}>${title}</div>${rows.join("")}` : "";
+  const realWl = S.watchlist.filter(x => !x.stock).length;
   let h = `<h2>TAKE ONE VIDEO</h2><p class="c">OPEN LATE · BE KIND, REWIND</p><hr>
     ${ln("MEMBER", who)}${ln("DATE", d.toLocaleDateString("en-IE"))}${ln("TIME", d.toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" }))}<hr>
-    ${ln("FILMS RENTED", t.watched.toLocaleString())}${ln("HOURS IN FRONT OF THE TELLY", t.hours.toLocaleString())}${ln("RATINGS GIVEN", t.rated.toLocaleString())}${ln("YOUR AVERAGE", t.avg.toFixed(2) + "★")}${ln("THE CROWD, SAME FILMS", (t.crowdAvg || 0).toFixed(2) + "★")}${ln("STILL ON THE WATCHLIST", t.watchlist.toLocaleString())}<hr>
-    <div class="sec">TOP GENRES</div>${t.genres.slice(0, 6).map(g => ln(g.k.toUpperCase(), `${g.n} · ${g.avg ? g.avg.toFixed(1) + "★" : "–"}`)).join("")}<hr>
+    ${ln("FILMS RENTED", t.watched.toLocaleString())}${ln("HOURS IN FRONT OF THE TELLY", t.hours.toLocaleString())}${ln("RATINGS GIVEN", t.rated.toLocaleString())}${ln("YOUR AVERAGE", t.avg.toFixed(2) + "★")}${ln("THE CROWD, SAME FILMS", (t.crowdAvg || 0).toFixed(2) + "★")}${realWl ? ln("STILL ON THE WATCHLIST", realWl.toLocaleString()) : ""}<hr>
+    ${sec("TOP GENRES", t.genres.slice(0, 6).map(g => ln(g.k.toUpperCase(), `${g.n} · ${g.avg ? g.avg.toFixed(1) + "★" : "–"}`)))}<hr>
     ${t.lately.length ? `<div class="sec">LATELY YOU'RE INTO</div>${t.lately.map(g => ln(g.g.toUpperCase(), `${g.n} OF LAST ${g.of} · USUALLY ${Math.round(g.o * 100)}%`)).join("")}<hr>` : ""}
     <div class="sec">BY DECADE</div><div class="hash">${t.decades.map(x => `${x.k.padEnd(6)}${bar(x.n, dmax).padEnd(13)}${String(x.n).padStart(4)}`).join("\n")}</div><hr>
-    <div class="sec">DIRECTORS YOU RENT MOST</div>${t.directors.most.map(p => ln(p.k.toUpperCase(), p.n + " FILMS")).join("")}<hr>
-    <div class="sec">DIRECTORS YOU RATE HIGHEST</div>${t.directors.best.map(p => ln(p.k.toUpperCase(), p.avg.toFixed(2) + "★")).join("")}<hr>
-    <div class="sec">ACTORS YOU RENT MOST</div>${t.actors.most.map(p => ln(p.k.toUpperCase(), p.n + " FILMS")).join("")}<hr>
-    <div class="sec">WHERE THEY'RE FROM</div>${t.countries.slice(0, 5).map(c => ln(region(c.k).toUpperCase(), c.n)).join("")}<hr>
-    <div class="sec">HARSHER THAN THE CROWD ON</div>${t.vsCrowd.slice(0, 3).map(g => ln(g.g.toUpperCase(), g.d.toFixed(2) + "★")).join("")}
-    <div class="sec" style="margin-top:8px">YOU RATED WAY UNDER THE CROWD</div>${t.harsher.slice(0, 3).map(p => ln(p.s.m.t.toUpperCase(), `${p.mine}★ v ${p.crowd.toFixed(1)}★`)).join("")}
-    <div class="sec" style="margin-top:8px">YOU RATED WAY OVER THE CROWD</div>${t.kinder.slice(0, 3).map(p => ln(p.s.m.t.toUpperCase(), `${p.mine}★ v ${p.crowd.toFixed(1)}★`)).join("")}<hr>
+    ${[sec("DIRECTORS YOU RENT MOST", t.directors.most.map(p => ln(p.k.toUpperCase(), p.n + " FILMS"))),
+       sec("DIRECTORS YOU RATE HIGHEST", t.directors.best.map(p => ln(p.k.toUpperCase(), p.avg.toFixed(2) + "★"))),
+       sec("ACTORS YOU RENT MOST", t.actors.most.map(p => ln(p.k.toUpperCase(), p.n + " FILMS"))),
+       sec("WHERE THEY'RE FROM", t.countries.slice(0, 5).map(c => ln(region(c.k).toUpperCase(), c.n)))].filter(Boolean).join("<hr>")}<hr>
+    ${[sec("HARSHER THAN THE CROWD ON", t.vsCrowd.slice(0, 3).map(g => ln(g.g.toUpperCase(), g.d.toFixed(2) + "★"))),
+       sec("YOU RATED WAY UNDER THE CROWD", t.harsher.slice(0, 3).map(p => ln(p.s.m.t.toUpperCase(), `${p.mine}★ v ${p.crowd.toFixed(1)}★`)), ' style="margin-top:8px"'),
+       sec("YOU RATED WAY OVER THE CROWD", t.kinder.slice(0, 3).map(p => ln(p.s.m.t.toUpperCase(), `${p.mine}★ v ${p.crowd.toFixed(1)}★`)), ' style="margin-top:8px"')].filter(Boolean).join("")}<hr>
     ${barcode(who + t.watched)}<p class="tiny">THANK YOU FOR RENTING · ALL TAPES DUE BACK BY NOON</p>`;
   r.innerHTML = h;
 }
@@ -942,7 +950,7 @@ function counterState() {
   $("#keyMsg").textContent = apiKey ? "Key saved on this phone." : tmdb.hasProxy ? "Optional. The shop has its own key, so you can skip straight to step 2." : "Get one free at themoviedb.org → Settings → API.";
   $("#stepHouse").hidden = !!profile;
   const showOwn = !!profile || !!apiKey || ownOpen;
-  $("#stepKey").hidden = !showOwn || (tmdb.hasProxy && !apiKey && !profile); $("#stepZip").hidden = !showOwn;
+  $("#stepKey").hidden = !showOwn || (tmdb.hasProxy && !apiKey); $("#stepZip").hidden = !showOwn;
   $("#zipH").textContent = $("#stepKey").hidden ? "Your Letterboxd export" : "2 · Your Letterboxd export";
   $("#ownGo").hidden = showOwn;
   $("#houseTxt").textContent = mode === "house" ? "You're browsing the house shop. Start your own any time." : "Pick a way in.";
@@ -953,7 +961,7 @@ function counterState() {
   $("#unwatch").hidden = !n; $("#unwatch").textContent = `Forget ${n} film${n > 1 ? "s" : ""} marked watched here`;
   $("#soundOn").checked = snd.isOn(); $("#skipStreet").checked = store.prefs.get("skipStreet", false); $("#quietOn").checked = rasher.quiet();
   const cs = LINES.counter, age = profile ? (Date.now() - new Date(profile.importedAt)) / 864e5 : 0;
-  const say = rasher.quiet() ? "" : !S ? cs[3] : profile && age > 30 ? cs[2] : profile && age < 1 ? cs[1] : !profile ? cs[0] : Math.random() < .5 ? rasher.quote("counter") : "";
+  const say = rasher.quiet() ? "" : !S ? cs[3] : profile && age > 30 ? cs[2] : profile && age < 1 && !profile.built ? cs[1] : !profile ? cs[0] : Math.random() < .5 ? rasher.quote("counter") : "";
   renderFriends();
   $("#counterSays").hidden = !say; $("#counterSays").innerHTML = say ? `<p class="said"><b>Rasher</b>${esc(say)}</p>` : "";
 }
@@ -981,6 +989,7 @@ $("#zipIn").onchange = async e => {
     rebuild();
     prog.hidden = true;
     toast(`Shelves stocked. ${S.watchlist.length.toLocaleString()} tapes on the watchlist shelf.`);
+    setTimeout(offerSwaps, 1500);
   } catch (err) {
     prog.hidden = true;
     $("#zipMsg").textContent = err.code === "bad_key" ? "TMDB stopped accepting your key. Save it again and retry." : (err.message || "Something went wrong reading that zip.");
@@ -998,7 +1007,7 @@ document.addEventListener("visibilitychange", () => {
   $("#zipPick").scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" });
   toast("Got the zip? Tap Choose the zip and pick it from Downloads.");
 });
-$("#ownGo").onclick = () => { ownOpen = true; counterState(); $("#stepKey").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); };
+$("#ownGo").onclick = () => { ownOpen = true; counterState(); ($("#stepKey").hidden ? $("#stepZip") : $("#stepKey")).scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); };
 $("#houseGo").onclick = async () => {
   if (mode === "house") { mode = ""; store.prefs.set("mode", "out"); picks = []; rebuild(); return; }
   mode = "house"; store.prefs.set("mode", "house"); await loadHouse(); picks = []; rebuild(); if (S) { tab("roll"); toast("Welcome in. Have a look around."); }
@@ -1243,6 +1252,91 @@ function shelfChanged() {
   clearTimeout(shelfShareT); shelfShareT = setTimeout(() => friends.share(mine, sh.name).catch(() => {}), 3000);
 }
 
+// ---------- Seen it: one tap bins a film you've already watched and teaches Rasher ----------
+async function seenIt(it, i) {
+  const m = it.m, key = Object.keys(films).find(k => films[k] && films[k].id === m.id) || null;
+  log[m.id] = { key, date: today(), rating: null, seen: true, m: key ? undefined : m };
+  await store.set("log", log); if (!$("#caseSheet").hidden) closeCase();
+  rebuild();
+  const nx = draw(pool().filter(x => !picks.some(c => c.m.id === x.m.id)), 1)[0];
+  if (!nx) { picks.splice(i, 1); active = 0; renderPicks(); if (picks[0]) playOnTV(picks[0]); return toast("Noted. That was the last one on this shelf."); }
+  picks[i] = nx; active = i; snd.clunk(); playOnTV(nx); renderPicks();
+  const say = rasher.line("seen"); if (say) rasher.slip(say);
+}
+
+// ---------- "Seen any of these?" after a quick setup: tap what you've watched, no stars ----------
+// A spread, not just the biggest: mostly well-known, plus classics, foreign films and smaller ones.
+let seenPage = 0, seenPicked = new Set(), seenOrder = [];
+function seenSpread() {
+  const pool = S.watchlist.filter(x => x.m.p).map(x => x.m);
+  const by = f => pool.filter(f).sort(() => Math.random() - .5);
+  const big = by(m => m.vc >= 8000), known = by(m => m.vc >= 2000 && m.vc < 8000), old = by(m => +m.y < 1985 && m.vc >= 800),
+    foreign = by(m => m.l !== "en" && m.vc >= 800), small = by(m => m.vc < 2000);
+  const pattern = [big, big, known, old, big, foreign, known, small, big, known], out = [], used = new Set(), cols = new Set();
+  for (let guard = 0; out.length < pool.length && guard < pool.length * 3; guard++) {
+    const src = pattern[guard % pattern.length]; let m;
+    while ((m = src.shift()) && (used.has(m.id) || (m.col && cols.has(m.col))));
+    if (!m) { if (pattern.every(a => !a.length)) break; continue; }
+    used.add(m.id); if (m.col) cols.add(m.col); out.push(m);
+  }
+  return out;
+}
+function openSeenGrid(afterSetup = false) {
+  seenOrder = seenSpread(); seenPage = 0; seenPicked = new Set(); seenAfter = afterSetup;
+  $("#seenHead").innerHTML = `${rasher.HEAD}<p class="said"><b>Rasher</b>${esc(rasher.line("seen_grid", {}, { always: true }))}</p>`;
+  paintSeenGrid(); $("#seenSheet").hidden = false; document.body.classList.add("noscroll");
+}
+let seenAfter = false;
+function paintSeenGrid() {
+  const page = seenOrder.slice(0, (seenPage + 1) * 30);
+  $("#seenGrid").innerHTML = page.map(m => `<button class="sgrid${seenPicked.has(m.id) ? " on" : ""}" data-seen="${m.id}" aria-pressed="${seenPicked.has(m.id)}" aria-label="${esc(m.t)}" style="background-image:url('${poster(m.p, "w154")}')"><span>SEEN</span></button>`).join("");
+  $("#seenMore").hidden = page.length >= seenOrder.length;
+  $("#seenDone").textContent = seenPicked.size ? `Done · ${seenPicked.size} seen` : "Done";
+}
+$("#seenGrid").addEventListener("click", e => { const b = e.target.closest("[data-seen]"); if (!b) return; const id = +b.dataset.seen; seenPicked.has(id) ? seenPicked.delete(id) : seenPicked.add(id); snd.tick?.(); b.classList.toggle("on"); b.setAttribute("aria-pressed", seenPicked.has(id)); $("#seenDone").textContent = seenPicked.size ? `Done · ${seenPicked.size} seen` : "Done"; });
+$("#seenMore").onclick = () => { seenPage++; paintSeenGrid(); };
+async function closeSeenGrid(save) {
+  if (save && seenPicked.size) {
+    for (const id of seenPicked) { const m = seenOrder.find(x => x.id === id); const key = Object.keys(films).find(k => films[k] && films[k].id === id) || null; log[id] = { key, date: today(), rating: null, seen: true, m: key ? undefined : m }; }
+    await store.set("log", log); rebuild(); toast(`Noted. ${seenPicked.size} off the shelves.`);
+  }
+  $("#seenSheet").hidden = true; document.body.classList.remove("noscroll");
+  if (seenAfter) { seenAfter = false; setTimeout(afterQuickSetup, 700); }
+}
+$("#seenDone").onclick = () => closeSeenGrid(true);
+$("#seenSkip").onclick = () => closeSeenGrid(false);
+$("#seenAgain").onclick = () => openSeenGrid(false);
+// After a username import: be straight about what it read, and point at the export for the whole picture.
+async function afterQuickSetup() {
+  if (profile?.username) {
+    const n = profile.watched.filter(w => !w.stock).length;
+    const go = await rasherNote(rasher.line("export_nudge", { n }, { always: true }), [["go", "Show me how", true], ["later", "Later"]]);
+    if (go === "go") { tab("counter"); ownOpen = true; counterState(); setTimeout(() => $("#stepZip").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }), 200); return; }
+  }
+  offerSwaps();
+}
+// New shelves of your own: offer to swap with the mates you've been visiting.
+async function offerSwaps() {
+  if (!mine) return;
+  const todo = Object.values(FR).filter(f => !friends.swapped().has(f.code)); if (!todo.length) return;
+  const names = todo.map(f => f.name), list = names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names.at(-1) : names[0];
+  const ok = await rasherNote(rasher.line("swap_offer", { names: list }, { always: true }), [["yes", "Swap shops", true], ["no", "Not now"]]);
+  if (ok !== "yes") return;
+  const name = friends.shareInfo()?.name || profile?.username || "";
+  if (!name) { tab("counter"); $("#myName").focus(); fmsg("Put your name on your shop, then add your mates' codes again to swap."); return; }
+  let n = 0; for (const f of todo) { try { await friends.swapWith(mine, name, f.code); n++; } catch { } }
+  toast(n ? `Swapped with ${n === todo.length ? list : n + " of them"}.` : "Couldn't reach the shop's line. Try again from the Counter.");
+}
+// A one-off Rasher card with buttons. Resolves with the key of the button pressed.
+function rasherNote(text, buttons) {
+  return new Promise(res => {
+    $("#noteTxt").textContent = text;
+    $("#noteBtns").innerHTML = buttons.map(([k, l, hot]) => `<button class="tag${hot ? " hot" : ""}" data-k="${k}">${esc(l)}</button>`).join("");
+    $("#rNote").hidden = false;
+    $("#noteBtns").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; $("#rNote").hidden = true; res(b.dataset.k); };
+  });
+}
+
 // ---------- the membership card ----------
 async function takeHome(it) {
   const st = await card.take(it.m); if (!st) return;
@@ -1345,6 +1439,7 @@ function renderFriends() {
   $("#fwall").innerHTML = list.map(wallTile).join("") + (S?.visit ? `<button class="ghost" id="backHome">Back to my own shop</button>` : "");
   const bh = $("#backHome"); if (bh) bh.onclick = leaveVisit;
   $("#stepTop").hidden = !profile?.username || !tmdb.hasProxy;
+  $("#stepSeen").hidden = !profile?.built && !S?.house;
   if (profile?.toppedAt) $("#topMsg").textContent = `Last topped up ${new Date(profile.toppedAt).toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.`;
 }
 const fmsg = t => $("#friendMsg").textContent = t;
@@ -1476,9 +1571,11 @@ builder.init({
   details: id => tmdb.details(apiKey, id), search: q => tmdb.call(apiKey, "/search/movie", { query: q }),
   posterOf, esc, head: rasher.HEAD, snd, toast,
   save: async (p, f) => {
+    const first = !profile || !profile.built;
     profile = p; films = { ...films, ...f }; await store.set("profile", profile); await store.set("films", films);
     mode = ""; store.prefs.del("mode"); visit = ""; store.prefs.del("visit"); picks = []; poolMode = "wl"; store.prefs.set("pool", "wl");
     rebuild(); tab("roll"); toast(`Shelves stocked. ${S.watchlist.length.toLocaleString()} tapes picked for you.`);
+    if (first) setTimeout(() => openSeenGrid(true), 600);
     try { extra = await importer.enrichIds(apiKey, S.candidateIds); rebuild(); } catch { }
   },
 });

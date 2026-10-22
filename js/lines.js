@@ -315,6 +315,18 @@ export const LINES = {
 "Ah, one of those. Nice.",
 "That one's earned its spot."
 ],
+"seen": [
+"Seen it. Noted. Here's another."
+],
+"seen_grid": [
+"Tap any you've already seen and I'll stop handing them to you. No stars needed."
+],
+"export_nudge": [
+"That's your last {n} from the diary. Want me to know everything you've logged, and roll from your watchlist? Bring your export. Three taps."
+],
+"swap_offer": [
+"Your own shelves now. Want to swap shops with {names}?"
+],
 "arc": [
 "Winner, man. Fair and square."
 ],

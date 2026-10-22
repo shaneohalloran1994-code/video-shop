@@ -1,5 +1,5 @@
 // Where to watch: streaming, rent and buy options for your country, from JustWatch via TMDB.
-import { prefs } from "./store.js?v=q8";
+import { prefs } from "./store.js?v=q9";
 
 export const COUNTRIES = ["IE", "GB", "US", "CA", "AU", "NZ", "DE", "FR", "ES", "IT", "NL", "BE", "DK", "SE", "NO", "FI", "PL", "PT", "AT", "CH", "BR", "MX", "AR", "IN", "JP", "KR", "ZA"];
 export const country = () => prefs.get("region", "IE");

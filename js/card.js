@@ -1,6 +1,6 @@
 // The membership card: every tape you take home gets a date stamp; checking it back in records how it was.
 // Ten stamps fill a card; full cards stack up underneath as your rental history. Lives on this phone only.
-import * as store from "./store.js?v=q8";
+import * as store from "./store.js?v=q9";
 
 const SLOTS = 10, NIGHTS = 3, ASK_AFTER = 2 * 36e5;
 let card = null;

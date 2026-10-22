@@ -31,7 +31,7 @@ export function build(profile, films, extra, log) {
     const m = rec(w.key);
     if (!m || wlIds.has(m.id) || seen.has(m.id)) continue;
     wlIds.add(m.id);
-    watchlist.push({ m, added: w.added, uri: w.uri, via: w.via });
+    watchlist.push({ m, added: w.added, uri: w.uri, via: w.via, stock: w.stock });
   }
   const seenList = [...seen.values()];
   const unmatched = profile.watchlist.filter(w => !rec(w.key)).length;

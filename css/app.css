@@ -1084,7 +1084,7 @@ button.tag,a.tag{justify-content:center}
 .play-screen .bars.b{justify-content:center}
 .play-screen .ttl{width:100%;box-sizing:border-box;text-align:center}
 /* Staff picks row: fade the right edge so it reads as scrollable */
-.pjump{-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:40px}
+.pjump{padding-right:2px}
 /* Settings: thumb-height rows, the whole row toggles */
 .step .tog{min-height:44px;align-items:center;cursor:pointer}
 .step .tog input{margin-top:0;width:22px;height:22px}
@@ -1142,3 +1142,24 @@ button.tag,a.tag{justify-content:center}
 .sbtns{display:flex;flex-direction:column;gap:4px}.sbtns .tag{min-height:36px;padding:4px 10px;transform:none}
 #shelfQ{width:100%;box-sizing:border-box;min-height:44px;background:var(--paper);color:#2a1306;border:0;border-bottom:2px solid #2a1306;padding:8px 10px;font:600 16px var(--cond);color-scheme:light}
 @media (max-width:360px){.vrow,.shelfsug{gap:5px;padding-left:4px;padding-right:4px}}
+
+/* Seen it: on the poster for one tape, under it for three */
+.case.mini .sleeve{position:relative}
+.case.mini .seenit{position:absolute;left:4px;right:4px;bottom:4px;min-height:36px;padding:4px 6px;font-size:11px;letter-spacing:.08em;background:rgba(10,10,12,.85);transform:none;justify-content:center}
+.cases.three .case.mini .seenit{position:static;width:100%;min-height:36px;margin-top:4px}
+#cases:not(.three) .case.mini .rental{bottom:46px}
+.whybox{margin:6px 0 0;font:400 16px/1.25 var(--marker);color:var(--amber)}
+
+/* Seen any of these? */
+.seengrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-height:52vh;overflow:auto;padding:2px}
+.sgrid{position:relative;aspect-ratio:2/3;border:0;padding:0;background:#222 center/cover;cursor:pointer;box-shadow:2px 2px 0 #000}
+.sgrid span{position:absolute;inset:auto 0 30% 0;display:none;font:800 13px var(--cond);letter-spacing:.14em;color:#fff;background:#b3150e;transform:rotate(-10deg);padding:3px 0;text-align:center;box-shadow:1px 1px 0 #000}
+.sgrid.on{filter:grayscale(.6) brightness(.7)}.sgrid.on span{display:block;filter:none}
+#seenSheet .row{justify-content:space-between}
+@media (max-width:360px){.seengrid{grid-template-columns:repeat(4,1fr)}}
+.sgrid.on{filter:none}.sgrid.on::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.55)}
+
+/* Staff picks signs: solid bar (nothing shows through), a fade on the right edge only, captions land below it */
+.pjump{background:#0b0a12}
+.pjump::after{content:"";position:sticky;right:-2px;flex:0 0 36px;margin-left:-36px;background:linear-gradient(90deg,rgba(11,10,18,0),#0b0a12);pointer-events:none}
+#v-picks .shelfname{scroll-margin-top:150px}

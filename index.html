@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q8">
+<link rel="stylesheet" href="css/app.css?v=q9">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q8"></script>
+<script type="module" src="js/app.js?v=q9"></script>
 </head>
 <body>
 
@@ -209,6 +209,11 @@
         <p class="small" id="friendMsg"></p>
         <div class="fwall" id="fwall"></div>
       </div>
+      <div class="step" id="stepSeen" hidden>
+        <h3>Seen any of these?</h3>
+        <p>Tap the films you've already watched and Rasher stops handing them to you. No stars needed.</p>
+        <div class="row"><button class="ghost" id="seenAgain">Show me films</button></div>
+      </div>
       <div class="step" id="stepTop" hidden>
         <h3>Top up from Letterboxd</h3>
         <p>Pulls in what you've logged lately from your public Letterboxd diary, so you don't need a fresh export every time. Your watchlist only updates with a full export.</p>
@@ -332,6 +337,17 @@
 </div>
 <div class="sheet" id="shelfView" hidden role="dialog" aria-modal="true" aria-label="A film off the shelf">
   <div class="sheet-card dark"><div class="fhead"><span class="marker" id="svWho">Off the shelf</span><button class="tag" id="svClose">Done</button></div><div id="svBody"></div></div>
+</div>
+<div class="sheet" id="seenSheet" hidden role="dialog" aria-modal="true" aria-label="Films you've seen">
+  <div class="sheet-card dark">
+    <div class="fhead"><span class="marker">Seen any of these?</span><button class="tag" id="seenSkip">Skip</button></div>
+    <div class="askq" id="seenHead"></div>
+    <div class="seengrid" id="seenGrid"></div>
+    <div class="row"><button class="tag" id="seenMore">More films</button><button class="btn" id="seenDone">Done</button></div>
+  </div>
+</div>
+<div class="a2hs" id="rNote" hidden role="dialog" aria-label="Rasher">
+  <div class="a2hs-card"><p class="said"><b>Rasher</b><span id="noteTxt"></span></p><div class="row" id="noteBtns"></div></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>

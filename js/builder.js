@@ -1,7 +1,7 @@
 // Start your own shop without a Letterboxd export: read a username's public diary and/or swipe through films.
 // Produces the same profile + films shape as the zip importer, so the rest of the app can't tell the difference.
-import * as friends from "./friends.js?v=q8";
-import { LINES } from "./lines.js?v=q8";
+import * as friends from "./friends.js?v=q9";
+import { LINES } from "./lines.js?v=q9";
 
 let C = null;
 export function init(ctx) { C = ctx; }
@@ -17,15 +17,22 @@ function likeness(a, b) {
   return Math.min(1, s / 5);
 }
 
-// Forty well-known films, spread across genres and decades, that most people will have an opinion on.
+// A long deck that keeps going: big films most people know, mixed with classics, new ones, foreign films,
+// cult picks and smaller ones, one per series, never the same genre three times running.
 function deck(items, skip) {
-  const pool = items.filter(x => x.m.p && x.m.vc >= 2500 && !skip.has(x.m.id)).sort((a, b) => b.m.vc - a.m.vc).slice(0, 260);
-  const out = [], g = {}, d = {};
-  for (const x of pool.sort(() => Math.random() - .5).sort((a, b) => b.m.vc - a.m.vc)) {
-    const gg = x.m.g[0], dd = (x.m.y || "").slice(0, 3);
-    if ((g[gg] || 0) >= 6 || (d[dd] || 0) >= 9) continue;
-    g[gg] = (g[gg] || 0) + 1; d[dd] = (d[dd] || 0) + 1; out.push(x.m);
-    if (out.length >= 40) break;
+  const pool = items.filter(x => x.m.p && x.m.vc >= 300 && !skip.has(x.m.id)).map(x => x.m);
+  const by = f => pool.filter(f).sort(() => Math.random() - .5);
+  const yr = m => parseInt(m.y) || 2000;
+  const big = by(m => m.vc >= 6000), known = by(m => m.vc >= 1500 && m.vc < 6000), old = by(m => yr(m) < 1980),
+    recent = by(m => yr(m) >= 2018 && m.vc >= 800), foreign = by(m => m.l !== "en" && m.vc >= 600),
+    acclaimed = by(m => m.va >= 7.6 && m.vc >= 800), small = by(m => m.vc < 1500 && m.va >= 6.6);
+  const pattern = [big, known, big, old, foreign, big, recent, acclaimed, known, small, big, old, foreign, known, recent, small];
+  const out = [], used = new Set(), cols = new Set();
+  for (let i = 0; out.length < 200 && i < 4000; i++) {
+    const src = pattern[i % pattern.length]; let m;
+    while ((m = src.shift()) && (used.has(m.id) || (m.col && cols.has(m.col)) || (out.length >= 2 && out.at(-1).g[0] === m.g[0] && out.at(-2).g[0] === m.g[0])));
+    if (!m) { if (pattern.every(a => !a.length)) break; continue; }
+    used.add(m.id); if (m.col) cols.add(m.col); out.push(m);
   }
   return out;
 }
@@ -71,7 +78,7 @@ function swipeView() {
   const enough = answered + st.profile.watched.length >= 10;
   if (!m) return finish();
   const p = C.posterOf(m, "w342");
-  $("#buildBody").innerHTML = `<div class="row bfoot top"><span class="rcount">${answered} rated · ${st.deck.length - st.i} to go</span>${enough ? `<button class="tag hot" id="bDone">That'll do, stock my shelves</button>` : `<span class="small">${10 - answered - st.profile.watched.length} more and Rasher has enough to go on</span>`}</div>
+  $("#buildBody").innerHTML = `<div class="row bfoot top"><span class="rcount">${answered} rated · keep going as long as you like</span>${enough ? `<button class="tag hot" id="bDone">That'll do, stock my shelves</button>` : `<span class="small">${10 - answered - st.profile.watched.length} more and Rasher has enough to go on</span>`}</div>
     <div class="bsearch"><input id="bQ" autocomplete="off" placeholder="Add a film you love…"><div id="bRes"></div></div>
     <div class="bcard"><div class="bposter" style="${p ? `background-image:url('${p}')` : ""}"></div><div class="btitle">${C.esc(m.t)} <small>${C.esc(m.y)}</small></div></div>
     <div class="bbtns">${BUCKETS.map(([k, l]) => `<button class="chip b-${k.replace(".", "")}" data-b="${k}">${l}</button>`).join("")}</div>`;
