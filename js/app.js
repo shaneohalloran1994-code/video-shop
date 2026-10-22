@@ -1,15 +1,16 @@
-import * as store from "./store.js?v=q6";
-import * as tmdb from "./tmdb.js?v=q6";
-import * as importer from "./importer.js?v=q6";
-import * as lib from "./library.js?v=q6";
-import * as snd from "./sound.js?v=q6";
-import * as arcade from "./arcade.js?v=q6";
-import * as coming from "./coming.js?v=q6";
-import * as rasher from "./rasher.js?v=q6";
-import { LINES } from "./lines.js?v=q6";
-import * as friends from "./friends.js?v=q6";
-import * as builder from "./builder.js?v=q6";
-import * as where from "./where.js?v=q6";
+import * as store from "./store.js?v=q7";
+import * as tmdb from "./tmdb.js?v=q7";
+import * as importer from "./importer.js?v=q7";
+import * as lib from "./library.js?v=q7";
+import * as snd from "./sound.js?v=q7";
+import * as arcade from "./arcade.js?v=q7";
+import * as coming from "./coming.js?v=q7";
+import * as rasher from "./rasher.js?v=q7";
+import { LINES } from "./lines.js?v=q7";
+import * as friends from "./friends.js?v=q7";
+import * as card from "./card.js?v=q7";
+import * as builder from "./builder.js?v=q7";
+import * as where from "./where.js?v=q7";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -124,6 +125,7 @@ async function load() {
   films = (await store.get("films")) || {};
   extra = (await store.get("extra")) || {};
   log = (await store.get("log")) || {};
+  await card.load();
   if (!profile && mode === "house") await loadHouse();
   FR = await friends.all(); if (visit && !FR[visit]) { visit = ""; store.prefs.del("visit"); }
   rebuild();
@@ -578,7 +580,7 @@ function caseHTML(it, i) {
       ${m.dir.length ? `<div class="who wide">Directed by ${esc(m.dir.slice(0, 2).join(" & "))}${m.cast.length ? `<br><em>With ${esc(m.cast.slice(0, 3).join(", "))}</em>` : ""}</div>` : ""}
       <p class="syn wide" hidden>${esc(m.ov)}</p>
       <div class="acts wide">
-        <span class="ag act"><button class="tag hot" data-a="ret">${again ? "Watched it again" : "Watched it"}</button></span>
+        <span class="ag act">${card.isOut(m.id) ? `<button class="tag hot" data-a="checkin">Check it back in</button>` : `<button class="tag hot" data-a="take">Take it home</button>`}<button class="tag" data-a="ret">${again ? "Watched it again" : "Watched it"}</button></span>
         <span class="ag look">${swapBtn}${m.ov ? `<button class="tag" data-a="syn">Synopsis</button>` : ""}
         <button class="tag" data-a="more">More like this</button>
         <button class="tag" data-a="poster">Poster</button></span>
@@ -685,6 +687,8 @@ function caseClick(e) {
     else rasher.slip(swapRun === 2 && Math.random() < .4 ? rasher.quote("swap") : rasher.line("swap"));
   }
   if (a === "ret") openReturn(it);
+  if (a === "take") takeHome(it);
+  if (a === "checkin") { const s = card.out().find(x => x.m.id === it.m.id); if (s) { closeCase(); openCheckin(s, false); } }
 }
 $("#cases").addEventListener("click", caseClick);
 $("#caseBody").addEventListener("click", caseClick);
@@ -742,6 +746,8 @@ $("#aisleBody").addEventListener("click", e => {
 
 // ---------- returning a tape ----------
 let retItem = null, retVal = null;
+let retFromCard = false;
+const verdictOf = r => r == null ? null : r >= 4 ? "loved" : r >= 3 ? "liked" : "nope";
 function openReturn(it) {
   retItem = it; retVal = null;
   $("#retTitle").textContent = it.m.t;
@@ -765,6 +771,7 @@ async function handBack(rating) {
   const key = Object.keys(films).find(k => films[k] && films[k].id === m.id) || null;
   log[m.id] = { key, date: today(), rating, guess, crowd, prev, m: key ? undefined : m };
   await store.set("log", log);
+  if (!retFromCard) await card.logged(m, verdictOf(rating)); retFromCard = false; statsDirty = true;
   const box = $("#retReveal");
   const verdict = rasher.verdict(rating, guess, prev, m);
   store.prefs.set("returned", true); setTimeout(installTip, 4000);
@@ -892,11 +899,12 @@ let statsDirty = true;
 $("#receiptGo").onclick = () => tab("roll");
 function renderReceipt() {
   const r = $("#receipt");
+  $("#memberCard").innerHTML = S ? card.html(friends.shareInfo()?.name || profile?.username || "") : "";
   if (!S) { $("#receiptNote").hidden = true; $("#receiptGo").hidden = true; r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">No rentals on file yet.</p>`; return; }
   if (!statsDirty) return; statsDirty = false;
   const empty = !S || (S.house && S.seen.filter(s => s.rating != null).length < 3);
   $("#receiptNote").hidden = empty; $("#receiptGo").hidden = !empty || !S;
-  if (S.house && S.seen.filter(s => s.rating != null).length < 3) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">HOUSE SHOP MEMBER</p><hr><p class="c">Return three tapes with a rating and your receipt starts printing. Take a tape, watch it, then hit Watched it.</p><p class="c">Or bring your own Letterboxd export to the counter.</p><hr>${barcode("house")}`; return; }
+  if (S.house && S.seen.filter(s => s.rating != null).length < 3) { r.innerHTML = `<h2>TAKE ONE VIDEO</h2><p class="c">HOUSE SHOP MEMBER</p><hr><p class="c">Check three tapes back in and your receipt starts printing. Take one home from the box, then tell Rasher how it was.</p><p class="c">Or bring your own Letterboxd export to the counter.</p><hr>${barcode("house")}`; return; }
   const t = lib.stats(S);
   const ln = (a, b) => `<div class="ln"><span>${esc(a)}</span><span class="dots"></span><span>${esc(b)}</span></div>`;
   const bar = (n, max, w = 12) => "#".repeat(Math.max(1, Math.round(n / max * w)));
@@ -1145,6 +1153,44 @@ $("#askClose").onclick = closeAsk;
 $("#askSheet").addEventListener("click", e => { if (e.target.id === "askSheet") closeAsk(); });
 $("#rHead").innerHTML = rasher.HEAD;
 
+// ---------- the membership card ----------
+async function takeHome(it) {
+  const st = await card.take(it.m); if (!st) return;
+  closeCase(); snd.clunk(); statsDirty = true; renderPicks();
+  const say = rasher.line("take"); if (say) rasher.slip(say); else toast("Stamped. Due back in three nights.");
+}
+const CHECK = [["loved", "Loved it", 4.5], ["liked", "Liked it", 3.5], ["nope", "Not for me", 1.5], ["skip", "Didn't get to it", null]];
+function openCheckin(s, auto) {
+  const late = card.overdue(s);
+  $("#checkTxt").textContent = rasher.line(late ? "checkin_late" : "checkin_ask", { t: s.m.t }, { always: true });
+  $("#checkBtns").innerHTML = CHECK.map(([k, l]) => `<button class="tag${k === "loved" ? " hot" : ""}" data-chk="${k}">${l}</button>`).join("") + `<button class="tag" data-chk="later">Later</button>`;
+  $("#checkBtns").dataset.id = s.id; $("#checkNote").hidden = false;
+  if (auto) card.asked(s.id, late);
+}
+$("#checkBtns").addEventListener("click", async e => {
+  const b = e.target.closest("[data-chk]"); if (!b) return;
+  const id = $("#checkBtns").dataset.id, s = card.find(id), v = b.dataset.chk;
+  $("#checkNote").hidden = true; if (!s || v === "later") return;
+  await card.checkIn(id, v); statsDirty = true;
+  if (v === "skip") { toast(rasher.line("checkin_skip", {}, { always: true })); if (!$("#v-receipt").hidden) renderReceipt(); return; }
+  retItem = { m: s.m, src: "wl" }; retFromCard = true;
+  $("#retTitle").textContent = s.m.t; $("#returnSheet").hidden = false;
+  handBack(CHECK.find(c => c[0] === v)[2]);
+});
+let checkShown = false;
+function maybeCheckin() {
+  if (checkShown || touring || !S || $("#shop").hidden || !store.prefs.get("welcomed", false)) return;
+  if (!$("#caseSheet").hidden || !$("#returnSheet").hidden || !$("#swapNote").hidden) return;
+  const d = card.due(); if (!d) return;
+  checkShown = true; openCheckin(d.s, true);
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { checkShown = false; setTimeout(maybeCheckin, 1200); } });
+$("#memberCard").addEventListener("click", e => {
+  const b = e.target.closest("[data-stamp]"); if (!b) return;
+  const s = card.find(b.dataset.stamp); if (!s) return;
+  if (!s.back) openCheckin(s, false); else toast(`${s.m.t}: out ${new Date(s.out).toLocaleDateString("en-IE", { day: "numeric", month: "short" })}, back ${new Date(s.back).toLocaleDateString("en-IE", { day: "numeric", month: "short" })}.`);
+});
+
 // ---------- mates who swapped shops with you ----------
 let inboxAt = 0;
 async function pollInbox() {
@@ -1366,6 +1412,6 @@ async function arriveFromLink() {
 }
 snd.setOn(store.prefs.get("sound", true));
 street();
-load().then(arriveFromLink).then(() => { setTimeout(pollInbox, 1500); const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
+load().then(arriveFromLink).then(() => { setTimeout(pollInbox, 1500); setTimeout(maybeCheckin, 2500); const t = store.prefs.get("tab", "roll"); tab(S ? (store.prefs.get("welcomed", false) && TABS.includes(t) ? t : "roll") : "counter"); loaded = true; maybeTour();
   if (profile?.username && navigator.onLine && (!profile.toppedAt || Date.now() - new Date(profile.toppedAt) > 12 * 36e5)) setTimeout(() => topUp(true), 4000); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

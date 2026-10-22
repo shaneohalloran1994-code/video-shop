@@ -1090,3 +1090,29 @@ button.tag,a.tag{justify-content:center}
 .step .tog input{margin-top:0;width:22px;height:22px}
 /* Staff pick sticker readable */
 .spine .stk.pick,.spine .stk.new,.spine.thin .stk{font-size:9px;letter-spacing:.04em}
+
+/* ===== Membership card ===== */
+.mcard{background:#f3ecdc;color:#2a1306;padding:14px 14px 10px;border:2px solid #2a1306;box-shadow:5px 5px 0 #000;transform:rotate(-.6deg);position:relative;font-family:var(--receipt)}
+.mcard::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:repeating-linear-gradient(90deg,#b3150e 0 18px,#1d3d8f 18px 36px)}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px;border-bottom:1px dashed #2a1306;padding-bottom:6px}
+.mhead b{font:800 18px var(--cond);letter-spacing:.18em;color:#b3150e}
+.mhead span{font:700 11px var(--cond);letter-spacing:.12em}
+.mwho{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 0 10px;font-size:11px;letter-spacing:.06em}
+.mwho b{font-weight:700}
+.mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cstamp{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;padding:4px 2px;border:2px solid currentColor;border-radius:4px;background:transparent;font:700 9px/1.1 var(--cond);letter-spacing:.04em;text-transform:uppercase;transform:rotate(var(--tilt,0deg));cursor:pointer;overflow:hidden}
+.cstamp.empty{color:#cbbda4;border-style:dashed;font:400 18px var(--marker);transform:none;cursor:default}
+.cstamp.back{color:#1d3d8f;opacity:.9}
+.cstamp.out{color:#2a1306}
+.cstamp.late{color:#b3150e}
+.cstamp .cdate{font-size:11px;letter-spacing:.08em}
+.cstamp .ctitle{font:400 10px/1.05 var(--receipt);text-transform:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;padding:0 2px}
+.cstamp .csub{font-size:8.5px;letter-spacing:.06em}
+.mfoot{margin:10px 0 0;font:400 11px var(--receipt);text-align:center}
+.mold{margin:10px 0 0;color:var(--ink2)}
+.mold summary{cursor:pointer;font:700 13px var(--cond);letter-spacing:.1em;text-transform:uppercase;min-height:44px;display:flex;align-items:center}
+.mold .mgrid{background:#f3ecdc;padding:10px;color:#2a1306}
+#memberCard{margin-bottom:6px}
+#checkBtns{flex-wrap:wrap;gap:8px}
+#checkBtns .tag{flex:1 1 40%}
+@media (max-width:360px){.mgrid{grid-template-columns:repeat(4,1fr)}}

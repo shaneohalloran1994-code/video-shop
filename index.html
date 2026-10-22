@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q6">
+<link rel="stylesheet" href="css/app.css?v=q7">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q6"></script>
+<script type="module" src="js/app.js?v=q7"></script>
 </head>
 <body>
 
@@ -152,6 +152,7 @@
   <!-- RECEIPT -->
   <section id="v-receipt" class="view" hidden>
     <div class="neonhead"><span class="neon green">Receipt</span><span class="byline">your rentals, printed</span></div>
+    <div id="memberCard"></div>
     <div class="receipt" id="receipt"></div>
     <p class="note center" id="receiptNote">Screenshot it and send it on.</p>
     <button class="btn" id="receiptGo" hidden>Take a tape ▸</button>
@@ -314,6 +315,10 @@
 <div class="a2hs" id="swapNote" hidden role="dialog" aria-label="Mates who swapped shops with you">
   <div class="a2hs-card"><p class="said"><b>Rasher</b><span id="swapTxt"></span></p>
   <div class="row" id="swapBtns"></div></div>
+</div>
+<div class="a2hs" id="checkNote" hidden role="dialog" aria-label="Check a tape back in">
+  <div class="a2hs-card"><p class="said"><b>Rasher</b><span id="checkTxt"></span></p>
+  <div class="row" id="checkBtns"></div></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 </body>

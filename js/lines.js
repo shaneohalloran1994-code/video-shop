@@ -295,6 +295,20 @@ export const LINES = {
 "Pay attention to the boring bits. They're never boring.",
 "Guess early, guess often."
 ],
+"take": [
+"Three nights. Be kind, rewind.",
+"Stamped. Bring it back in one piece."
+],
+"checkin_ask": [
+"How was {t}?",
+"Well? {t}. Go on."
+],
+"checkin_late": [
+"{t}'s overdue, man. How was it?"
+],
+"checkin_skip": [
+"Back on the shelf. No late fee. I'm not a monster."
+],
 "arc": [
 "Winner, man. Fair and square."
 ],
