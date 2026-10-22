@@ -24,9 +24,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="css/app.css?v=q5">
+<link rel="stylesheet" href="css/app.css?v=q6">
 <script src="vendor/jszip.min.js" defer></script>
-<script type="module" src="js/app.js?v=q5"></script>
+<script type="module" src="js/app.js?v=q6"></script>
 </head>
 <body>
 
@@ -161,7 +161,7 @@
   <section id="v-counter" class="view" hidden>
     <div class="counter">
       <div class="neonhead"><span class="neon amber">The counter</span><span class="byline">set up, swap shops, settings</span></div>
-      <div class="tellrow"><span>Something broken, or brilliant?</span><button class="tag hot" id="tellGo">Tell the shop</button></div>
+      <div class="tellrow"><span>Something broken, or brilliant?</span><button class="tag" id="tellGo">Tell the shop</button></div>
       <div class="rasher says" id="counterSays" hidden></div>
       <div class="step" id="stepHouse">
         <h3 id="houseH">Come in</h3>
@@ -202,7 +202,8 @@
             <div class="row"><button class="ghost" id="shareNew">Get a new code</button></div>
             <p class="small">A new code stops the old one working. Mates on your wall get the new one automatically.</p></div>
         </div>
-        <div class="row"><input id="codeIn" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="A mate's code (you'll swap shops)"><button class="btn" id="codeGo">Add</button></div>
+        <div class="row"><input id="codeIn" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="Mate's code"><button class="btn" id="codeGo">Add</button></div>
+        <p class="small fieldnote">You'll swap shops: yours goes to them too.</p>
         <p class="small" id="friendMsg"></p>
         <div class="fwall" id="fwall"></div>
       </div>

@@ -1062,3 +1062,31 @@ button.tag,a.tag{justify-content:center}
 /* Visiting: back and swap buttons */
 .nudge .nvbtns .tag{min-height:44px}
 .case .wide{grid-column:1/-1;margin:0}
+
+/* ===== UI review round 2 ===== */
+#filters .chip,#sections .secsign{min-height:44px}
+#filters .chips{flex-wrap:wrap}
+.fieldnote{margin:-4px 0 0}
+/* Amber means selected. Red means press this. Amber fills stay only on the Counter's way-in slabs. */
+.btn{background:linear-gradient(#e0302a,#a8150f);color:#fff;text-shadow:0 -1px 0 #5c0805;min-height:44px}
+#shareSend{background:linear-gradient(#e0302a,#a8150f);color:#fff;border:0}
+.tellrow .tag{background:linear-gradient(#262626,#0d0d0d)}
+#tellTxt,#tellName{background:var(--paper);border:0;border-bottom:2px solid #2a1306}
+/* Three mode: no outline before anything is chosen */
+.cases.three:not(.touched) .case.mini.active{box-shadow:5px 5px 0 #000,inset 0 0 0 1px rgba(255,255,255,.03);border-color:transparent}
+/* Arcade: Insert coin sits at the bottom of every cabinet */
+.cab-coin{margin-top:auto}
+.cab-screen{margin-bottom:8px}
+/* Box: Swap, Synopsis, More like this, Poster as two rows of two */
+.case .ag.look{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.case .ag.look .tag{width:100%;transform:none}
+/* Telly: every title centred */
+.play-screen .bars.b{justify-content:center}
+.play-screen .ttl{width:100%;box-sizing:border-box;text-align:center}
+/* Staff picks row: fade the right edge so it reads as scrollable */
+.pjump{-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:40px}
+/* Settings: thumb-height rows, the whole row toggles */
+.step .tog{min-height:44px;align-items:center;cursor:pointer}
+.step .tog input{margin-top:0;width:22px;height:22px}
+/* Staff pick sticker readable */
+.spine .stk.pick,.spine .stk.new,.spine.thin .stk{font-size:9px;letter-spacing:.04em}

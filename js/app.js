@@ -1,15 +1,15 @@
-import * as store from "./store.js?v=q5";
-import * as tmdb from "./tmdb.js?v=q5";
-import * as importer from "./importer.js?v=q5";
-import * as lib from "./library.js?v=q5";
-import * as snd from "./sound.js?v=q5";
-import * as arcade from "./arcade.js?v=q5";
-import * as coming from "./coming.js?v=q5";
-import * as rasher from "./rasher.js?v=q5";
-import { LINES } from "./lines.js?v=q5";
-import * as friends from "./friends.js?v=q5";
-import * as builder from "./builder.js?v=q5";
-import * as where from "./where.js?v=q5";
+import * as store from "./store.js?v=q6";
+import * as tmdb from "./tmdb.js?v=q6";
+import * as importer from "./importer.js?v=q6";
+import * as lib from "./library.js?v=q6";
+import * as snd from "./sound.js?v=q6";
+import * as arcade from "./arcade.js?v=q6";
+import * as coming from "./coming.js?v=q6";
+import * as rasher from "./rasher.js?v=q6";
+import { LINES } from "./lines.js?v=q6";
+import * as friends from "./friends.js?v=q6";
+import * as builder from "./builder.js?v=q6";
+import * as where from "./where.js?v=q6";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -442,7 +442,7 @@ function spineHTML(m) {
   else if (tpl === 2) { style += `background:#f2efe6;color:#111`; inner = `<span class="st heavy">${t}</span><i class="foot" style="background:${bg === "#f2efe6" ? "#b3150e" : bg}"></i>`; }
   else if (tpl === 3) { style += `background:${bg === "#f2efe6" ? "#2b2b2b" : bg}`; inner = `<span class="tape"><span class="st hand">${t}</span></span>`; }
   else { style += `background:linear-gradient(160deg,${bg} 0 55%,${bg2} 55%);color:${fg}`; inner = `<span class="st">${t}</span>`; }
-  const stk = staff ? `<i class="stk pick">STAFF PICK</i>` : fresh ? `<i class="stk new">NEW</i>` : "";
+  const stk = staff ? `<i class="stk pick">${wid <= 22 ? "★" : "PICK"}</i>` : fresh ? `<i class="stk new">NEW</i>` : "";
   return `<div class="spine t${tpl}${old ? " old" : ""}${wid >= 34 ? " fat" : wid <= 22 ? " thin" : ""}" style="${style}" data-id="${m.id}"><i class="gdot" style="background:${dot}"></i>${inner}${stk}<i class="rent">T1</i></div>`;
 }
 const SW = 31; // spine width + gap
@@ -843,12 +843,12 @@ const jumpT0 = Date.now();
 function renderJump() {
   const sig = [["fitsHead", "Picks", "red"], ["cinemasHead", "In cinemas", "blue"], ["soonHead", "Coming soon", "teal"], ["deepHead", "Finish the job", "purple"], ["freshHead", "Not on your list", "orange"]];
   // Cinema shelves arrive a moment later: hold their signs (greyed) so the row doesn't jump, for up to 8 seconds.
-  const waiting = !$("#coming").childElementCount && Date.now() - jumpT0 < 8000 && navigator.onLine;
+  const waiting = Date.now() - jumpT0 < 10000 && navigator.onLine && !S?.visit;
   $("#pjump").innerHTML = sig.filter(([id]) => { const e = document.getElementById(id); return (e && !e.hidden) || (waiting && (id === "cinemasHead" || id === "soonHead")); })
     .map(([id, l, c]) => `<button class="secsign ${c}" data-jump="${id}"${document.getElementById(id) ? "" : " disabled"}>${id === "fitsHead" && S?.owner ? esc(S.owner) + "'s picks" : id === "freshHead" && S?.house ? "Still to see" : l}</button>`).join("");
 }
 new MutationObserver(() => renderJump()).observe($("#coming"), { childList: true });
-setTimeout(renderJump, 8200);
+setTimeout(renderJump, 10200);
 $("#pjump").addEventListener("click", e => { const b = e.target.closest("[data-jump]"); if (!b) return; snd.click(); const h = document.getElementById(b.dataset.jump); if (h) scrollTo({ top: scrollY + h.getBoundingClientRect().top - 80, behavior: RM ? "auto" : "smooth" }); });
 // Finish the job: directors you're partway through, and the next one on your list.
 function renderDeepDive() {
