@@ -1,7 +1,7 @@
 // Rasher, the clerk. Picks what he says, remembers what he said lately, and keeps quiet when asked.
-import { LINES } from "./lines.js?v=q4";
-import { prefs } from "./store.js?v=q4";
-import { QUOTES } from "./quotes.js?v=q4";
+import { LINES } from "./lines.js?v=q5";
+import { prefs } from "./store.js?v=q5";
+import { QUOTES } from "./quotes.js?v=q5";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -38,7 +38,7 @@ export function quote(tag, notFilm = "") {
   return list.length ? pickFrom(list) : "";
 }
 // Which bank fits a film that's just landed.
-const GENRE = { Horror: "g_horror", Comedy: "g_comedy", Romance: "g_romance", "Science Fiction": "g_scifi", Western: "g_western", War: "g_war", Documentary: "g_doc", Animation: "g_animation", Crime: "g_crime" };
+const GENRE = { Horror: "g_horror", Comedy: "g_comedy", Romance: "g_romance", "Science Fiction": "g_scifi", Western: "g_western", War: "g_war", Documentary: "g_doc", Animation: "g_animation", Crime: "g_crime", Thriller: "g_thriller", Mystery: "g_mystery", Drama: "g_drama" };
 const DIR_ALIAS = { "Ethan Coen": "Joel Coen", "Benny Safdie": "Josh Safdie" };
 export function landLine(m, c = {}) {
   if (quiet()) return "";
@@ -46,6 +46,10 @@ export function landLine(m, c = {}) {
   if (c.arcade) return line(LINES["arc_" + c.arcade] ? "arc_" + c.arcade : "arc");
   if (c.rewatch && Math.random() < .5) return line("rewatch");
   if (c.three) return line("land_three");
+  // Special shelves and the small hours get their own lines more often than not.
+  const shelf = { shock: "shock", back: "backroom", irish: "irish" }[c.pool];
+  if (shelf && LINES[shelf] && Math.random() < .6) return line(shelf);
+  if (c.late && (m.g || []).includes("Horror") && Math.random() < .6) return line("horror_late");
   const dirs = m.dir || [], roll = Math.random();
   if (c.mood === "hangover" && roll < .35) return quote("hangover", m.t) || line("land");
   if (c.mood === "date" && roll < .25) return quote("date", m.t) || line("land");
@@ -61,7 +65,8 @@ export function landLine(m, c = {}) {
   const d = (m.dir || []).map(x => DIR_ALIAS[x] || x).find(x => LINES["d_" + x]);
   if (d && !recent.includes(LINES["d_" + d][0])) return line("d_" + d);
   if (c.late && Math.random() < .5) return line("land_late");
-  const g = (m.g || []).map(x => GENRE[x]).filter(Boolean).find(k => LINES[k].some(t => !recent.includes(t)));
+  // Drama is on half the shelf, so it only counts when it's the film's main genre.
+  const g = (m.g || []).filter((x, i) => x !== "Drama" || i === 0).map(x => GENRE[x]).filter(Boolean).find(k => LINES[k].some(t => !recent.includes(t)));
   if (g && Math.random() < .4) return line(g);
   return line("land");
 }

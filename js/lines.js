@@ -118,12 +118,26 @@ export const LINES = {
 "Back on the shelf with you.",
 "Picky. I respect it.",
 "That one'll wait. They always wait.",
-"Grand, grand. Let's go again."
+"Grand, grand. Let's go again.",
+"Back it goes. Plenty more where that came from.",
+"No bother. The shelf doesn't take it personally.",
+"Rejected. That tape's going to need a minute.",
+"Next. I've got shelves of these.",
+"You'd want to be sure. Go again.",
+"Ah here. Fine.",
+"Swap all you want. The rack's not going anywhere.",
+"That one's for another night. Or another person."
 ],
 "locked": [
 "That's your veto, man. This one's yours now. No take-backs.",
 "Locked in. The universe has rules. So do I.",
-"No more vetoes. Press play, ya coward."
+"No more vetoes. Press play, ya coward.",
+"That's it now. You picked it, you're watching it.",
+"No vetoes left. Popcorn in, phone down.",
+"Locked. Even I can't swap it, and I've got keys.",
+"Destiny, man. Or at least the rules.",
+"Out of vetoes. Commit.",
+"This is the one. Not because it's perfect. Because you're out of swaps."
 ],
 "blind": [
 "Don't read the back of the box. The back lies, man.",
@@ -149,7 +163,15 @@ export const LINES = {
 ],
 "rate_low": [
 "Ah, shite. Can't win them all.",
-"Into the bargain bin with it."
+"Into the bargain bin with it.",
+"Grand. Let us never speak of it.",
+"That's a couple of hours you're not getting back, man.",
+"Fair. Not every tape's a keeper.",
+"Bin it. I'll have words with the distributor.",
+"Ouch. Noted, and filed under \"no\".",
+"Some films are just a lesson. That was a lesson.",
+"Right. Off my shelves and out of my sight.",
+"Yeah, I'd heard mixed things."
 ],
 "rewatch": [
 "Second time's for the details, man.",
@@ -228,6 +250,50 @@ export const LINES = {
 ],
 "not_streaming": [
 "Not on anything here, man. Swap it?"
+],
+"horror_late": [
+"Horror, after midnight. Bold. Leave a light on in the hall.",
+"Who picks horror at this hour? Legends, that's who.",
+"Check the back door. Go on. I'll wait.",
+"If you hear something in the kitchen, it's the fridge. Probably.",
+"Perfect hour for this. Terrible hour for sleep after.",
+"Lights off is the brave way. Lights on is the smart way.",
+"Don't look at the window during the quiet bits.",
+"This is how every one of these films starts, by the way. Someone up late."
+],
+"shock": [
+"Shocktober, man. Every tape's a fright till the first of November.",
+"Spooky season. I've put cobwebs on the telly and everything.",
+"October rules: lights off, blanket up, no peeking.",
+"Horror month. You're not allowed to skip the scary bits.",
+"One more for the season. How many's that now?",
+"Whatever you hear on the stairs tonight, it's just the house settling.",
+"Shocktober special. Comes with a free bad night's sleep."
+],
+"backroom": [
+"The back room. Mind your step, and your sanity.",
+"Weird one. The good kind of weird. Mostly.",
+"Nobody comes back here by accident.",
+"This is from the shelf I don't show everyone.",
+"Cult tape. Either you'll love it or you'll ring me in the small hours.",
+"Don't ask what it's about. Just press play."
+],
+"g_thriller": [
+"Tense one. Don't plan on blinking.",
+"Twists. Don't check your phone or you'll miss one.",
+"Pulse up, lights down."
+],
+"g_drama": [
+"A proper drama. Feelings incoming.",
+"Slow burn. Let it get to you.",
+"Grown-up film. Sit with it.",
+"This one's about people. The best ones always are."
+],
+"g_mystery": [
+"Whodunnit? Not telling.",
+"Keep a notepad. Or don't, and get it wrong like the rest of us.",
+"Pay attention to the boring bits. They're never boring.",
+"Guess early, guess often."
 ],
 "arc": [
 "Winner, man. Fair and square."
