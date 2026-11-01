@@ -1,18 +1,25 @@
 // Small IndexedDB key-value store plus localStorage settings. Everything stays on this device.
 const DB_NAME = "take-one";
 let dbp = null;
+// Some browsers won't let a site store anything (private windows, in-app browsers, strict privacy settings).
+// Then the shop still opens and works for the visit; it just can't keep anything afterwards.
+const mem = new Map();
+export let saving = true;
 function open() {
   if (dbp) return dbp;
   dbp = new Promise((res, rej) => {
-    const r = indexedDB.open(DB_NAME, 1);
+    let r; try { r = indexedDB.open(DB_NAME, 1); } catch (e) { return rej(e); }
+    const t = setTimeout(() => rej(new Error("storage timed out")), 4000);
     r.onupgradeneeded = () => r.result.createObjectStore("kv");
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
+    r.onsuccess = () => { clearTimeout(t); res(r.result); };
+    r.onerror = () => { clearTimeout(t); rej(r.error); };
+    r.onblocked = () => { clearTimeout(t); rej(new Error("storage blocked")); };
+  }).catch(() => { saving = false; return null; });
   return dbp;
 }
 export async function get(key) {
   const db = await open();
+  if (!db) return mem.get(key);
   return new Promise((res, rej) => {
     const t = db.transaction("kv").objectStore("kv").get(key);
     t.onsuccess = () => res(t.result);
@@ -21,6 +28,7 @@ export async function get(key) {
 }
 export async function set(key, val) {
   const db = await open();
+  if (!db) { mem.set(key, val); return; }
   return new Promise((res, rej) => {
     const tx = db.transaction("kv", "readwrite");
     tx.objectStore("kv").put(val, key);
@@ -30,6 +38,7 @@ export async function set(key, val) {
 }
 export async function clearAll() {
   const db = await open();
+  if (!db) { mem.clear(); return; }
   return new Promise((res, rej) => {
     const tx = db.transaction("kv", "readwrite");
     tx.objectStore("kv").clear();

@@ -1,7 +1,7 @@
 // Friends: sharing your shop by code, visiting a mate's, comparing taste, group night, guest tuning and the Letterboxd top-up.
-import * as store from "./store.js?v=r2";
-import { TMDB_PROXY } from "./config.js?v=r2";
-import * as shelf from "./shelf.js?v=r2";
+import * as store from "./store.js?v=r3";
+import { TMDB_PROXY } from "./config.js?v=r3";
+import * as shelf from "./shelf.js?v=r3";
 
 const BASE = (TMDB_PROXY || "").replace(/\/$/, "");
 let C = null;
@@ -29,7 +29,9 @@ export function payload(S, name) {
 }
 
 async function api(method, path, body, token) {
-  const r = await fetch(BASE + path, { method, body, headers: { ...(body ? { "Content-Type": "application/octet-stream" } : {}), ...(token ? { "X-Token": token } : {}) } });
+  let r;
+  try { r = await fetch(BASE + path, { method, body, headers: { ...(body ? { "Content-Type": "application/octet-stream" } : {}), ...(token ? { "X-Token": token } : {}) } }); }
+  catch { throw new Error("Couldn't reach the shop's line. Check your connection and try again."); }
   if (r.status === 404 && method === "GET") throw new Error("No shop with that code. Check it and try again.");
   if (r.status === 503) throw new Error("Sharing's not working right now. Try again later.");
   if (!r.ok) { let e = ""; try { e = (await r.json()).error; } catch { } throw new Error(e || "The shop's line is down. Try again in a minute."); }

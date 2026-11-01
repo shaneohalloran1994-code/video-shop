@@ -1,17 +1,17 @@
-import * as store from "./store.js?v=r2";
-import * as tmdb from "./tmdb.js?v=r2";
-import * as importer from "./importer.js?v=r2";
-import * as lib from "./library.js?v=r2";
-import * as snd from "./sound.js?v=r2";
-import * as arcade from "./arcade.js?v=r2";
-import * as coming from "./coming.js?v=r2";
-import * as rasher from "./rasher.js?v=r2";
-import { LINES } from "./lines.js?v=r2";
-import * as friends from "./friends.js?v=r2";
-import * as card from "./card.js?v=r2";
-import * as myshelf from "./shelf.js?v=r2";
-import * as builder from "./builder.js?v=r2";
-import * as where from "./where.js?v=r2";
+import * as store from "./store.js?v=r3";
+import * as tmdb from "./tmdb.js?v=r3";
+import * as importer from "./importer.js?v=r3";
+import * as lib from "./library.js?v=r3";
+import * as snd from "./sound.js?v=r3";
+import * as arcade from "./arcade.js?v=r3";
+import * as coming from "./coming.js?v=r3";
+import * as rasher from "./rasher.js?v=r3";
+import { LINES } from "./lines.js?v=r3";
+import * as friends from "./friends.js?v=r3";
+import * as card from "./card.js?v=r3";
+import * as myshelf from "./shelf.js?v=r3";
+import * as builder from "./builder.js?v=r3";
+import * as where from "./where.js?v=r3";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -128,6 +128,7 @@ async function load() {
   extra = (await store.get("extra")) || {};
   log = (await store.get("log")) || {};
   await card.load(); await myshelf.load();
+  if (!store.saving) setTimeout(() => toast("This browser won't let the shop save anything. Rolling works, but open it in Safari or Chrome to keep your shelves."), 2500);
   if (!profile && mode === "house") await loadHouse();
   FR = await friends.all(); if (visit && !FR[visit]) { visit = ""; store.prefs.del("visit"); }
   rebuild();
@@ -669,7 +670,7 @@ function fillWhere(root = document) {
     const it = picks.find(x => String(x.m.id) === el.dataset.where); if (!it) return;
     const w = await where.lookup((path, params) => tmdb.call(apiKey, path, params), it.m);
     if (!el.isConnected) return;
-    el.innerHTML = w ? `<span class="wl">${where.line(w)}</span>` : "";
+    el.innerHTML = w ? `<span class="wl">${where.line(w)}</span>` : `<a class="wl" href="${esc(where.jwLink(it.m))}" target="_blank" rel="noopener">Check JustWatch ▸</a>`;
     const none = w && !w.stream.length && !w.rent.length && !w.buy.length, card = el.closest(".case");
     if (none && card && picks.length === 1 && card.closest("#cases")) {
       card.querySelector('[data-a="swap"]')?.classList.add("hot");
